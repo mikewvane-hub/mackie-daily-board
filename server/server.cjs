@@ -577,6 +577,35 @@ app.delete('/api/meal-plan/:day/:instanceId', (req, res) => {
   });
 });
 
+app.put('/api/meal-plan/:day/:instanceId', (req, res) => {
+  const { day, instanceId } = req.params;
+  const { title, recipeId, category } = req.body || {};
+  const cleanTitle = String(title || '').trim();
+  if (!cleanTitle) {
+    return res.status(400).json({ error: 'Meal title is required' });
+  }
+
+  const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan() });
+  mealPlanData.days = mealPlanData.days || getEmptyMealPlan();
+  if (Array.isArray(mealPlanData.days[day])) {
+    const target = mealPlanData.days[day].find(m => m.instanceId === instanceId);
+    if (target) {
+      target.title = cleanTitle;
+      if (recipeId !== undefined) target.recipeId = recipeId;
+      if (category !== undefined) target.category = category;
+      if (!recipeId) target.isManual = true;
+      target.updatedAt = new Date().toISOString();
+      mealPlanData.updatedAt = new Date().toISOString();
+      writeJson(MEAL_PLAN_FILE, mealPlanData);
+    }
+  }
+
+  res.json({
+    success: true,
+    mealPlan: mealPlanData.days
+  });
+});
+
 app.post('/api/meal-plan/clear', (req, res) => {
   const empty = getEmptyMealPlan();
   writeJson(MEAL_PLAN_FILE, { days: empty, updatedAt: new Date().toISOString() });

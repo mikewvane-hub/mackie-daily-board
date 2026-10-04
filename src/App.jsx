@@ -29,7 +29,8 @@ import {
   Scale,
   Baby,
   Landmark,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Pencil
 } from 'lucide-react';
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
@@ -175,11 +176,19 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [recipeSearch, setRecipeSearch] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState(COOKBOOK_RECIPES[0].id);
-  const [targetDay, setTargetDay] = useState('Monday');
+  const [targetDay, setTargetDay] = useState(() => {
+    const dayStr = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'long'
+    }).format(new Date());
+    return DAYS_OF_WEEK.some(d => d.key === dayStr) ? dayStr : 'Monday';
+  });
   const [viewingRecipe, setViewingRecipe] = useState(null);
   const [showConversionsModal, setShowConversionsModal] = useState(false);
   const [draggedRecipe, setDraggedRecipe] = useState(null);
   const [dragOverDay, setDragOverDay] = useState(null);
+  const [editingMeal, setEditingMeal] = useState(null); // { dayKey, instanceId, title }
+  const [todayQuickInput, setTodayQuickInput] = useState('');
   const [customMealInputs, setCustomMealInputs] = useState({
     Monday: '',
     Tuesday: '',
@@ -189,6 +198,22 @@ export default function App() {
     Saturday: '',
     Sunday: ''
   });
+
+  const todayDayName = useMemo(() => {
+    const dayStr = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'long'
+    }).format(currentTime);
+    return DAYS_OF_WEEK.some(d => d.key === dayStr) ? dayStr : 'Monday';
+  }, [currentTime]);
+
+  const todayShortDateLabel = useMemo(() => {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      month: 'short',
+      day: 'numeric'
+    }).format(currentTime);
+  }, [currentTime]);
 
   // Grocery List states
   const [manualItemName, setManualItemName] = useState('');
@@ -457,6 +482,62 @@ export default function App() {
       }
     } catch (e) {
       console.error('Failed to add custom meal:', e);
+    }
+  };
+
+  // Add a quick meal directly to Today's Menu Highlight box
+  const handleAddTodayQuickMeal = async (e) => {
+    if (e) e.preventDefault();
+    const rawTitle = (todayQuickInput || '').trim();
+    if (!rawTitle) return;
+    try {
+      const res = await fetch(`${API_BASE}/meal-plan/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          day: todayDayName,
+          isManual: true,
+          customTitle: rawTitle
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setBoardData(prev => ({
+          ...prev,
+          mealPlan: json.mealPlan
+        }));
+        setTodayQuickInput('');
+        showToast(`Added "${rawTitle}" to Today (${todayDayName})`);
+      }
+    } catch (e) {
+      console.error('Failed to add today meal:', e);
+    }
+  };
+
+  // Edit / rename an existing planned meal on any day (including Today)
+  const handleSaveEditedMeal = async (dayKey, instanceId, newTitle) => {
+    const trimmed = (newTitle || '').trim();
+    if (!trimmed) {
+      setEditingMeal(null);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/meal-plan/${dayKey}/${instanceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmed })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setBoardData(prev => ({
+          ...prev,
+          mealPlan: json.mealPlan
+        }));
+        setEditingMeal(null);
+        showToast(`Updated ${dayKey} meal to "${trimmed}"`);
+      }
+    } catch (e) {
+      console.error('Failed to update meal:', e);
     }
   };
 
@@ -1576,11 +1657,227 @@ export default function App() {
                 )}
               </div>
 
+              {/* TODAY'S MENU HIGHLIGHT BOX (Auto-populates current day & editable in place) */}
+              {(() => {
+                const todayMeals = mealPlan[todayDayName] || [];
+                const isTodayDragTarget = dragOverDay === `TODAY_${todayDayName}`;
+                return (
+                  <div
+                    onClick={() => setTargetDay(todayDayName)}
+                    onDragOver={e => {
+                      e.preventDefault();
+                      setDragOverDay(`TODAY_${todayDayName}`);
+                    }}
+                    onDragLeave={() => setDragOverDay(null)}
+                    onDrop={e => {
+                      e.preventDefault();
+                      setDragOverDay(null);
+                      if (draggedRecipe) {
+                        setTargetDay(todayDayName);
+                        handleAssignRecipeToDay(draggedRecipe, todayDayName);
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer ${
+                      isTodayDragTarget
+                        ? 'border-[#9E5A43] bg-[#FDF8F3] ring-2 ring-[#9E5A43]/30'
+                        : 'border-[#9E5A43]/60 bg-gradient-to-br from-[#FDF9F3] via-[#FAF3EA] to-[#F5EBE0] shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 flex-wrap mb-2.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#9E5A43] text-white flex items-center gap-1 shadow-2xs">
+                          <Sparkles className="w-3 h-3" />
+                          Today&apos;s Menu
+                        </span>
+                        <span className="font-editorial text-lg font-bold text-[#2C2623]">
+                          {todayDayName}
+                        </span>
+                        <span className={`text-xs ${theme.textSecondary}`}>
+                          • {todayShortDateLabel}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setTargetDay(todayDayName);
+                          handleAssignRecipeToDay(selectedRecipeObj, todayDayName);
+                        }}
+                        className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border ${theme.border} bg-white hover:${theme.accentSoft} flex items-center gap-1 shadow-2xs`}
+                        title={`Add selected recipe (${selectedRecipeObj.title}) to Today (${todayDayName})`}
+                      >
+                        <Plus className="w-3 h-3 text-[#9E5A43]" />
+                        <span>Add Selected Recipe</span>
+                      </button>
+                    </div>
+
+                    {/* Today's Planned Meals List with Inline Edit */}
+                    {todayMeals.length === 0 ? (
+                      <div className="py-2.5 px-3 mb-2.5 text-center border border-dashed border-[#D5C7B8] bg-white/70 rounded-xl text-xs text-[#6E655F]">
+                        No meal set for <strong>Today ({todayDayName})</strong> yet — type below, tap a recipe, or drag here!
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1.5 mb-2.5">
+                        {todayMeals.map(meal => {
+                          const fullRec = meal.recipeId
+                            ? COOKBOOK_RECIPES.find(r => r.id === meal.recipeId)
+                            : null;
+                          const isCustomMeal = meal.isManual || !fullRec;
+                          const isEditingThis =
+                            editingMeal &&
+                            editingMeal.dayKey === todayDayName &&
+                            editingMeal.instanceId === meal.instanceId;
+
+                          return (
+                            <div
+                              key={meal.instanceId}
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (!isEditingThis && fullRec) setViewingRecipe(fullRec);
+                              }}
+                              className="px-3 py-2 rounded-xl bg-white border border-[#E2D9CC] shadow-2xs flex items-center justify-between gap-2 group"
+                            >
+                              {isEditingThis ? (
+                                <div
+                                  onClick={e => e.stopPropagation()}
+                                  className="flex items-center gap-1.5 flex-1"
+                                >
+                                  <input
+                                    type="text"
+                                    autoFocus
+                                    value={editingMeal.title}
+                                    onChange={e =>
+                                      setEditingMeal(prev => ({
+                                        ...prev,
+                                        title: e.target.value
+                                      }))
+                                    }
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveEditedMeal(
+                                          todayDayName,
+                                          meal.instanceId,
+                                          editingMeal.title
+                                        );
+                                      } else if (e.key === 'Escape') {
+                                        setEditingMeal(null);
+                                      }
+                                    }}
+                                    className="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-[#9E5A43] text-xs font-medium outline-none bg-[#FAF7F2]"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleSaveEditedMeal(
+                                        todayDayName,
+                                        meal.instanceId,
+                                        editingMeal.title
+                                      )
+                                    }
+                                    className="px-2.5 py-1 rounded-lg bg-[#9E5A43] text-white text-[11px] font-semibold hover:bg-[#864934] transition shrink-0"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingMeal(null)}
+                                    className="px-2 py-1 rounded-lg border border-[#E2D9CC] text-[11px] text-[#6E655F] hover:bg-stone-100 transition shrink-0"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="min-w-0 flex-1">
+                                    <div
+                                      className={`text-xs sm:text-sm font-semibold text-[#2C2623] truncate ${
+                                        fullRec ? 'group-hover:underline' : ''
+                                      }`}
+                                    >
+                                      {meal.title}
+                                    </div>
+                                    <div className={`text-[10px] ${theme.textSecondary}`}>
+                                      {isCustomMeal
+                                        ? 'Today’s Plan • Tap Edit to change'
+                                        : `${meal.category} • Tap for recipe or Edit to modify`}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        setEditingMeal({
+                                          dayKey: todayDayName,
+                                          instanceId: meal.instanceId,
+                                          title: meal.title
+                                        });
+                                      }}
+                                      className="px-2 py-1 rounded-md text-[11px] font-medium text-[#6E655F] hover:text-[#9E5A43] hover:bg-[#FAF3EA] border border-transparent hover:border-[#E2D9CC] flex items-center gap-1 transition"
+                                      title="Edit or change this meal plan"
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                      <span>Edit</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        handleRemoveMealFromDay(
+                                          todayDayName,
+                                          meal.instanceId,
+                                          meal.title
+                                        );
+                                      }}
+                                      className="p-1 rounded-md text-stone-400 hover:text-red-600 hover:bg-red-50 transition"
+                                      title="Remove meal from Today"
+                                      aria-label={`Remove ${meal.title} from ${todayDayName}`}
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Quick Add / Change Today's Plan Input */}
+                    <form
+                      onSubmit={handleAddTodayQuickMeal}
+                      onClick={e => e.stopPropagation()}
+                      className="flex items-center gap-1.5"
+                    >
+                      <input
+                        type="text"
+                        value={todayQuickInput}
+                        onChange={e => setTodayQuickInput(e.target.value)}
+                        placeholder={`Add or update ${todayDayName}'s menu plan...`}
+                        className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-white border border-[#DECFC0] text-xs outline-none focus:border-[#9E5A43]"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!todayQuickInput.trim()}
+                        className={`px-3 py-1.5 rounded-lg ${theme.accentBg} ${theme.accentHover} text-white text-xs font-semibold flex items-center gap-1 transition disabled:opacity-40 shrink-0 shadow-2xs`}
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Add to Today</span>
+                      </button>
+                    </form>
+                  </div>
+                );
+              })()}
+
               {/* 7 Visual Day Boxes (Monday through Sunday) */}
-              <div className="flex flex-col gap-2.5 max-h-[670px] overflow-y-auto pr-1 scrollbar-minimal">
+              <div className="flex flex-col gap-2.5 max-h-[600px] overflow-y-auto pr-1 scrollbar-minimal">
                 {DAYS_OF_WEEK.map(dayObj => {
                   const dayMeals = mealPlan[dayObj.key] || [];
                   const isTarget = targetDay === dayObj.key;
+                  const isTodayBox = dayObj.key === todayDayName;
                   const isDragTarget = dragOverDay === dayObj.key;
 
                   return (
@@ -1608,10 +1905,15 @@ export default function App() {
                     >
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-editorial text-base sm:text-lg font-bold">
                               {dayObj.key}
                             </span>
+                            {isTodayBox && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-[#9E5A43] text-white">
+                                Today
+                              </span>
+                            )}
                             {isTarget && (
                               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${theme.accentSoft}`}>
                                 Selected
@@ -1680,41 +1982,118 @@ export default function App() {
                                 ? COOKBOOK_RECIPES.find(r => r.id === meal.recipeId)
                                 : null;
                               const isCustomMeal = meal.isManual || !fullRec;
+                              const isEditingThis =
+                                editingMeal &&
+                                editingMeal.dayKey === dayObj.key &&
+                                editingMeal.instanceId === meal.instanceId;
+
                               return (
                                 <div
                                   key={meal.instanceId}
                                   onClick={e => {
                                     e.stopPropagation();
-                                    if (fullRec) setViewingRecipe(fullRec);
+                                    if (!isEditingThis && fullRec) setViewingRecipe(fullRec);
                                   }}
                                   className={`px-2.5 py-2 rounded-lg ${theme.cardBg} border ${theme.border} shadow-2xs flex items-center justify-between gap-2 group`}
                                 >
-                                  <div className="min-w-0">
+                                  {isEditingThis ? (
                                     <div
-                                      className={`text-xs font-semibold truncate ${
-                                        fullRec ? 'group-hover:underline' : ''
-                                      }`}
+                                      onClick={e => e.stopPropagation()}
+                                      className="flex items-center gap-1.5 flex-1"
                                     >
-                                      {meal.title}
+                                      <input
+                                        type="text"
+                                        autoFocus
+                                        value={editingMeal.title}
+                                        onChange={e =>
+                                          setEditingMeal(prev => ({
+                                            ...prev,
+                                            title: e.target.value
+                                          }))
+                                        }
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleSaveEditedMeal(
+                                              dayObj.key,
+                                              meal.instanceId,
+                                              editingMeal.title
+                                            );
+                                          } else if (e.key === 'Escape') {
+                                            setEditingMeal(null);
+                                          }
+                                        }}
+                                        className="flex-1 min-w-0 px-2 py-1 rounded-md border border-[#9E5A43] text-xs font-medium outline-none bg-[#FAF7F2]"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleSaveEditedMeal(
+                                            dayObj.key,
+                                            meal.instanceId,
+                                            editingMeal.title
+                                          )
+                                        }
+                                        className="px-2 py-1 rounded-md bg-[#9E5A43] text-white text-[10px] font-semibold hover:bg-[#864934] transition shrink-0"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingMeal(null)}
+                                        className="px-1.5 py-1 rounded-md border border-[#E2D9CC] text-[10px] text-[#6E655F] hover:bg-stone-100 transition shrink-0"
+                                      >
+                                        Cancel
+                                      </button>
                                     </div>
-                                    <div className={`text-[10px] ${theme.textSecondary}`}>
-                                      {isCustomMeal
-                                        ? 'Custom meal'
-                                        : `${meal.category} • Tap for recipe`}
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      handleRemoveMealFromDay(dayObj.key, meal.instanceId, meal.title);
-                                    }}
-                                    className="p-1 rounded-md text-stone-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
-                                    title="Remove meal"
-                                    aria-label={`Remove ${meal.title} from ${dayObj.key}`}
-                                  >
-                                    <X className="w-3.5 h-3.5" />
-                                  </button>
+                                  ) : (
+                                    <>
+                                      <div className="min-w-0 flex-1">
+                                        <div
+                                          className={`text-xs font-semibold truncate ${
+                                            fullRec ? 'group-hover:underline' : ''
+                                          }`}
+                                        >
+                                          {meal.title}
+                                        </div>
+                                        <div className={`text-[10px] ${theme.textSecondary}`}>
+                                          {isCustomMeal
+                                            ? 'Custom meal'
+                                            : `${meal.category} • Tap for recipe`}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-0.5 shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            setEditingMeal({
+                                              dayKey: dayObj.key,
+                                              instanceId: meal.instanceId,
+                                              title: meal.title
+                                            });
+                                          }}
+                                          className="p-1 rounded-md text-stone-400 hover:text-[#9E5A43] hover:bg-[#FAF3EA] transition"
+                                          title="Edit meal"
+                                          aria-label={`Edit ${meal.title} on ${dayObj.key}`}
+                                        >
+                                          <Pencil className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            handleRemoveMealFromDay(dayObj.key, meal.instanceId, meal.title);
+                                          }}
+                                          className="p-1 rounded-md text-stone-400 hover:text-red-600 hover:bg-red-50 transition"
+                                          title="Remove meal"
+                                          aria-label={`Remove ${meal.title} from ${dayObj.key}`}
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               );
                             })}
