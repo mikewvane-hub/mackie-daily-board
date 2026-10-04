@@ -1,0 +1,82 @@
+{
+  "updatedDateEST": "2026-10-04",
+  "updatedAt": "2026-10-04T04:06:40.603Z",
+  "scheduleNote": "Updated once daily at 07:00 AM EST automatically (All links HTTP verified & deduplicated)",
+  "articles": [
+    {
+      "id": "news-1791086800091-1",
+      "rank": 1,
+      "title": "A $28 billion hemp THC industry is fighting to save itself from a looming federal ban",
+      "whatHappened": "America's multibillion-dollar market for impairing hemp products faces potential elimination after Congress voted to close a loophole in federal law that has allowed it to flourish.",
+      "significance": "Legislative & Fiscal Policy Significance: Directly shapes federal funding priorities, congressional negotiations, and downstream programs for American households.",
+      "url": "https://www.pbs.org/newshour/economy/a-28-billion-hemp-thc-industry-is-fighting-to-save-itself-from-a-looming-federal-ban",
+      "source": "PBS NewsHour Politics & Policy",
+      "category": "U.S. Policy Update",
+      "isPolicy": true,
+      "publishedAt": "Sat, 03 Oct 2026 18:06:17 -0400",
+      "linkVerified": true,
+      "httpStatus": 202,
+      "verifiedAt": "2026-10-04T04:06:40.091Z"
+    },
+    {
+      "id": "news-1791086800138-2",
+      "rank": 2,
+      "title": "How the West is preparing for a drier future as water supplies hit lows",
+      "whatHappened": "Mandatory cuts from the federal government on water from the Colorado River will soon take effect in Arizona, Nevada, and California. Now, some water managers in the region are spending billions to prepare for a drier future. Special correspondent Ben Tracy with Climate Central reports for our series, Tipping Point.",
+      "significance": "Legislative & Fiscal Policy Significance: Directly shapes federal funding priorities, congressional negotiations, and downstream programs for American households.",
+      "url": "https://www.pbs.org/newshour/show/drying-uphow-the-west-is-preparing-for-a-drier-future-as-water-supplies-hit-lows",
+      "source": "PBS NewsHour Politics & Policy",
+      "category": "U.S. Policy Update",
+      "isPolicy": true,
+      "publishedAt": "Fri, 02 Oct 2026 18:25:32 -0400",
+      "linkVerified": true,
+      "httpStatus": 202,
+      "verifiedAt": "2026-10-04T04:06:40.138Z"
+    },
+    {
+      "id": "news-1791086800264-3",
+      "rank": 3,
+      "title": "A gut punch in Ohio: Nearly 1,400 laid off at truck factory just days before Trump rally",
+      "whatHappened": "This year's election is a test for the working-class coalition that lifted Trump into the White House and gave majorities to Republicans in the House and Senate.",
+      "significance": "Legislative & Fiscal Policy Significance: Directly shapes federal funding priorities, congressional negotiations, and downstream programs for American households.",
+      "url": "https://www.pbs.org/newshour/politics/a-gut-punch-in-ohio-nearly-1400-laid-off-at-truck-factory-just-days-before-trump-rally",
+      "source": "PBS NewsHour Politics & Policy",
+      "category": "U.S. Policy Update",
+      "isPolicy": true,
+      "publishedAt": "Sat, 03 Oct 2026 12:50:47 -0400",
+      "linkVerified": true,
+      "httpStatus": 202,
+      "verifiedAt": "2026-10-04T04:06:40.264Z"
+    },
+    {
+      "id": "news-1791086800587-4",
+      "rank": 4,
+      "title": "Who's spending big, and where, in most expensive election cycle ever",
+      "whatHappened": "Spending for this year's midterms is accelerating as we get closer to Election Day. Political correspondent Lisa Desjardins makes sense of the billions spent to influence who controls Congress next year.",
+      "significance": "Legislative & Fiscal Policy Significance: Directly shapes federal funding priorities, congressional negotiations, and downstream programs for American households.",
+      "url": "https://www.pbs.org/newshour/show/whos-spending-big-and-where-in-most-expensive-election-cycle-ever",
+      "source": "PBS NewsHour Politics & Policy",
+      "category": "U.S. Policy Update",
+      "isPolicy": true,
+      "publishedAt": "Fri, 02 Oct 2026 18:40:47 -0400",
+      "linkVerified": true,
+      "httpStatus": 202,
+      "verifiedAt": "2026-10-04T04:06:40.587Z"
+    },
+    {
+      "id": "news-1791086800603-5",
+      "rank": 5,
+      "title": "Supreme Court ready to tackle climate, immigration and gun rights. Here are 5 cases to watch",
+      "whatHappened": "When the U.S. Supreme Court returns Monday, the justices will kick off a new term featuring cases on climate change, gun rights, immigration and religious liberty.",
+      "significance": "Judicial & Constitutional Impact: Sets a key legal precedent affecting federal enforcement, constitutional rights, and how lower courts interpret national law.",
+      "url": "https://www.pbs.org/newshour/politics/supreme-court-ready-to-tackle-climate-immigration-and-gun-rights-here-are-5-cases-to-watch",
+      "source": "PBS NewsHour Politics & Policy",
+      "category": "U.S. Policy Update",
+      "isPolicy": true,
+      "publishedAt": "Fri, 02 Oct 2026 17:45:09 -0400",
+      "linkVerified": true,
+      "httpStatus": 202,
+      "verifiedAt": "2026-10-04T04:06:40.603Z"
+    }
+  ]
+}

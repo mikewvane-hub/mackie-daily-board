@@ -1,0 +1,72 @@
+{
+  "city": "Downtown Washington, D.C.",
+  "cycleWeekNumber": 39,
+  "activeCycleGroup": 0,
+  "updatedAt": "2026-10-04T05:04:17.690Z",
+  "recommendations": [
+    {
+      "id": "dc-penn-quarter-market",
+      "cycleGroup": 0,
+      "timeframeBadge": "Weekly Downtown D.C. Staple",
+      "neighborhood": "Penn Quarter / Downtown D.C.",
+      "title": "FRESHFARM Penn Quarter Market & Autumn Harvest Stroll",
+      "who": "Downtown D.C. locals, expecting parents, and food lovers (Hosted by FRESHFARM)",
+      "what": "Open-air farmers market featuring Shenandoah Valley orchard apples, warm apple cider, artisan sourdough, seasonal flowers, and local D.C. roasters right in the heart of Penn Quarter.",
+      "when": "Thursdays, 3:00 PM – 7:00 PM (Spring through late Autumn season)",
+      "where": "8th St NW between D & E Streets NW (Penn Quarter, Downtown D.C.)",
+      "why": "An easy, flat, stroller-friendly afternoon walk in Downtown D.C. to pick up fresh seasonal produce and treats next to the National Portrait Gallery.",
+      "url": "https://www.freshfarm.org/markets/penn-quarter",
+      "linkVerified": true,
+      "httpStatus": 200,
+      "verifiedAt": "2026-10-04T05:04:17.288Z"
+    },
+    {
+      "id": "dc-nga-sculpture-garden",
+      "cycleGroup": 0,
+      "timeframeBadge": "This Week in Downtown D.C.",
+      "neighborhood": "National Mall / Constitution Ave",
+      "title": "National Gallery of Art — East & West Building Exhibitions & Sculpture Garden",
+      "who": "Art lovers, couples, and families looking for a peaceful indoor/outdoor D.C. outing",
+      "what": "Explore special seasonal exhibitions inside the skylit West Building courtyard (filled with seasonal botanical foliage) and stroll among monumental sculptures around the central fountain.",
+      "when": "Daily, 10:00 AM – 5:00 PM (Free admission, no tickets required)",
+      "where": "Constitution Ave NW between 3rd & 9th Streets NW, Washington, D.C.",
+      "why": "Offers calm, bench-lined galleries, elevator/stroller accessibility, and the Pavilion Café overlooking the changing seasonal trees.",
+      "url": "https://www.nga.gov/visit.html",
+      "linkVerified": false,
+      "httpStatus": 403,
+      "verifiedAt": "2026-10-04T05:04:17.367Z"
+    },
+    {
+      "id": "dc-botanic-garden-autumn",
+      "cycleGroup": 0,
+      "timeframeBadge": "Seasonal Highlight",
+      "neighborhood": "Capitol Hill / National Mall",
+      "title": "United States Botanic Garden — Seasonal Conservatory & Bartholdi Fountain Gardens",
+      "who": "Plant enthusiasts, downtown walkers, and families (Hosted by U.S. Botanic Garden)",
+      "what": "Step inside the glass Conservatory tropical & subtropical rooms or relax in the freshly planted seasonal beds at Bartholdi Park just across Independence Ave.",
+      "when": "Daily: Conservatory 10:00 AM – 5:00 PM • Outdoor Gardens Dawn to Dusk (Free)",
+      "where": "100 Maryland Ave SW, Washington, D.C. 20001",
+      "why": "One of D.C.’s most serene, climate-controlled sanctuaries with shaded seating and vibrant seasonal blooms.",
+      "url": "https://www.usbg.gov/visit",
+      "linkVerified": true,
+      "httpStatus": 200,
+      "verifiedAt": "2026-10-04T05:04:17.581Z"
+    },
+    {
+      "id": "dc-portrait-gallery-courtyard",
+      "cycleGroup": 0,
+      "timeframeBadge": "Downtown D.C. Gem",
+      "neighborhood": "Penn Quarter / Chinatown",
+      "title": "Kogod Courtyard & Exhibitions at the National Portrait Gallery / SAAM",
+      "who": "D.C. residents, culture seekers, and parents looking for a relaxed afternoon oasis",
+      "what": "Tour new American portraiture and craft exhibitions, then unwind beneath the iconic Foster + Partners glass canopy in the indoor Kogod Courtyard with shallow water pools and ficus trees.",
+      "when": "Daily, 11:30 AM – 7:00 PM (Open later than Mall museums; Free admission)",
+      "where": "8th and G Streets NW, Downtown Washington, D.C.",
+      "why": "Open until 7:00 PM every evening right in Downtown D.C., making it ideal for an early-evening stroll or quiet coffee break.",
+      "url": "https://npg.si.edu/visit",
+      "linkVerified": false,
+      "httpStatus": 403,
+      "verifiedAt": "2026-10-04T05:04:17.690Z"
+    }
+  ]
+}

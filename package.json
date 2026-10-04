@@ -1,0 +1,30 @@
+{
+  "name": "mackie-mom-board",
+  "version": "1.0.0",
+  "description": "Mackie's Seasonal Minimalist Daily Dashboard, Meal Planner & Running Grocery List",
+  "main": "server/server.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "server": "node server/server.cjs",
+    "start": "node server/server.cjs"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
+    "lucide-react": "^1.48.0",
+    "node-cron": "^4.6.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.40.0",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.1.4"
+  }
+}
