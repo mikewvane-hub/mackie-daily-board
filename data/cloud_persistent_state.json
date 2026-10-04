@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "updatedAt": 1791144413397,
+  "mealPlanUpdatedAt": 1791144413397,
+  "groceryUpdatedAt": 1791144413397,
+  "suggestionsUpdatedAt": 1791144413397,
+  "babyTrackerUpdatedAt": 0,
+  "mealPlan": {
+    "Monday": [],
+    "Tuesday": [],
+    "Wednesday": [],
+    "Thursday": [],
+    "Friday": [],
+    "Saturday": [],
+    "Sunday": []
+  },
+  "groceryList": [],
+  "suggestions": {
+    "items": [],
+    "deletedIds": []
+  },
+  "babyTracker": null
+}
