@@ -239,6 +239,123 @@ export default function App() {
   const [suggestionInput, setSuggestionInput] = useState('');
   const [suggestionCategory, setSuggestionCategory] = useState('General');
   const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
+  const [isSyncingSuggestions, setIsSyncingSuggestions] = useState(false);
+
+  const CLOUD_MACKIE_SUGGESTIONS_BASE = 'https://daily-executive-dashboard.onrender.com/mackie/api';
+
+  const getLocalSuggestionsState = () => {
+    let items = [];
+    let deletedIds = [];
+    try {
+      const rawItems = localStorage.getItem('mackie_dashboard_suggestions');
+      if (rawItems) items = JSON.parse(rawItems);
+    } catch {}
+    try {
+      const rawDel = localStorage.getItem('mackie_deleted_suggestion_ids');
+      if (rawDel) deletedIds = JSON.parse(rawDel);
+    } catch {}
+    return {
+      items: Array.isArray(items) ? items : [],
+      deletedIds: Array.isArray(deletedIds) ? deletedIds : []
+    };
+  };
+
+  const saveLocalSuggestionsState = (items, deletedIds) => {
+    try {
+      localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(items));
+      localStorage.setItem('mackie_deleted_suggestion_ids', JSON.stringify(deletedIds));
+    } catch {}
+  };
+
+  const mergeClientSuggestions = (statesArray) => {
+    const deletedSet = new Set();
+    for (const st of statesArray) {
+      for (const dId of (st?.deletedIds || [])) {
+        if (dId) deletedSet.add(dId);
+      }
+    }
+    const map = new Map();
+    for (const st of statesArray) {
+      const arr = st?.items || st?.suggestions || [];
+      for (const item of arr) {
+        if (item && item.id && item.text && !deletedSet.has(item.id)) {
+          map.set(item.id, item);
+        }
+      }
+    }
+    const mergedItems = Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    );
+    return {
+      items: mergedItems,
+      deletedIds: Array.from(deletedSet)
+    };
+  };
+
+  // Two-way sync between browser localStorage, active API_BASE server, and Render Cloud
+  const syncSuggestionsEverywhere = async (showSpinner = false) => {
+    if (showSpinner) setIsSyncingSuggestions(true);
+    try {
+      const localState = getLocalSuggestionsState();
+      const payload = {
+        items: localState.items,
+        deletedIds: localState.deletedIds
+      };
+
+      const isAlreadyOnRender =
+        typeof window !== 'undefined' &&
+        window.location.hostname.includes('onrender.com');
+
+      const requests = [
+        fetch(`${API_BASE}/suggestions/sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+      ];
+
+      if (!isAlreadyOnRender) {
+        requests.push(
+          fetch(`${CLOUD_MACKIE_SUGGESTIONS_BASE}/suggestions/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+        );
+      }
+
+      const results = await Promise.all(requests);
+      const validStates = [localState, ...results.filter(Boolean)];
+      const merged = mergeClientSuggestions(validStates);
+
+      setSuggestionsList(merged.items);
+      saveLocalSuggestionsState(merged.items, merged.deletedIds);
+
+      // If one of the servers was missing items that we merged from the other, push the final merged state
+      if (!isAlreadyOnRender && results[0] && results[1]) {
+        const count0 = (results[0].suggestions || []).length;
+        const count1 = (results[1].suggestions || []).length;
+        if (count0 !== merged.items.length) {
+          fetch(`${API_BASE}/suggestions/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(merged)
+          }).catch(() => {});
+        }
+        if (count1 !== merged.items.length) {
+          fetch(`${CLOUD_MACKIE_SUGGESTIONS_BASE}/suggestions/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(merged)
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.error('Error syncing suggestions:', e);
+    } finally {
+      if (showSpinner) setIsSyncingSuggestions(false);
+    }
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -255,10 +372,10 @@ export default function App() {
   const fetchBoard = async (isInitial = false) => {
     if (isInitial) setLoading(true);
     try {
-      const [res, babyRes, sugRes] = await Promise.all([
+      const [res, babyRes] = await Promise.all([
         fetch(`${API_BASE}/board`),
         fetch(`${API_BASE}/baby-tracker`),
-        fetch(`${API_BASE}/suggestions`)
+        syncSuggestionsEverywhere(false)
       ]);
       if (res.ok) {
         const json = await res.json();
@@ -267,15 +384,6 @@ export default function App() {
       if (babyRes.ok) {
         const babyJson = await babyRes.json();
         setBabyTracker(babyJson);
-      }
-      if (sugRes && sugRes.ok) {
-        const sugJson = await sugRes.json();
-        if (Array.isArray(sugJson.suggestions)) {
-          setSuggestionsList(sugJson.suggestions);
-          try {
-            localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(sugJson.suggestions));
-          } catch {}
-        }
       }
     } catch (e) {
       console.error('Error fetching board:', e);
@@ -286,9 +394,19 @@ export default function App() {
 
   useEffect(() => {
     fetchBoard(true);
-    const poll = setInterval(() => fetchBoard(false), 45000);
+    const poll = setInterval(() => fetchBoard(false), 20000);
     return () => clearInterval(poll);
   }, []);
+
+  // Poll suggestions every 8 seconds while the Suggest Updates modal is open
+  useEffect(() => {
+    if (!showSuggestionsModal) return;
+    syncSuggestionsEverywhere(false);
+    const modalPoll = setInterval(() => {
+      syncSuggestionsEverywhere(false);
+    }, 8000);
+    return () => clearInterval(modalPoll);
+  }, [showSuggestionsModal]);
 
   // Determine active season palette
   const detectedSeason = useMemo(() => {
@@ -328,25 +446,59 @@ export default function App() {
     if (!cleanText || isSubmittingSuggestion) return;
     setIsSubmittingSuggestion(true);
 
+    const now = new Date();
+    const formattedDate =
+      new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(now) + ' EST';
+
+    const newEntry = {
+      id: `sug-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      text: cleanText,
+      category: suggestionCategory || 'General',
+      author: 'Mackie',
+      createdAt: now.toISOString(),
+      formattedDate
+    };
+
+    // Optimistically save to localStorage & state immediately so it can never be lost
+    const localState = getLocalSuggestionsState();
+    const optimisticItems = [newEntry, ...localState.items.filter(i => i.id !== newEntry.id)];
+    setSuggestionsList(optimisticItems);
+    saveLocalSuggestionsState(optimisticItems, localState.deletedIds);
+    setSuggestionInput('');
+
     try {
-      const res = await fetch(`${API_BASE}/suggestions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: cleanText,
-          category: suggestionCategory
-        })
-      });
-      if (res.ok) {
-        const json = await res.json();
-        const updated = Array.isArray(json.suggestions) ? json.suggestions : [];
-        setSuggestionsList(updated);
-        try {
-          localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(updated));
-        } catch {}
-        setSuggestionInput('');
-        showToast('Saved Mackie’s update suggestion for Mike & Antigravity!');
+      const isAlreadyOnRender =
+        typeof window !== 'undefined' &&
+        window.location.hostname.includes('onrender.com');
+
+      const postCalls = [
+        fetch(`${API_BASE}/suggestions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newEntry)
+        }).catch(() => null)
+      ];
+
+      if (!isAlreadyOnRender) {
+        postCalls.push(
+          fetch(`${CLOUD_MACKIE_SUGGESTIONS_BASE}/suggestions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newEntry)
+          }).catch(() => null)
+        );
       }
+
+      await Promise.all(postCalls);
+      await syncSuggestionsEverywhere(false);
+      showToast('Saved Mackie’s update suggestion & synced to Cloud + Desktop!');
     } catch (err) {
       console.error('Error saving suggestion:', err);
     } finally {
@@ -355,24 +507,36 @@ export default function App() {
   };
 
   const handleDeleteSuggestion = async (id) => {
+    const localState = getLocalSuggestionsState();
     const nextList = suggestionsList.filter(s => s.id !== id);
+    const nextDeleted = localState.deletedIds.includes(id)
+      ? localState.deletedIds
+      : [...localState.deletedIds, id];
+
     setSuggestionsList(nextList);
+    saveLocalSuggestionsState(nextList, nextDeleted);
+
     try {
-      localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(nextList));
-    } catch {}
-    try {
-      const res = await fetch(`${API_BASE}/suggestions/${encodeURIComponent(id)}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (Array.isArray(json.suggestions)) {
-          setSuggestionsList(json.suggestions);
-          try {
-            localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(json.suggestions));
-          } catch {}
-        }
+      const isAlreadyOnRender =
+        typeof window !== 'undefined' &&
+        window.location.hostname.includes('onrender.com');
+
+      const delCalls = [
+        fetch(`${API_BASE}/suggestions/${encodeURIComponent(id)}`, {
+          method: 'DELETE'
+        }).catch(() => null)
+      ];
+
+      if (!isAlreadyOnRender) {
+        delCalls.push(
+          fetch(`${CLOUD_MACKIE_SUGGESTIONS_BASE}/suggestions/${encodeURIComponent(id)}`, {
+            method: 'DELETE'
+          }).catch(() => null)
+        );
       }
+
+      await Promise.all(delCalls);
+      await syncSuggestionsEverywhere(false);
       showToast('Remedied & removed suggestion from history');
     } catch (err) {
       console.error('Error deleting suggestion:', err);
@@ -2918,17 +3082,32 @@ export default function App() {
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="font-semibold text-xs sm:text-sm flex items-center gap-2">
                     <span>Historical Suggestion Queue ({suggestionsList.length})</span>
+                    <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Live iPhone ↔ PC Sync
+                    </span>
                   </div>
-                  {suggestionsList.length > 0 && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <button
                       type="button"
-                      onClick={handleCopyAllSuggestionsForAntigravity}
-                      className={`px-3 py-1.5 rounded-xl border ${theme.borderStrong} ${theme.cardSubtle} hover:${theme.accentSoft} text-xs font-semibold flex items-center gap-1.5 transition`}
+                      onClick={() => syncSuggestionsEverywhere(true)}
+                      disabled={isSyncingSuggestions}
+                      className={`px-2.5 py-1.5 rounded-xl border ${theme.border} ${theme.cardBg} hover:${theme.accentSoft} text-xs font-medium flex items-center gap-1.5 transition`}
+                      title="Force immediate sync with Mackie's iPhone & Cloud"
                     >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy All ({suggestionsList.length}) for Antigravity</span>
+                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncingSuggestions ? 'animate-spin' : ''}`} />
+                      <span>{isSyncingSuggestions ? 'Syncing...' : 'Sync from iPhone'}</span>
                     </button>
-                  )}
+                    {suggestionsList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleCopyAllSuggestionsForAntigravity}
+                        className={`px-3 py-1.5 rounded-xl border ${theme.borderStrong} ${theme.cardSubtle} hover:${theme.accentSoft} text-xs font-semibold flex items-center gap-1.5 transition`}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy All ({suggestionsList.length}) for Antigravity</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {suggestionsList.length === 0 ? (

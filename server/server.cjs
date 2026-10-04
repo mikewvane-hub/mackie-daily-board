@@ -1173,22 +1173,27 @@ app.post('/api/baby-agent/ask', async (req, res) => {
 const CLOUD_MACKIE_API = 'https://daily-executive-dashboard.onrender.com/mackie/api';
 const IS_RENDER_ENV = Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_URL);
 
-function loadSuggestionsState() {
-  const raw = readJson(SUGGESTIONS_FILE, { items: [], deletedIds: [] });
-  return {
-    items: Array.isArray(raw.items) ? raw.items : [],
-    deletedIds: Array.isArray(raw.deletedIds) ? raw.deletedIds : []
-  };
-}
+// Mirror paths on local Windows PC so both standalone (port 3005) and mounted (port 3001) share the exact same file
+const LOCAL_MIRROR_SUGGESTIONS_FILES = !IS_RENDER_ENV
+  ? [
+      SUGGESTIONS_FILE,
+      'c:\\Users\\micha\\OneDrive\\Desktop\\ANTIGRAVITY PROJECTS\\Mackie Mom Board\\data\\suggestions.json',
+      'c:\\Users\\micha\\OneDrive\\Desktop\\ANTIGRAVITY PROJECTS\\Daily Dashboard\\mackie-board\\data\\suggestions.json'
+    ]
+  : [SUGGESTIONS_FILE];
 
 function mergeSuggestionsStates(localState, remoteState) {
   const deletedSet = new Set([
-    ...(localState.deletedIds || []),
-    ...(remoteState.deletedIds || [])
+    ...((localState && localState.deletedIds) || []),
+    ...((remoteState && remoteState.deletedIds) || [])
   ]);
   const map = new Map();
-  for (const item of [...(remoteState.items || []), ...(localState.items || [])]) {
-    if (item && item.id && !deletedSet.has(item.id)) {
+  const combined = [
+    ...((remoteState && (remoteState.items || remoteState.suggestions)) || []),
+    ...((localState && (localState.items || localState.suggestions)) || [])
+  ];
+  for (const item of combined) {
+    if (item && item.id && item.text && !deletedSet.has(item.id)) {
       map.set(item.id, item);
     }
   }
@@ -1197,33 +1202,124 @@ function mergeSuggestionsStates(localState, remoteState) {
   );
   return {
     items: mergedItems,
-    deletedIds: Array.from(deletedSet)
+    deletedIds: Array.from(deletedSet),
+    updatedAt: new Date().toISOString()
   };
+}
+
+function loadSuggestionsState() {
+  let merged = { items: [], deletedIds: [] };
+  for (const filePath of LOCAL_MIRROR_SUGGESTIONS_FILES) {
+    const raw = readJson(filePath, null);
+    if (raw) {
+      merged = mergeSuggestionsStates(merged, {
+        items: Array.isArray(raw.items) ? raw.items : (Array.isArray(raw.suggestions) ? raw.suggestions : []),
+        deletedIds: Array.isArray(raw.deletedIds) ? raw.deletedIds : []
+      });
+    }
+  }
+  return merged;
+}
+
+function saveSuggestionsStateToDisk(state) {
+  const normalized = {
+    items: Array.isArray(state.items) ? state.items : [],
+    deletedIds: Array.isArray(state.deletedIds) ? state.deletedIds : [],
+    updatedAt: new Date().toISOString()
+  };
+  for (const filePath of LOCAL_MIRROR_SUGGESTIONS_FILES) {
+    try {
+      const dir = path.dirname(filePath);
+      if (fs.existsSync(dir)) {
+        writeJson(filePath, normalized);
+      }
+    } catch {}
+  }
+  return normalized;
+}
+
+// Background two-way sync between local PC and Render Cloud (runs every 15s on local PC)
+// Also keeps Render Cloud container awake 24/7 so it never spins down and wipes ephemeral disk
+async function syncSuggestionsWithCloud() {
+  let state = loadSuggestionsState();
+  if (IS_RENDER_ENV) return state;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const r = await fetch(`${CLOUD_MACKIE_API}/suggestions/sync?localOnly=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: state.items,
+        deletedIds: state.deletedIds
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    if (r.ok) {
+      const remote = await r.json();
+      state = mergeSuggestionsStates(state, {
+        items: remote.suggestions || remote.items || [],
+        deletedIds: remote.deletedIds || []
+      });
+      saveSuggestionsStateToDisk(state);
+    }
+  } catch {}
+  return state;
 }
 
 app.get('/api/suggestions', async (req, res) => {
   let state = loadSuggestionsState();
   if (!IS_RENDER_ENV && !req.query.localOnly) {
+    state = await syncSuggestionsWithCloud();
+  }
+  res.json({
+    suggestions: state.items,
+    deletedIds: state.deletedIds
+  });
+});
+
+app.post('/api/suggestions/sync', async (req, res) => {
+  const incoming = req.body || {};
+  const current = loadSuggestionsState();
+  let merged = mergeSuggestionsStates(current, {
+    items: Array.isArray(incoming.items)
+      ? incoming.items
+      : (Array.isArray(incoming.suggestions) ? incoming.suggestions : []),
+    deletedIds: Array.isArray(incoming.deletedIds) ? incoming.deletedIds : []
+  });
+  saveSuggestionsStateToDisk(merged);
+
+  if (!IS_RENDER_ENV && !req.query.localOnly) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 3000);
-      const r = await fetch(`${CLOUD_MACKIE_API}/suggestions?localOnly=1`, {
+      const timeout = setTimeout(() => controller.abort(), 3500);
+      const r = await fetch(`${CLOUD_MACKIE_API}/suggestions/sync?localOnly=1`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: merged.items,
+          deletedIds: merged.deletedIds
+        }),
         signal: controller.signal
       });
       clearTimeout(timeout);
       if (r.ok) {
         const remote = await r.json();
-        state = mergeSuggestionsStates(state, {
-          items: remote.suggestions || [],
+        merged = mergeSuggestionsStates(merged, {
+          items: remote.suggestions || remote.items || [],
           deletedIds: remote.deletedIds || []
         });
-        writeJson(SUGGESTIONS_FILE, state);
+        saveSuggestionsStateToDisk(merged);
       }
     } catch {}
   }
+
   res.json({
-    suggestions: state.items,
-    deletedIds: state.deletedIds
+    success: true,
+    suggestions: merged.items,
+    deletedIds: merged.deletedIds
   });
 });
 
@@ -1256,24 +1352,30 @@ app.post('/api/suggestions', async (req, res) => {
   };
 
   const state = loadSuggestionsState();
+  // Remove from deletedIds if re-added explicitly
+  state.deletedIds = (state.deletedIds || []).filter(id => id !== newEntry.id);
   if (!state.items.some(i => i.id === newEntry.id)) {
     state.items.unshift(newEntry);
-    writeJson(SUGGESTIONS_FILE, state);
   }
+  saveSuggestionsStateToDisk(state);
 
   // Forward to Render cloud if added locally so both cloud & desktop stay in sync
   if (!IS_RENDER_ENV && !req.query.localOnly) {
-    fetch(`${CLOUD_MACKIE_API}/suggestions?localOnly=1`, {
+    fetch(`${CLOUD_MACKIE_API}/suggestions/sync?localOnly=1`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newEntry)
+      body: JSON.stringify({
+        items: state.items,
+        deletedIds: state.deletedIds
+      })
     }).catch(() => {});
   }
 
   res.json({
     success: true,
     suggestion: newEntry,
-    suggestions: state.items
+    suggestions: state.items,
+    deletedIds: state.deletedIds
   });
 });
 
@@ -1284,7 +1386,7 @@ app.delete('/api/suggestions/:id', async (req, res) => {
   if (targetId && !state.deletedIds.includes(targetId)) {
     state.deletedIds.push(targetId);
   }
-  writeJson(SUGGESTIONS_FILE, state);
+  saveSuggestionsStateToDisk(state);
 
   if (!IS_RENDER_ENV && !req.query.localOnly) {
     fetch(`${CLOUD_MACKIE_API}/suggestions/${encodeURIComponent(targetId)}?localOnly=1`, {
@@ -1294,9 +1396,20 @@ app.delete('/api/suggestions/:id', async (req, res) => {
 
   res.json({
     success: true,
-    suggestions: state.items
+    suggestions: state.items,
+    deletedIds: state.deletedIds
   });
 });
+
+// Start continuous 15-second Cloud <-> Local PC sync & Render keep-alive daemon
+if (!IS_RENDER_ENV) {
+  setTimeout(() => {
+    syncSuggestionsWithCloud().catch(() => {});
+  }, 2000);
+  setInterval(() => {
+    syncSuggestionsWithCloud().catch(() => {});
+  }, 15000);
+}
 
 // ============================================================================
 // 8. Automated Background Sync (Every 15 Mins Calendar + 07:00 AM EST News)
