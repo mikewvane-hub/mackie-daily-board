@@ -139,9 +139,29 @@ const SEASON_THEMES = {
 };
 
 export default function App() {
-  const [boardData, setBoardData] = useState(null);
-  const [babyTracker, setBabyTracker] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [boardData, setBoardData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mackie_saved_board_data');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [babyTracker, setBabyTracker] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mackie_saved_baby_tracker');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !localStorage.getItem('mackie_saved_board_data');
+    } catch {
+      return true;
+    }
+  });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [aussieAgentOpen, setAussieAgentOpen] = useState(true);
 
@@ -369,8 +389,30 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs) => {
+    try {
+      if (nextBoard) {
+        localStorage.setItem('mackie_saved_board_data', JSON.stringify(nextBoard));
+      }
+      if (mpTs !== undefined && mpTs !== null) {
+        localStorage.setItem('mackie_meal_plan_updated_at', String(mpTs));
+      }
+      if (grTs !== undefined && grTs !== null) {
+        localStorage.setItem('mackie_grocery_updated_at', String(grTs));
+      }
+    } catch {}
+  };
+
+  const countMeals = (mp) => {
+    if (!mp || typeof mp !== 'object') return 0;
+    return Object.values(mp).reduce(
+      (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+      0
+    );
+  };
+
   const fetchBoard = async (isInitial = false) => {
-    if (isInitial) setLoading(true);
+    if (isInitial && !boardData) setLoading(true);
     try {
       const [res, babyRes] = await Promise.all([
         fetch(`${API_BASE}/board`),
@@ -378,12 +420,64 @@ export default function App() {
         syncSuggestionsEverywhere(false)
       ]);
       if (res.ok) {
-        const json = await res.json();
-        setBoardData(json);
+        const serverJson = await res.json();
+        const serverMpTs = Number(serverJson.meta?.mealPlanUpdatedAt) || 0;
+        const serverGrTs = Number(serverJson.meta?.groceryUpdatedAt) || 0;
+
+        let localBoard = null;
+        let localMpTs = 0;
+        let localGrTs = 0;
+        try {
+          const rawB = localStorage.getItem('mackie_saved_board_data');
+          if (rawB) localBoard = JSON.parse(rawB);
+          localMpTs = Number(localStorage.getItem('mackie_meal_plan_updated_at')) || 0;
+          localGrTs = Number(localStorage.getItem('mackie_grocery_updated_at')) || 0;
+        } catch {}
+
+        const localHasNewerMeals =
+          localBoard?.mealPlan &&
+          (localMpTs > serverMpTs ||
+            (serverMpTs === 0 && countMeals(localBoard.mealPlan) > 0 && countMeals(serverJson.mealPlan) === 0));
+
+        const localHasNewerGrocery =
+          Array.isArray(localBoard?.groceryList) &&
+          (localGrTs > serverGrTs ||
+            (serverGrTs === 0 && localBoard.groceryList.length > 0 && (serverJson.groceryList || []).length === 0));
+
+        const finalMealPlan = localHasNewerMeals ? localBoard.mealPlan : serverJson.mealPlan;
+        const finalMpTs = localHasNewerMeals ? (localMpTs || Date.now()) : serverMpTs;
+
+        const finalGroceryList = localHasNewerGrocery ? localBoard.groceryList : serverJson.groceryList;
+        const finalGrTs = localHasNewerGrocery ? (localGrTs || Date.now()) : serverGrTs;
+
+        const mergedBoard = {
+          ...serverJson,
+          mealPlan: finalMealPlan,
+          groceryList: finalGroceryList
+        };
+
+        setBoardData(mergedBoard);
+        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs);
+
+        if (localHasNewerMeals || localHasNewerGrocery) {
+          fetch(`${API_BASE}/board/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mealPlan: finalMealPlan,
+              mealPlanUpdatedAt: finalMpTs,
+              groceryList: finalGroceryList,
+              groceryUpdatedAt: finalGrTs
+            })
+          }).catch(() => {});
+        }
       }
       if (babyRes.ok) {
         const babyJson = await babyRes.json();
         setBabyTracker(babyJson);
+        try {
+          localStorage.setItem('mackie_saved_baby_tracker', JSON.stringify(babyJson));
+        } catch {}
       }
     } catch (e) {
       console.error('Error fetching board:', e);
@@ -607,11 +701,20 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan,
-          groceryList: json.groceryList
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan,
+            groceryList: json.groceryList
+          };
+          persistBoardToLocalStorage(
+            next,
+            json.mealPlanUpdatedAt || nowTs,
+            json.groceryUpdatedAt || nowTs
+          );
+          return next;
+        });
         showToast(
           `Added "${recipe.title}" to ${dayKey} (unique items added to Grocery List)`
         );
@@ -637,10 +740,15 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan
+          };
+          persistBoardToLocalStorage(next, json.mealPlanUpdatedAt || nowTs, undefined);
+          return next;
+        });
         setCustomMealInputs(prev => ({ ...prev, [dayKey]: '' }));
         showToast(`Added "${rawTitle}" to ${dayKey}`);
       }
@@ -666,10 +774,15 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan
+          };
+          persistBoardToLocalStorage(next, json.mealPlanUpdatedAt || nowTs, undefined);
+          return next;
+        });
         setTodayQuickInput('');
         showToast(`Added "${rawTitle}" to Today (${todayDayName})`);
       }
@@ -693,10 +806,15 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan
+          };
+          persistBoardToLocalStorage(next, json.mealPlanUpdatedAt || nowTs, undefined);
+          return next;
+        });
         setEditingMeal(null);
         showToast(`Updated ${dayKey} meal to "${trimmed}"`);
       }
@@ -712,11 +830,20 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan,
-          groceryList: json.groceryList
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan,
+            groceryList: json.groceryList
+          };
+          persistBoardToLocalStorage(
+            next,
+            json.mealPlanUpdatedAt || nowTs,
+            json.groceryUpdatedAt || nowTs
+          );
+          return next;
+        });
         showToast(`Removed "${title}" from ${dayKey}`);
       }
     } catch (e) {
@@ -729,10 +856,15 @@ export default function App() {
       const res = await fetch(`${API_BASE}/meal-plan/clear`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({
-          ...prev,
-          mealPlan: json.mealPlan
-        }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = {
+            ...prev,
+            mealPlan: json.mealPlan
+          };
+          persistBoardToLocalStorage(next, json.mealPlanUpdatedAt || nowTs, undefined);
+          return next;
+        });
         showToast('Cleared weekly meal boxes');
       }
     } catch (e) {
@@ -754,7 +886,12 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, groceryList: json.groceryList }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = { ...prev, groceryList: json.groceryList };
+          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          return next;
+        });
         setManualItemName('');
       }
     } catch (err) {
@@ -767,7 +904,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/grocery/${id}/toggle`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, groceryList: json.groceryList }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = { ...prev, groceryList: json.groceryList };
+          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          return next;
+        });
       }
     } catch (err) {
       console.error('Failed to toggle item:', err);
@@ -779,7 +921,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/grocery/${id}`, { method: 'DELETE' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, groceryList: json.groceryList }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = { ...prev, groceryList: json.groceryList };
+          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          return next;
+        });
       }
     } catch (err) {
       console.error('Failed to delete item:', err);
@@ -791,7 +938,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/grocery/clear-checked`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, groceryList: json.groceryList }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = { ...prev, groceryList: json.groceryList };
+          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          return next;
+        });
         showToast('Cleared checked items');
       }
     } catch (err) {
@@ -804,7 +956,12 @@ export default function App() {
       const res = await fetch(`${API_BASE}/grocery/clear-all`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, groceryList: json.groceryList }));
+        const nowTs = Date.now();
+        setBoardData(prev => {
+          const next = { ...prev, groceryList: json.groceryList };
+          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          return next;
+        });
         showToast('Cleared entire grocery list');
       }
     } catch (err) {

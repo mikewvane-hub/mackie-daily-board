@@ -2,7 +2,7 @@
   "city": "Downtown Washington, D.C.",
   "cycleWeekNumber": 39,
   "activeCycleGroup": 0,
-  "updatedAt": "2026-10-04T14:33:45.995Z",
+  "updatedAt": "2026-10-04T17:48:35.322Z",
   "recommendations": [
     {
       "id": "dc-penn-quarter-market",
@@ -18,7 +18,7 @@
       "url": "https://www.freshfarm.org/markets/penn-quarter",
       "linkVerified": true,
       "httpStatus": 200,
-      "verifiedAt": "2026-10-04T14:33:45.780Z"
+      "verifiedAt": "2026-10-04T17:48:35.132Z"
     },
     {
       "id": "dc-nga-sculpture-garden",
@@ -34,7 +34,7 @@
       "url": "https://www.nga.gov/visit.html",
       "linkVerified": false,
       "httpStatus": 403,
-      "verifiedAt": "2026-10-04T14:33:45.851Z"
+      "verifiedAt": "2026-10-04T17:48:35.199Z"
     },
     {
       "id": "dc-botanic-garden-autumn",
@@ -50,7 +50,7 @@
       "url": "https://www.usbg.gov/visit",
       "linkVerified": true,
       "httpStatus": 200,
-      "verifiedAt": "2026-10-04T14:33:45.915Z"
+      "verifiedAt": "2026-10-04T17:48:35.263Z"
     },
     {
       "id": "dc-portrait-gallery-courtyard",
@@ -66,7 +66,7 @@
       "url": "https://npg.si.edu/visit",
       "linkVerified": false,
       "httpStatus": 403,
-      "verifiedAt": "2026-10-04T14:33:45.995Z"
+      "verifiedAt": "2026-10-04T17:48:35.322Z"
     }
   ]
 }

@@ -19,6 +19,7 @@ const {
   getDcRecommendations
 } = require('./services/newsAndEvents.cjs');
 const { askNewbornMedicalAgent } = require('./services/babyMedicalAgent.cjs');
+const { pullCloudState, pushCloudState } = require('./services/cloudStore.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -196,16 +197,108 @@ function enrichScheduleEvents(scheduleData) {
 }
 
 // ============================================================================
-// 1. Complete Board State Endpoint
+// 1. Complete Board State Endpoint & Permanent Cloud State Sync
 // ============================================================================
-app.get('/api/board', (req, res) => {
+function countMealsInPlan(daysObj) {
+  if (!daysObj || typeof daysObj !== 'object') return 0;
+  return Object.values(daysObj).reduce(
+    (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+    0
+  );
+}
+
+function saveMealPlanAndSync(mealPlanData) {
+  const nowTs = Date.now();
+  mealPlanData.updatedAt = new Date(nowTs).toISOString();
+  mealPlanData.updatedAtTs = nowTs;
+  writeJson(MEAL_PLAN_FILE, mealPlanData);
+  pushCloudState({
+    mealPlan: mealPlanData.days || getEmptyMealPlan(),
+    mealPlanUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
+function saveGroceryAndSync(groceryData) {
+  const nowTs = Date.now();
+  groceryData.updatedAt = new Date(nowTs).toISOString();
+  groceryData.updatedAtTs = nowTs;
+  writeJson(GROCERY_FILE, groceryData);
+  pushCloudState({
+    groceryList: groceryData.items || [],
+    groceryUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
+async function hydrateBoardFromCloud(force = false) {
+  try {
+    const cloud = await pullCloudState(force);
+    if (!cloud) return;
+
+    // 1. Hydrate Meal Plan if cloud has newer state (or if local disk was wiped on Render spin-down)
+    const localMp = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
+    const localMpTs = Number(localMp.updatedAtTs) || 0;
+    const cloudMpTs = Number(cloud.mealPlanUpdatedAt) || 0;
+    if (cloud.mealPlan && (cloudMpTs > localMpTs || (localMpTs === 0 && countMealsInPlan(cloud.mealPlan) > 0))) {
+      writeJson(MEAL_PLAN_FILE, {
+        days: cloud.mealPlan,
+        updatedAt: new Date(cloudMpTs || Date.now()).toISOString(),
+        updatedAtTs: cloudMpTs || Date.now()
+      });
+    }
+
+    // 2. Hydrate Grocery List if cloud has newer state (or if local disk was wiped on Render spin-down)
+    const localGr = readJson(GROCERY_FILE, { items: [], updatedAtTs: 0 });
+    const localGrTs = Number(localGr.updatedAtTs) || 0;
+    const cloudGrTs = Number(cloud.groceryUpdatedAt) || 0;
+    if (Array.isArray(cloud.groceryList) && (cloudGrTs > localGrTs || (localGrTs === 0 && cloud.groceryList.length > 0))) {
+      writeJson(GROCERY_FILE, {
+        items: cloud.groceryList,
+        updatedAt: new Date(cloudGrTs || Date.now()).toISOString(),
+        updatedAtTs: cloudGrTs || Date.now()
+      });
+    }
+
+    // 3. Hydrate Baby Tracker if cloud has newer state
+    const localBt = readJson(BABY_TRACKER_FILE, null);
+    const localBtTs = Number(localBt?.updatedAtTs) || 0;
+    const cloudBtTs = Number(cloud.babyTrackerUpdatedAt) || 0;
+    if (cloud.babyTracker && cloudBtTs > localBtTs) {
+      writeJson(BABY_TRACKER_FILE, {
+        ...cloud.babyTracker,
+        updatedAtTs: cloudBtTs
+      });
+    }
+
+    // 4. Hydrate Suggestions by merging
+    if (cloud.suggestions && typeof loadSuggestionsState === 'function') {
+      const localSug = loadSuggestionsState();
+      const mergedSug = mergeSuggestionsStates(localSug, cloud.suggestions);
+      if (
+        mergedSug.items.length !== localSug.items.length ||
+        mergedSug.deletedIds.length !== localSug.deletedIds.length
+      ) {
+        saveSuggestionsStateToDisk(mergedSug, false);
+      }
+    }
+  } catch (err) {
+    console.warn('[HydrateCloud] warning:', err.message);
+  }
+}
+
+app.get('/api/board', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { dateStr, timeStr, autoSeason } = getEstDateTime();
   const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, authorized: false });
   const calConfig = readJson(CAL_CONFIG_FILE, { icalUrl: '' });
-  const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null });
-  const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null });
+  const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null, updatedAtTs: 0 });
+  const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null, updatedAtTs: 0 });
   const tunnelInfo = readJson(TUNNEL_FILE, { url: null });
-  const suggestionsData = readJson(SUGGESTIONS_FILE, { items: [], deletedIds: [] });
+  const suggestionsData = typeof loadSuggestionsState === 'function'
+    ? loadSuggestionsState()
+    : readJson(SUGGESTIONS_FILE, { items: [], deletedIds: [] });
 
   const lanIp = getLocalLanIp();
 
@@ -219,12 +312,74 @@ app.get('/api/board', (req, res) => {
       autoSeason,
       lanUrl: `http://${lanIp}:${PORT}`,
       tunnelUrl: tunnelInfo.url || null,
-      hasIcalConfigured: Boolean(calConfig.icalUrl)
+      hasIcalConfigured: Boolean(calConfig.icalUrl),
+      mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
+      groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0
     },
     calendar: enrichScheduleEvents(scheduleData),
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
     groceryList: groceryData.items || [],
     suggestions: suggestionsData.items || []
+  });
+});
+
+// Two-way client <-> server board state sync (restores iPhone localStorage if newer than server)
+app.post('/api/board/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
+  const {
+    mealPlan: incomingMealPlan,
+    mealPlanUpdatedAt: incomingMpTs,
+    groceryList: incomingGroceryList,
+    groceryUpdatedAt: incomingGrTs
+  } = req.body || {};
+
+  let mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
+  let groceryData = readJson(GROCERY_FILE, { items: [], updatedAtTs: 0 });
+
+  const curMpTs = Number(mealPlanData.updatedAtTs) || 0;
+  const incMpTs = Number(incomingMpTs) || 0;
+  if (
+    incomingMealPlan &&
+    typeof incomingMealPlan === 'object' &&
+    (incMpTs > curMpTs || (curMpTs === 0 && countMealsInPlan(incomingMealPlan) > 0))
+  ) {
+    mealPlanData = {
+      days: incomingMealPlan,
+      updatedAt: new Date(incMpTs || Date.now()).toISOString(),
+      updatedAtTs: incMpTs || Date.now()
+    };
+    writeJson(MEAL_PLAN_FILE, mealPlanData);
+    pushCloudState({
+      mealPlan: mealPlanData.days,
+      mealPlanUpdatedAt: mealPlanData.updatedAtTs
+    }).catch(() => {});
+  }
+
+  const curGrTs = Number(groceryData.updatedAtTs) || 0;
+  const incGrTs = Number(incomingGrTs) || 0;
+  if (
+    Array.isArray(incomingGroceryList) &&
+    (incGrTs > curGrTs || (curGrTs === 0 && incomingGroceryList.length > 0))
+  ) {
+    groceryData = {
+      items: incomingGroceryList,
+      updatedAt: new Date(incGrTs || Date.now()).toISOString(),
+      updatedAtTs: incGrTs || Date.now()
+    };
+    writeJson(GROCERY_FILE, groceryData);
+    pushCloudState({
+      groceryList: groceryData.items,
+      groceryUpdatedAt: groceryData.updatedAtTs
+    }).catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    mealPlan: mealPlanData.days || getEmptyMealPlan(),
+    mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
+    groceryList: groceryData.items || [],
+    groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0
   });
 });
 
@@ -434,7 +589,9 @@ function cleanGroceryItemName(raw) {
 // ============================================================================
 // 2. Meal Plan Endpoints (Assign Recipe -> Auto-Populates Grocery List Once!)
 // ============================================================================
-app.post('/api/meal-plan/assign', (req, res) => {
+app.post('/api/meal-plan/assign', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { day, recipe, slot, isManual, customTitle } = req.body;
   if (!day || !DAYS_OF_WEEK.includes(day)) {
     return res.status(400).json({ error: 'Valid day (Monday-Sunday) is required' });
@@ -462,13 +619,13 @@ app.post('/api/meal-plan/assign', (req, res) => {
       addedAt: new Date().toISOString()
     };
     mealPlanData.days[day].push(mealEntry);
-    mealPlanData.updatedAt = new Date().toISOString();
-    writeJson(MEAL_PLAN_FILE, mealPlanData);
+    const mpTs = saveMealPlanAndSync(mealPlanData);
 
     const groceryData = readJson(GROCERY_FILE, { items: [] });
     return res.json({
       success: true,
       mealPlan: mealPlanData.days,
+      mealPlanUpdatedAt: mpTs,
       groceryList: groceryData.items || [],
       addedIngredientsCount: 0
     });
@@ -490,8 +647,7 @@ app.post('/api/meal-plan/assign', (req, res) => {
   };
 
   mealPlanData.days[day].push(mealEntry);
-  mealPlanData.updatedAt = new Date().toISOString();
-  writeJson(MEAL_PLAN_FILE, mealPlanData);
+  const mpTs = saveMealPlanAndSync(mealPlanData);
 
   // Automatically populate unique, quantity-free items onto the running grocery list
   const groceryData = readJson(GROCERY_FILE, { items: [] });
@@ -532,29 +688,33 @@ app.post('/api/meal-plan/assign', (req, res) => {
     }
   });
 
-  groceryData.updatedAt = new Date().toISOString();
-  writeJson(GROCERY_FILE, groceryData);
+  const grTs = saveGroceryAndSync(groceryData);
 
   res.json({
     success: true,
     mealPlan: mealPlanData.days,
+    mealPlanUpdatedAt: mpTs,
     groceryList: groceryData.items,
+    groceryUpdatedAt: grTs,
     addedIngredientsCount: addedCount
   });
 });
 
-app.delete('/api/meal-plan/:day/:instanceId', (req, res) => {
+app.delete('/api/meal-plan/:day/:instanceId', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { day, instanceId } = req.params;
   const removeIngredients = req.query.removeIngredients === 'true';
 
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan() });
+  let mpTs = Number(mealPlanData.updatedAtTs) || Date.now();
   if (mealPlanData.days && Array.isArray(mealPlanData.days[day])) {
     mealPlanData.days[day] = mealPlanData.days[day].filter(m => m.instanceId !== instanceId);
-    mealPlanData.updatedAt = new Date().toISOString();
-    writeJson(MEAL_PLAN_FILE, mealPlanData);
+    mpTs = saveMealPlanAndSync(mealPlanData);
   }
 
   const groceryData = readJson(GROCERY_FILE, { items: [] });
+  let grTs = Number(groceryData.updatedAtTs) || Date.now();
   if (removeIngredients && Array.isArray(groceryData.items)) {
     groceryData.items = groceryData.items.filter(item => {
       if (Array.isArray(item.sourceInstanceIds) && item.sourceInstanceIds.includes(instanceId)) {
@@ -566,18 +726,21 @@ app.delete('/api/meal-plan/:day/:instanceId', (req, res) => {
       }
       return true;
     });
-    groceryData.updatedAt = new Date().toISOString();
-    writeJson(GROCERY_FILE, groceryData);
+    grTs = saveGroceryAndSync(groceryData);
   }
 
   res.json({
     success: true,
     mealPlan: mealPlanData.days,
-    groceryList: groceryData.items
+    mealPlanUpdatedAt: mpTs,
+    groceryList: groceryData.items,
+    groceryUpdatedAt: grTs
   });
 });
 
-app.put('/api/meal-plan/:day/:instanceId', (req, res) => {
+app.put('/api/meal-plan/:day/:instanceId', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { day, instanceId } = req.params;
   const { title, recipeId, category } = req.body || {};
   const cleanTitle = String(title || '').trim();
@@ -587,6 +750,7 @@ app.put('/api/meal-plan/:day/:instanceId', (req, res) => {
 
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan() });
   mealPlanData.days = mealPlanData.days || getEmptyMealPlan();
+  let mpTs = Number(mealPlanData.updatedAtTs) || Date.now();
   if (Array.isArray(mealPlanData.days[day])) {
     const target = mealPlanData.days[day].find(m => m.instanceId === instanceId);
     if (target) {
@@ -595,27 +759,30 @@ app.put('/api/meal-plan/:day/:instanceId', (req, res) => {
       if (category !== undefined) target.category = category;
       if (!recipeId) target.isManual = true;
       target.updatedAt = new Date().toISOString();
-      mealPlanData.updatedAt = new Date().toISOString();
-      writeJson(MEAL_PLAN_FILE, mealPlanData);
+      mpTs = saveMealPlanAndSync(mealPlanData);
     }
   }
 
   res.json({
     success: true,
-    mealPlan: mealPlanData.days
+    mealPlan: mealPlanData.days,
+    mealPlanUpdatedAt: mpTs
   });
 });
 
-app.post('/api/meal-plan/clear', (req, res) => {
+app.post('/api/meal-plan/clear', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const empty = getEmptyMealPlan();
-  writeJson(MEAL_PLAN_FILE, { days: empty, updatedAt: new Date().toISOString() });
-  res.json({ success: true, mealPlan: empty });
+  const mpTs = saveMealPlanAndSync({ days: empty });
+  res.json({ success: true, mealPlan: empty, mealPlanUpdatedAt: mpTs });
 });
 
 // ============================================================================
 // 3. Running Grocery List Endpoints (Manual Add, Subtract, Check, Clear)
 // ============================================================================
-app.post('/api/grocery/add', (req, res) => {
+app.post('/api/grocery/add', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { name, note } = req.body;
   const cleanName = String(name || '').trim();
   if (!cleanName) {
@@ -642,12 +809,13 @@ app.post('/api/grocery/add', (req, res) => {
     });
   }
 
-  groceryData.updatedAt = new Date().toISOString();
-  writeJson(GROCERY_FILE, groceryData);
-  res.json({ success: true, groceryList: groceryData.items });
+  const grTs = saveGroceryAndSync(groceryData);
+  res.json({ success: true, groceryList: groceryData.items, groceryUpdatedAt: grTs });
 });
 
-app.post('/api/grocery/add-recipe-ingredients', (req, res) => {
+app.post('/api/grocery/add-recipe-ingredients', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { recipe } = req.body;
   if (!recipe || !Array.isArray(recipe.ingredients)) {
     return res.status(400).json({ error: 'Valid recipe with ingredients required' });
@@ -679,41 +847,46 @@ app.post('/api/grocery/add-recipe-ingredients', (req, res) => {
     }
   });
 
-  groceryData.updatedAt = new Date().toISOString();
-  writeJson(GROCERY_FILE, groceryData);
-  res.json({ success: true, groceryList: groceryData.items });
+  const grTs = saveGroceryAndSync(groceryData);
+  res.json({ success: true, groceryList: groceryData.items, groceryUpdatedAt: grTs });
 });
 
-app.post('/api/grocery/:id/toggle', (req, res) => {
+app.post('/api/grocery/:id/toggle', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const groceryData = readJson(GROCERY_FILE, { items: [] });
   const item = (groceryData.items || []).find(i => i.id === req.params.id);
+  let grTs = Number(groceryData.updatedAtTs) || Date.now();
   if (item) {
     item.checked = !item.checked;
-    groceryData.updatedAt = new Date().toISOString();
-    writeJson(GROCERY_FILE, groceryData);
+    grTs = saveGroceryAndSync(groceryData);
   }
-  res.json({ success: true, groceryList: groceryData.items || [] });
+  res.json({ success: true, groceryList: groceryData.items || [], groceryUpdatedAt: grTs });
 });
 
-app.delete('/api/grocery/:id', (req, res) => {
+app.delete('/api/grocery/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const groceryData = readJson(GROCERY_FILE, { items: [] });
   groceryData.items = (groceryData.items || []).filter(i => i.id !== req.params.id);
-  groceryData.updatedAt = new Date().toISOString();
-  writeJson(GROCERY_FILE, groceryData);
-  res.json({ success: true, groceryList: groceryData.items });
+  const grTs = saveGroceryAndSync(groceryData);
+  res.json({ success: true, groceryList: groceryData.items, groceryUpdatedAt: grTs });
 });
 
-app.post('/api/grocery/clear-checked', (req, res) => {
+app.post('/api/grocery/clear-checked', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const groceryData = readJson(GROCERY_FILE, { items: [] });
   groceryData.items = (groceryData.items || []).filter(i => !i.checked);
-  groceryData.updatedAt = new Date().toISOString();
-  writeJson(GROCERY_FILE, groceryData);
-  res.json({ success: true, groceryList: groceryData.items });
+  const grTs = saveGroceryAndSync(groceryData);
+  res.json({ success: true, groceryList: groceryData.items, groceryUpdatedAt: grTs });
 });
 
-app.post('/api/grocery/clear-all', (req, res) => {
-  writeJson(GROCERY_FILE, { items: [], updatedAt: new Date().toISOString() });
-  res.json({ success: true, groceryList: [] });
+app.post('/api/grocery/clear-all', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
+  const grTs = saveGroceryAndSync({ items: [] });
+  res.json({ success: true, groceryList: [], groceryUpdatedAt: grTs });
 });
 
 // ============================================================================
@@ -945,12 +1118,26 @@ function getBabyTrackerState() {
   };
 }
 
-app.get('/api/baby-tracker', (req, res) => {
+function saveBabyTrackerAndSync(state) {
+  const nowTs = Date.now();
+  state.updatedAt = new Date(nowTs).toISOString();
+  state.updatedAtTs = nowTs;
+  writeJson(BABY_TRACKER_FILE, state);
+  pushCloudState({
+    babyTracker: state,
+    babyTrackerUpdatedAt: nowTs
+  }).catch(() => {});
+}
+
+app.get('/api/baby-tracker', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   res.json(getBabyTrackerState());
 });
 
 // Add a breastfeeding / feeding session
-app.post('/api/baby-tracker/feeding', (req, res) => {
+app.post('/api/baby-tracker/feeding', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { date, time, side, durationMinutes, notes } = req.body;
   const { dateStr, timeStr } = getEstDateTime();
   const targetDate = date || dateStr;
@@ -970,14 +1157,15 @@ app.post('/api/baby-tracker/feeding', (req, res) => {
   };
 
   state.feedingSessions.unshift(newSession);
-  state.updatedAt = new Date().toISOString();
-  writeJson(BABY_TRACKER_FILE, state);
+  saveBabyTrackerAndSync(state);
 
   res.json(getBabyTrackerState());
 });
 
 // Update an existing feeding session
-app.put('/api/baby-tracker/feeding/:id', (req, res) => {
+app.put('/api/baby-tracker/feeding/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { id } = req.params;
   const { side, durationMinutes, time, date, notes } = req.body;
   const state = readJson(BABY_TRACKER_FILE, getDefaultBabyTrackerData());
@@ -992,26 +1180,28 @@ app.put('/api/baby-tracker/feeding/:id', (req, res) => {
     if (time !== undefined) state.feedingSessions[idx].time = time;
     if (date !== undefined) state.feedingSessions[idx].date = date;
     if (notes !== undefined) state.feedingSessions[idx].notes = notes;
-    state.updatedAt = new Date().toISOString();
-    writeJson(BABY_TRACKER_FILE, state);
+    saveBabyTrackerAndSync(state);
   }
 
   res.json(getBabyTrackerState());
 });
 
 // Delete a feeding session
-app.delete('/api/baby-tracker/feeding/:id', (req, res) => {
+app.delete('/api/baby-tracker/feeding/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { id } = req.params;
   const state = readJson(BABY_TRACKER_FILE, getDefaultBabyTrackerData());
   state.feedingSessions = (state.feedingSessions || []).filter(f => f.id !== id);
-  state.updatedAt = new Date().toISOString();
-  writeJson(BABY_TRACKER_FILE, state);
+  saveBabyTrackerAndSync(state);
 
   res.json(getBabyTrackerState());
 });
 
 // Update daily metrics (Changed diapers, Daily weight, Hours of sleep)
-app.post('/api/baby-tracker/metrics', (req, res) => {
+app.post('/api/baby-tracker/metrics', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const {
     date,
     wetDiapers,
@@ -1067,14 +1257,15 @@ app.post('/api/baby-tracker/metrics', (req, res) => {
   }
 
   state.dailyMetrics[targetDate] = current;
-  state.updatedAt = new Date().toISOString();
-  writeJson(BABY_TRACKER_FILE, state);
+  saveBabyTrackerAndSync(state);
 
   res.json(getBabyTrackerState());
 });
 
 // Toggle completed AAP vaccine on schedule
-app.post('/api/baby-tracker/vaccine/toggle', (req, res) => {
+app.post('/api/baby-tracker/vaccine/toggle', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const { vaccineId } = req.body;
   if (!vaccineId) return res.status(400).json({ error: 'vaccineId required' });
 
@@ -1087,13 +1278,14 @@ app.post('/api/baby-tracker/vaccine/toggle', (req, res) => {
     state.completedVaccines.push(vaccineId);
   }
 
-  state.updatedAt = new Date().toISOString();
-  writeJson(BABY_TRACKER_FILE, state);
+  saveBabyTrackerAndSync(state);
   res.json(getBabyTrackerState());
 });
 
 // Reset / Clear Baby Tracker data to fresh zero state
-app.post('/api/baby-tracker/reset', (req, res) => {
+app.post('/api/baby-tracker/reset', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
   const past7 = getPastDateKeysEST(7);
   const emptyDaily = {};
   past7.forEach(d => {
@@ -1118,7 +1310,7 @@ app.post('/api/baby-tracker/reset', (req, res) => {
     completedVaccines: [],
     updatedAt: new Date().toISOString()
   };
-  writeJson(BABY_TRACKER_FILE, fresh);
+  saveBabyTrackerAndSync(fresh);
   res.json(getBabyTrackerState());
 });
 
@@ -1221,7 +1413,7 @@ function loadSuggestionsState() {
   return merged;
 }
 
-function saveSuggestionsStateToDisk(state) {
+function saveSuggestionsStateToDisk(state, syncToGitHub = true) {
   const normalized = {
     items: Array.isArray(state.items) ? state.items : [],
     deletedIds: Array.isArray(state.deletedIds) ? state.deletedIds : [],
@@ -1235,12 +1427,21 @@ function saveSuggestionsStateToDisk(state) {
       }
     } catch {}
   }
+  if (syncToGitHub) {
+    pushCloudState({
+      suggestions: {
+        items: normalized.items,
+        deletedIds: normalized.deletedIds
+      },
+      suggestionsUpdatedAt: Date.now()
+    }).catch(() => {});
+  }
   return normalized;
 }
 
-// Background two-way sync between local PC and Render Cloud (runs every 15s on local PC)
-// Also keeps Render Cloud container awake 24/7 so it never spins down and wipes ephemeral disk
+// Background two-way sync between local PC, Render Cloud, and permanent GitHub store
 async function syncSuggestionsWithCloud() {
+  await hydrateBoardFromCloud(false);
   let state = loadSuggestionsState();
   if (IS_RENDER_ENV) return state;
 
@@ -1263,13 +1464,14 @@ async function syncSuggestionsWithCloud() {
         items: remote.suggestions || remote.items || [],
         deletedIds: remote.deletedIds || []
       });
-      saveSuggestionsStateToDisk(state);
+      saveSuggestionsStateToDisk(state, false);
     }
   } catch {}
   return state;
 }
 
 app.get('/api/suggestions', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   let state = loadSuggestionsState();
   if (!IS_RENDER_ENV && !req.query.localOnly) {
     state = await syncSuggestionsWithCloud();
@@ -1281,6 +1483,7 @@ app.get('/api/suggestions', async (req, res) => {
 });
 
 app.post('/api/suggestions/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const incoming = req.body || {};
   const current = loadSuggestionsState();
   let merged = mergeSuggestionsStates(current, {
@@ -1289,7 +1492,12 @@ app.post('/api/suggestions/sync', async (req, res) => {
       : (Array.isArray(incoming.suggestions) ? incoming.suggestions : []),
     deletedIds: Array.isArray(incoming.deletedIds) ? incoming.deletedIds : []
   });
-  saveSuggestionsStateToDisk(merged);
+
+  const changed =
+    merged.items.length !== current.items.length ||
+    merged.deletedIds.length !== current.deletedIds.length;
+
+  saveSuggestionsStateToDisk(merged, changed);
 
   if (!IS_RENDER_ENV && !req.query.localOnly) {
     try {
@@ -1311,7 +1519,7 @@ app.post('/api/suggestions/sync', async (req, res) => {
           items: remote.suggestions || remote.items || [],
           deletedIds: remote.deletedIds || []
         });
-        saveSuggestionsStateToDisk(merged);
+        saveSuggestionsStateToDisk(merged, false);
       }
     } catch {}
   }
@@ -1324,6 +1532,7 @@ app.post('/api/suggestions/sync', async (req, res) => {
 });
 
 app.post('/api/suggestions', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const { text, category, id: providedId, createdAt: providedCreatedAt, formattedDate: providedDate } = req.body || {};
   const cleanText = String(text || '').trim();
   if (!cleanText) {
@@ -1357,7 +1566,7 @@ app.post('/api/suggestions', async (req, res) => {
   if (!state.items.some(i => i.id === newEntry.id)) {
     state.items.unshift(newEntry);
   }
-  saveSuggestionsStateToDisk(state);
+  saveSuggestionsStateToDisk(state, true);
 
   // Forward to Render cloud if added locally so both cloud & desktop stay in sync
   if (!IS_RENDER_ENV && !req.query.localOnly) {
@@ -1380,13 +1589,14 @@ app.post('/api/suggestions', async (req, res) => {
 });
 
 app.delete('/api/suggestions/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const targetId = req.params.id;
   const state = loadSuggestionsState();
   state.items = state.items.filter(i => i.id !== targetId);
   if (targetId && !state.deletedIds.includes(targetId)) {
     state.deletedIds.push(targetId);
   }
-  saveSuggestionsStateToDisk(state);
+  saveSuggestionsStateToDisk(state, true);
 
   if (!IS_RENDER_ENV && !req.query.localOnly) {
     fetch(`${CLOUD_MACKIE_API}/suggestions/${encodeURIComponent(targetId)}?localOnly=1`, {
@@ -1400,6 +1610,9 @@ app.delete('/api/suggestions/:id', async (req, res) => {
     deletedIds: state.deletedIds
   });
 });
+
+// Hydrate from permanent GitHub Cloud Store immediately on boot (for both Render & Local PC)
+hydrateBoardFromCloud(true).catch(() => {});
 
 // Start continuous 15-second Cloud <-> Local PC sync & Render keep-alive daemon
 if (!IS_RENDER_ENV) {
