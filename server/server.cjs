@@ -37,6 +37,7 @@ const MEAL_PLAN_FILE = path.join(DATA_DIR, 'meal_plan.json');
 const GROCERY_FILE = path.join(DATA_DIR, 'grocery_list.json');
 const TUNNEL_FILE = path.join(DATA_DIR, 'tunnel_url.json');
 const BABY_TRACKER_FILE = path.join(DATA_DIR, 'baby_tracker.json');
+const SUGGESTIONS_FILE = path.join(DATA_DIR, 'suggestions.json');
 
 app.use(cors());
 app.use(express.json());
@@ -204,6 +205,7 @@ app.get('/api/board', (req, res) => {
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null });
   const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null });
   const tunnelInfo = readJson(TUNNEL_FILE, { url: null });
+  const suggestionsData = readJson(SUGGESTIONS_FILE, { items: [], deletedIds: [] });
 
   const lanIp = getLocalLanIp();
 
@@ -221,7 +223,8 @@ app.get('/api/board', (req, res) => {
     },
     calendar: enrichScheduleEvents(scheduleData),
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
-    groceryList: groceryData.items || []
+    groceryList: groceryData.items || [],
+    suggestions: suggestionsData.items || []
   });
 });
 
@@ -1133,6 +1136,137 @@ app.post('/api/baby-agent/ask', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ============================================================================
+// 7B. Mackie's Dashboard Update Suggestions (Historical Log for Antigravity)
+// ============================================================================
+const CLOUD_MACKIE_API = 'https://daily-executive-dashboard.onrender.com/mackie/api';
+const IS_RENDER_ENV = Boolean(process.env.RENDER || process.env.RENDER_EXTERNAL_URL);
+
+function loadSuggestionsState() {
+  const raw = readJson(SUGGESTIONS_FILE, { items: [], deletedIds: [] });
+  return {
+    items: Array.isArray(raw.items) ? raw.items : [],
+    deletedIds: Array.isArray(raw.deletedIds) ? raw.deletedIds : []
+  };
+}
+
+function mergeSuggestionsStates(localState, remoteState) {
+  const deletedSet = new Set([
+    ...(localState.deletedIds || []),
+    ...(remoteState.deletedIds || [])
+  ]);
+  const map = new Map();
+  for (const item of [...(remoteState.items || []), ...(localState.items || [])]) {
+    if (item && item.id && !deletedSet.has(item.id)) {
+      map.set(item.id, item);
+    }
+  }
+  const mergedItems = Array.from(map.values()).sort(
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  );
+  return {
+    items: mergedItems,
+    deletedIds: Array.from(deletedSet)
+  };
+}
+
+app.get('/api/suggestions', async (req, res) => {
+  let state = loadSuggestionsState();
+  if (!IS_RENDER_ENV && !req.query.localOnly) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const r = await fetch(`${CLOUD_MACKIE_API}/suggestions?localOnly=1`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      if (r.ok) {
+        const remote = await r.json();
+        state = mergeSuggestionsStates(state, {
+          items: remote.suggestions || [],
+          deletedIds: remote.deletedIds || []
+        });
+        writeJson(SUGGESTIONS_FILE, state);
+      }
+    } catch {}
+  }
+  res.json({
+    suggestions: state.items,
+    deletedIds: state.deletedIds
+  });
+});
+
+app.post('/api/suggestions', async (req, res) => {
+  const { text, category, id: providedId, createdAt: providedCreatedAt, formattedDate: providedDate } = req.body || {};
+  const cleanText = String(text || '').trim();
+  if (!cleanText) {
+    return res.status(400).json({ error: 'Suggestion comment is required' });
+  }
+
+  const now = new Date();
+  const formattedDate =
+    providedDate ||
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(now) + ' EST';
+
+  const newEntry = {
+    id: providedId || `sug-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    text: cleanText,
+    category: String(category || 'General').trim(),
+    author: 'Mackie',
+    createdAt: providedCreatedAt || now.toISOString(),
+    formattedDate
+  };
+
+  const state = loadSuggestionsState();
+  if (!state.items.some(i => i.id === newEntry.id)) {
+    state.items.unshift(newEntry);
+    writeJson(SUGGESTIONS_FILE, state);
+  }
+
+  // Forward to Render cloud if added locally so both cloud & desktop stay in sync
+  if (!IS_RENDER_ENV && !req.query.localOnly) {
+    fetch(`${CLOUD_MACKIE_API}/suggestions?localOnly=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newEntry)
+    }).catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    suggestion: newEntry,
+    suggestions: state.items
+  });
+});
+
+app.delete('/api/suggestions/:id', async (req, res) => {
+  const targetId = req.params.id;
+  const state = loadSuggestionsState();
+  state.items = state.items.filter(i => i.id !== targetId);
+  if (targetId && !state.deletedIds.includes(targetId)) {
+    state.deletedIds.push(targetId);
+  }
+  writeJson(SUGGESTIONS_FILE, state);
+
+  if (!IS_RENDER_ENV && !req.query.localOnly) {
+    fetch(`${CLOUD_MACKIE_API}/suggestions/${encodeURIComponent(targetId)}?localOnly=1`, {
+      method: 'DELETE'
+    }).catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    suggestions: state.items
+  });
 });
 
 // ============================================================================

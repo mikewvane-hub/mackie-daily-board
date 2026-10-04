@@ -28,7 +28,8 @@ import {
   Info,
   Scale,
   Baby,
-  Landmark
+  Landmark,
+  MessageSquarePlus
 } from 'lucide-react';
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
@@ -37,9 +38,12 @@ import AussieDogAgent from './components/AussieDogAgent.jsx';
 import DailyNewsAndDcEvents from './components/DailyNewsAndDcEvents.jsx';
 import {
   SeasonalBackgroundDoodles,
+  SeasonalMotifRibbon,
   SquigglyUnderline,
   CardHeaderSquiggle,
-  CutesyBadgeDoodle
+  CutesyBadgeDoodle,
+  cycleHolidayMotifs,
+  setHolidayMotifMode
 } from './components/SquigglyDecorations.jsx';
 import { API_BASE } from './apiBase.js';
 
@@ -194,6 +198,23 @@ export default function App() {
   // iPhone & Riverpoint WiFi / ADP Modal
   const [showWifiModal, setShowWifiModal] = useState(false);
 
+  // Holiday Motif Theme & Cycler ('Auto' | 'Halloween' | 'Thanksgiving' | 'Christmas')
+  const [holidayMode, setHolidayMode] = useState('Auto');
+
+  // Mackie's Dashboard Update Suggestions Modal & State
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [suggestionsList, setSuggestionsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mackie_dashboard_suggestions');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [suggestionInput, setSuggestionInput] = useState('');
+  const [suggestionCategory, setSuggestionCategory] = useState('General');
+  const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -209,9 +230,10 @@ export default function App() {
   const fetchBoard = async (isInitial = false) => {
     if (isInitial) setLoading(true);
     try {
-      const [res, babyRes] = await Promise.all([
+      const [res, babyRes, sugRes] = await Promise.all([
         fetch(`${API_BASE}/board`),
-        fetch(`${API_BASE}/baby-tracker`)
+        fetch(`${API_BASE}/baby-tracker`),
+        fetch(`${API_BASE}/suggestions`)
       ]);
       if (res.ok) {
         const json = await res.json();
@@ -220,6 +242,15 @@ export default function App() {
       if (babyRes.ok) {
         const babyJson = await babyRes.json();
         setBabyTracker(babyJson);
+      }
+      if (sugRes && sugRes.ok) {
+        const sugJson = await sugRes.json();
+        if (Array.isArray(sugJson.suggestions)) {
+          setSuggestionsList(sugJson.suggestions);
+          try {
+            localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(sugJson.suggestions));
+          } catch {}
+        }
       }
     } catch (e) {
       console.error('Error fetching board:', e);
@@ -252,6 +283,95 @@ export default function App() {
     try {
       localStorage.setItem('mackie_season_mode', mode);
     } catch {}
+  };
+
+  const handleHolidayModeChange = (mode) => {
+    setHolidayMode(mode);
+    setHolidayMotifMode(mode);
+    showToast(`Holiday aesthetic set to ${mode === 'Auto' ? 'Auto Seasonal' : mode} motifs`);
+  };
+
+  const handleCycleHolidayIcons = () => {
+    cycleHolidayMotifs();
+    showToast('Cycled seasonal & holiday illustrations across the board!');
+  };
+
+  // Mackie's Dashboard Update Suggestions Handlers
+  const handleAddSuggestion = async (e) => {
+    e.preventDefault();
+    const cleanText = suggestionInput.trim();
+    if (!cleanText || isSubmittingSuggestion) return;
+    setIsSubmittingSuggestion(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: cleanText,
+          category: suggestionCategory
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const updated = Array.isArray(json.suggestions) ? json.suggestions : [];
+        setSuggestionsList(updated);
+        try {
+          localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(updated));
+        } catch {}
+        setSuggestionInput('');
+        showToast('Saved Mackie’s update suggestion for Mike & Antigravity!');
+      }
+    } catch (err) {
+      console.error('Error saving suggestion:', err);
+    } finally {
+      setIsSubmittingSuggestion(false);
+    }
+  };
+
+  const handleDeleteSuggestion = async (id) => {
+    const nextList = suggestionsList.filter(s => s.id !== id);
+    setSuggestionsList(nextList);
+    try {
+      localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(nextList));
+    } catch {}
+    try {
+      const res = await fetch(`${API_BASE}/suggestions/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.suggestions)) {
+          setSuggestionsList(json.suggestions);
+          try {
+            localStorage.setItem('mackie_dashboard_suggestions', JSON.stringify(json.suggestions));
+          } catch {}
+        }
+      }
+      showToast('Remedied & removed suggestion from history');
+    } catch (err) {
+      console.error('Error deleting suggestion:', err);
+    }
+  };
+
+  const handleCopySuggestionForAntigravity = (sug) => {
+    const promptText = `[Mackie's Dashboard Update Request - ${sug.category || 'General'} (${sug.formattedDate || ''})]: ${sug.text}`;
+    navigator.clipboard.writeText(promptText);
+    showToast('Copied suggestion to clipboard — ready to paste into Antigravity!');
+  };
+
+  const handleCopyAllSuggestionsForAntigravity = () => {
+    if (suggestionsList.length === 0) {
+      showToast('No pending suggestions to copy');
+      return;
+    }
+    const combined =
+      `Please implement the following updates suggested by my wife for Mackie's Daily Board:\n` +
+      suggestionsList
+        .map((s, idx) => `${idx + 1}. [${s.category || 'General'} - ${s.formattedDate || ''}]: ${s.text}`)
+        .join('\n');
+    navigator.clipboard.writeText(combined);
+    showToast(`Copied all ${suggestionsList.length} suggestions for Antigravity!`);
   };
 
   // Filtered Cookbook Recipes (preserving exact cookbook order)
@@ -673,6 +793,21 @@ export default function App() {
                     <span>Executive Daily Briefing | Chief of Staff Command</span>
                     <ExternalLink className="w-2.5 h-2.5 opacity-70 shrink-0" />
                   </a>
+                  {/* Suggest Dashboard Updates Tab for Mackie & Mike */}
+                  <button
+                    type="button"
+                    onClick={() => setShowSuggestionsModal(true)}
+                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${theme.borderStrong} ${theme.accentSoft} hover:opacity-90 transition flex items-center gap-1.5 shadow-2xs`}
+                    title="Mackie: Suggest Dashboard Updates | Mike: Grab historical comments for Antigravity"
+                  >
+                    <MessageSquarePlus className={`w-3 h-3 ${theme.accentText} shrink-0`} />
+                    <span>Suggest Updates</span>
+                    {suggestionsList.length > 0 && (
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${theme.accentBg} text-white`}>
+                        {suggestionsList.length}
+                      </span>
+                    )}
+                  </button>
                   <CutesyBadgeDoodle season={activeSeasonKey} variant={0} />
                 </div>
                 <div className="flex items-center gap-2.5 mt-1 flex-wrap">
@@ -685,8 +820,39 @@ export default function App() {
               </div>
             </div>
 
-            {/* Right: Season Switcher, iPhone/Riverpoint Access, & Calendar Sync */}
+            {/* Right: Season Switcher, Holiday Decor Cycler, Suggest Updates, iPhone/Riverpoint Access, & Calendar Sync */}
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Holiday Motifs Selector & Cycler (Halloween / Thanksgiving / Christmas) */}
+              <div className={`flex items-center gap-1 p-1 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}>
+                {['Auto', 'Halloween', 'Thanksgiving', 'Christmas'].map(h => {
+                  const active = holidayMode === h;
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleHolidayModeChange(h)}
+                      className={`px-2 py-1 rounded-lg transition font-medium text-[11px] ${
+                        active
+                          ? `${theme.cardBg} ${theme.textPrimary} shadow-xs border ${theme.border}`
+                          : `${theme.textSecondary} hover:${theme.textPrimary}`
+                      }`}
+                      title={`Show ${h} warm-grey aesthetic illustrations`}
+                    >
+                      {h === 'Auto' ? 'Holiday: Auto' : h}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={handleCycleHolidayIcons}
+                  className={`px-2 py-1 rounded-lg border ${theme.border} ${theme.cardBg} hover:${theme.accentSoft} text-[11px] font-semibold flex items-center gap-1 transition`}
+                  title="Cycle through ghosts, candy corn, witch, wolf & moon, potions, scarecrows, trick-or-treaters, cauldrons, witch brooms, black cats, turkeys, pilgrims, Frosty, Santa & reindeer"
+                >
+                  <Sparkles className={`w-3 h-3 ${theme.accentText}`} />
+                  <span>Cycle Decor</span>
+                </button>
+              </div>
+
               {/* Seasonal Theme Selector */}
               <div className={`flex items-center gap-1 p-1 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}>
                 {['Auto', 'Spring', 'Summer', 'Autumn', 'Winter'].map(s => {
@@ -761,6 +927,14 @@ export default function App() {
                 </button>
               );
             })}
+            <button
+              type="button"
+              onClick={() => setShowSuggestionsModal(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${theme.borderStrong} ${theme.cardSubtle} hover:${theme.accentSoft}`}
+            >
+              <MessageSquarePlus className={`w-3.5 h-3.5 ${theme.accentText}`} />
+              <span>Suggest Updates ({suggestionsList.length})</span>
+            </button>
           </nav>
         </div>
       </header>
@@ -768,7 +942,10 @@ export default function App() {
       {/* =================================================================== */}
       {/* MAIN DASHBOARD CONTENT                                              */}
       {/* =================================================================== */}
-      <main className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 pt-5 space-y-6">
+      <main className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 pt-4 space-y-5">
+        {/* Subtle Seasonal / Holiday Aesthetic Motif Garland */}
+        <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={0} />
+
         {/* ================================================================= */}
         {/* TOP BANNER: BABY BOY AIDEN JAMES VANE COUNTDOWN (NOV 3RD)         */}
         {/* ================================================================= */}
@@ -1725,9 +1902,11 @@ export default function App() {
           )}
         </div>
 
+        <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={1} />
+
         {/* ================================================================= */}
         {/* ROW 3: POSTPARTUM TRACKER, LIVE TREND GRAPH, AAP NEWBORN GUIDE    */}
-        {/*        + HOVERING TRI-COLOR AUSTRALIAN SHEPHERD AGENT (DESKTOP)   */}
+        {/*        + HOVERING COZY TAN TEDDY BEAR AGENT ("TED", DESKTOP)      */}
         {/* ================================================================= */}
         {(activeSection === 'all' || activeSection === 'baby') && (
           <div className="space-y-6">
@@ -1749,6 +1928,8 @@ export default function App() {
           </div>
         )}
 
+        <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={2} />
+
         {/* ================================================================= */}
         {/* ROW 4: DAILY U.S. POLICY & TOP NEWS (07:00 AM EST AUTO-UPDATED)   */}
         {/*        + DOWNTOWN D.C. 5 W'S SEASONAL & WEEKLY RECOMMENDATIONS    */}
@@ -1766,6 +1947,8 @@ export default function App() {
             }
           />
         )}
+
+        <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={3} />
       </main>
 
       {/* =================================================================== */}
@@ -2244,6 +2427,186 @@ export default function App() {
               <div className="flex items-center justify-between gap-2">
                 <span className="text-stone-600">Local Network Direct:</span>
                 <span className="font-mono text-stone-700">{boardData?.meta?.lanUrl || 'http://192.168.4.21:3005'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL 6: MACKIE'S DASHBOARD UPDATE SUGGESTIONS (FOR ANTIGRAVITY)    */}
+      {/* =================================================================== */}
+      {showSuggestionsModal && (
+        <div
+          onClick={() => setShowSuggestionsModal(false)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className={`${theme.cardBg} ${theme.textPrimary} border ${theme.border} rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden text-xs sm:text-sm`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b px-5 py-4 border-[#E2D9CC]">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl ${theme.cardSubtle} ${theme.accentText}`}>
+                  <MessageSquarePlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-editorial text-2xl font-bold leading-none">
+                      Mackie&apos;s Dashboard Update Suggestions
+                    </h3>
+                    <CutesyBadgeDoodle season={activeSeasonKey} variant={5} />
+                  </div>
+                  <p className={`text-xs ${theme.textSecondary} mt-1`}>
+                    Mackie can leave update ideas here anytime • Mike can copy them into Antigravity &amp; delete once remedied
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSuggestionsModal(false)}
+                className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200"
+                aria-label="Close suggestions modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-5 flex-1">
+              {/* Form for Mackie to Add a New Suggestion */}
+              <form
+                onSubmit={handleAddSuggestion}
+                className={`p-4 rounded-xl ${theme.cardSubtle} border ${theme.border} space-y-3`}
+              >
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="font-semibold text-xs sm:text-sm">
+                    Add a New Dashboard Update Suggestion (for Mike &amp; Antigravity)
+                  </label>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {[
+                      'General',
+                      'Calendar',
+                      'Meals & Recipes',
+                      'Grocery List',
+                      'Baby & Ted',
+                      'Seasonal Decor',
+                      'D.C. & News'
+                    ].map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSuggestionCategory(cat)}
+                        className={`px-2 py-0.5 rounded-lg text-[11px] font-medium border transition ${
+                          suggestionCategory === cat
+                            ? `${theme.accentBg} text-white border-transparent`
+                            : `${theme.cardBg} ${theme.textSecondary} ${theme.border}`
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <textarea
+                  rows="3"
+                  value={suggestionInput}
+                  onChange={e => setSuggestionInput(e.target.value)}
+                  placeholder="Type your idea or update request here (e.g., 'Add a new recipe to Desserts', 'Change how the weekly meal box looks', 'Add a new baby milestone')..."
+                  className={`w-full px-3.5 py-2.5 rounded-xl ${theme.cardBg} border ${theme.borderStrong} text-xs sm:text-sm focus:outline-none`}
+                  required
+                />
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <span className={`text-[11px] ${theme.textSecondary}`}>
+                    Saved to permanent history so Mike can grab it anytime
+                  </span>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingSuggestion || !suggestionInput.trim()}
+                    className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs disabled:opacity-50`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{isSubmittingSuggestion ? 'Saving...' : 'Save Update Suggestion'}</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Historical Suggestions List for Mike to Grab & Delete After Remedied */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="font-semibold text-xs sm:text-sm flex items-center gap-2">
+                    <span>Historical Suggestion Queue ({suggestionsList.length})</span>
+                  </div>
+                  {suggestionsList.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleCopyAllSuggestionsForAntigravity}
+                      className={`px-3 py-1.5 rounded-xl border ${theme.borderStrong} ${theme.cardSubtle} hover:${theme.accentSoft} text-xs font-semibold flex items-center gap-1.5 transition`}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy All ({suggestionsList.length}) for Antigravity</span>
+                    </button>
+                  )}
+                </div>
+
+                {suggestionsList.length === 0 ? (
+                  <div className={`p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5`}>
+                    <MessageSquarePlus className={`w-6 h-6 mx-auto ${theme.textMuted}`} />
+                    <div className="font-editorial text-lg font-medium">
+                      No open update suggestions right now
+                    </div>
+                    <p className={`text-xs ${theme.textSecondary}`}>
+                      Whenever Mackie thinks of a tweak or feature she wants on her board, she can type it above and it will stay logged here until Mike remedies and deletes it!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {suggestionsList.map(sug => (
+                      <div
+                        key={sug.id}
+                        className={`p-3.5 rounded-xl ${theme.cardSubtle} border ${theme.border} flex flex-col sm:flex-row sm:items-start justify-between gap-3`}
+                      >
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${theme.accentSoft}`}>
+                              {sug.category || 'General'}
+                            </span>
+                            <span className={`text-[11px] font-mono ${theme.textSecondary}`}>
+                              {sug.formattedDate || 'Logged'}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words font-medium">
+                            {sug.text}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                          <button
+                            type="button"
+                            onClick={() => handleCopySuggestionForAntigravity(sug)}
+                            className={`px-2.5 py-1.5 rounded-lg border ${theme.borderStrong} ${theme.cardBg} hover:${theme.accentSoft} text-xs font-medium flex items-center gap-1 transition`}
+                            title="Copy comment to paste into Antigravity"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>Copy for Antigravity</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSuggestion(sug.id)}
+                            className="px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50/70 text-red-700 hover:bg-red-100 text-xs font-semibold flex items-center gap-1 transition"
+                            title="Delete suggestion after remedying with Antigravity"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Remedied / Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
