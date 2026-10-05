@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168504302,
+  "updatedAt": 1791168505373,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168504302,
+  "groceryUpdatedAt": 1791168505371,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,18 +56,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-1791158626251-4-98v",
-      "name": "Half and half",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.251Z"
-    },
     {
       "id": "groc-1791158626251-5-30a",
       "name": "Fresh kale",
