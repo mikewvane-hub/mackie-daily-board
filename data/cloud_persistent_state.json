@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "updatedAt": 1791172417433,
+  "updatedAt": 1791172418374,
   "mealPlanUpdatedAt": 1791172409376,
   "groceryUpdatedAt": 1791172409406,
   "suggestionsUpdatedAt": 1791168670720,
-  "babyTrackerUpdatedAt": 0,
+  "babyTrackerUpdatedAt": 1791172409458,
   "mealPlan": {
     "Monday": [
       {
@@ -88,5 +88,659 @@
       "sug-1791158808969-dboh"
     ]
   },
-  "babyTracker": null
+  "babyTracker": {
+    "babyName": "Aiden James Vane",
+    "dueDate": "2026-11-03",
+    "feedingGoalPerDay": 8,
+    "feedingDurationGoalMinutes": 140,
+    "diaperGoalPerDay": 8,
+    "sleepGoalHours": 15,
+    "dailyMetrics": {
+      "2026-09-27": {
+        "date": "2026-09-27",
+        "wetDiapers": 5,
+        "dirtyDiapers": 2,
+        "totalDiapers": 7,
+        "weightLbs": 7.4,
+        "sleepHours": 15.5
+      },
+      "2026-09-28": {
+        "date": "2026-09-28",
+        "wetDiapers": 6,
+        "dirtyDiapers": 3,
+        "totalDiapers": 9,
+        "weightLbs": 7.3,
+        "sleepHours": 16
+      },
+      "2026-09-29": {
+        "date": "2026-09-29",
+        "wetDiapers": 7,
+        "dirtyDiapers": 3,
+        "totalDiapers": 10,
+        "weightLbs": 7.25,
+        "sleepHours": 14.5
+      },
+      "2026-09-30": {
+        "date": "2026-09-30",
+        "wetDiapers": 7,
+        "dirtyDiapers": 4,
+        "totalDiapers": 11,
+        "weightLbs": 7.3,
+        "sleepHours": 15
+      },
+      "2026-10-01": {
+        "date": "2026-10-01",
+        "wetDiapers": 8,
+        "dirtyDiapers": 4,
+        "totalDiapers": 12,
+        "weightLbs": 7.4,
+        "sleepHours": 16
+      },
+      "2026-10-02": {
+        "date": "2026-10-02",
+        "wetDiapers": 8,
+        "dirtyDiapers": 3,
+        "totalDiapers": 11,
+        "weightLbs": 7.5,
+        "sleepHours": 15.5
+      },
+      "2026-10-03": {
+        "date": "2026-10-03",
+        "wetDiapers": 8,
+        "dirtyDiapers": 4,
+        "totalDiapers": 12,
+        "weightLbs": 7.6,
+        "sleepHours": 16
+      },
+      "2026-10-04": {
+        "date": "2026-10-04",
+        "wetDiapers": 0,
+        "dirtyDiapers": 0,
+        "totalDiapers": 0,
+        "weightLbs": 0,
+        "sleepHours": 0
+      }
+    },
+    "feedingSessions": [
+      {
+        "id": "feed-1791172409458-m8pk",
+        "date": "2026-10-04",
+        "time": "10:15 AM",
+        "side": "Left Breast",
+        "durationMinutes": 15,
+        "notes": "E2E Test Feeding",
+        "createdAt": "2026-10-05T03:53:29.458Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-0",
+        "date": "2026-09-27",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-1",
+        "date": "2026-09-27",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-2",
+        "date": "2026-09-27",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-3",
+        "date": "2026-09-27",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-4",
+        "date": "2026-09-27",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-5",
+        "date": "2026-09-27",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-6",
+        "date": "2026-09-27",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-27-7",
+        "date": "2026-09-27",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-0",
+        "date": "2026-09-28",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-1",
+        "date": "2026-09-28",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 18,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-2",
+        "date": "2026-09-28",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-3",
+        "date": "2026-09-28",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 18,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-4",
+        "date": "2026-09-28",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-5",
+        "date": "2026-09-28",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 18,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-6",
+        "date": "2026-09-28",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-7",
+        "date": "2026-09-28",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 18,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-28-8",
+        "date": "2026-09-28",
+        "time": "01:15",
+        "side": "Both",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-0",
+        "date": "2026-09-29",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-1",
+        "date": "2026-09-29",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-2",
+        "date": "2026-09-29",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-3",
+        "date": "2026-09-29",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-4",
+        "date": "2026-09-29",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-5",
+        "date": "2026-09-29",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-6",
+        "date": "2026-09-29",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-7",
+        "date": "2026-09-29",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-8",
+        "date": "2026-09-29",
+        "time": "01:15",
+        "side": "Both",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-29-9",
+        "date": "2026-09-29",
+        "time": "04:15",
+        "side": "Left Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-0",
+        "date": "2026-09-30",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 23,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-1",
+        "date": "2026-09-30",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 19,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-2",
+        "date": "2026-09-30",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 23,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-3",
+        "date": "2026-09-30",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 19,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-4",
+        "date": "2026-09-30",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 23,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-5",
+        "date": "2026-09-30",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 19,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-6",
+        "date": "2026-09-30",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 23,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-7",
+        "date": "2026-09-30",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 19,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-09-30-8",
+        "date": "2026-09-30",
+        "time": "01:15",
+        "side": "Both",
+        "durationMinutes": 23,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-0",
+        "date": "2026-10-01",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 25,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-1",
+        "date": "2026-10-01",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 21,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-2",
+        "date": "2026-10-01",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 25,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-3",
+        "date": "2026-10-01",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 21,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-4",
+        "date": "2026-10-01",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 25,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-5",
+        "date": "2026-10-01",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 21,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-6",
+        "date": "2026-10-01",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 25,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-7",
+        "date": "2026-10-01",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 21,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-8",
+        "date": "2026-10-01",
+        "time": "01:15",
+        "side": "Both",
+        "durationMinutes": 25,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-01-9",
+        "date": "2026-10-01",
+        "time": "04:15",
+        "side": "Left Breast",
+        "durationMinutes": 21,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-0",
+        "date": "2026-10-02",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-1",
+        "date": "2026-10-02",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-2",
+        "date": "2026-10-02",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-3",
+        "date": "2026-10-02",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-4",
+        "date": "2026-10-02",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-5",
+        "date": "2026-10-02",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-6",
+        "date": "2026-10-02",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-7",
+        "date": "2026-10-02",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 20,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-02-8",
+        "date": "2026-10-02",
+        "time": "01:15",
+        "side": "Both",
+        "durationMinutes": 24,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-0",
+        "date": "2026-10-03",
+        "time": "01:15",
+        "side": "Left Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-1",
+        "date": "2026-10-03",
+        "time": "04:15",
+        "side": "Right Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-2",
+        "date": "2026-10-03",
+        "time": "07:15",
+        "side": "Both",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-3",
+        "date": "2026-10-03",
+        "time": "10:15",
+        "side": "Left Breast",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-4",
+        "date": "2026-10-03",
+        "time": "13:15",
+        "side": "Right Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-5",
+        "date": "2026-10-03",
+        "time": "16:15",
+        "side": "Both",
+        "durationMinutes": 22,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-6",
+        "date": "2026-10-03",
+        "time": "19:15",
+        "side": "Left Breast",
+        "durationMinutes": 26,
+        "notes": "",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      },
+      {
+        "id": "feed-seed-2026-10-03-7",
+        "date": "2026-10-03",
+        "time": "22:15",
+        "side": "Right Breast",
+        "durationMinutes": 22,
+        "notes": "Strong latch, nursed well",
+        "createdAt": "2026-10-04T03:40:03.987Z"
+      }
+    ],
+    "completedVaccines": [],
+    "updatedAt": "2026-10-05T03:53:29.458Z",
+    "updatedAtTs": 1791172409458
+  }
 }
