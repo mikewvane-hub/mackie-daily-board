@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791243334041,
+  "updatedAt": 1791243338765,
   "mealPlanUpdatedAt": 1791172501722,
-  "groceryUpdatedAt": 1791243334040,
+  "groceryUpdatedAt": 1791243338764,
   "suggestionsUpdatedAt": 1791172504292,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -56,6 +56,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791243338764-sff",
+      "name": "Oats",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T23:35:38.764Z"
+    },
     {
       "id": "groc-manual-1791243334040-tvn",
       "name": "Pam spray",
