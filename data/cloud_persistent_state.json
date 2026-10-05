@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "updatedAt": 1791172514247,
+  "updatedAt": 1791172514929,
   "mealPlanUpdatedAt": 1791172501722,
   "groceryUpdatedAt": 1791172501746,
-  "suggestionsUpdatedAt": 1791172504280,
+  "suggestionsUpdatedAt": 1791172504292,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [
@@ -82,19 +82,11 @@
     }
   ],
   "suggestions": {
-    "items": [
-      {
-        "id": "sug-e2e-test-1791172504270",
-        "text": "E2E automated test suggestion",
-        "category": "General",
-        "author": "Mackie",
-        "createdAt": "2026-10-05T03:55:04.276Z",
-        "formattedDate": "Oct 4, 2026, 11:55 PM EST"
-      }
-    ],
+    "items": [],
     "deletedIds": [
       "sug-test-sync",
-      "sug-1791158808969-dboh"
+      "sug-1791158808969-dboh",
+      "sug-e2e-test-1791172504270"
     ]
   },
   "babyTracker": {
