@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791204880774,
+  "updatedAt": 1791208600620,
   "mealPlanUpdatedAt": 1791172501722,
-  "groceryUpdatedAt": 1791172501746,
+  "groceryUpdatedAt": 1791208600619,
   "suggestionsUpdatedAt": 1791172504292,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -59,7 +59,7 @@
     {
       "id": "groc-manual-1791168583503-au9",
       "name": "Brie",
-      "checked": false,
+      "checked": true,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-05T02:49:43.503Z"
