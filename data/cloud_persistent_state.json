@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168507170,
+  "updatedAt": 1791168508716,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168507169,
+  "groceryUpdatedAt": 1791168508715,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,18 +56,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-1791158626252-7-jlh",
-      "name": "Pasta shells",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.252Z"
-    },
     {
       "id": "groc-1791158626253-8-5d5",
       "name": "Chicken broth",
