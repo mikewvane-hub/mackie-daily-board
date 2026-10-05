@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168509613,
+  "updatedAt": 1791168510339,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168509156,
+  "groceryUpdatedAt": 1791168510039,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,18 +56,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-1791158626253-9-o6b",
-      "name": "Parmesan cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.253Z"
-    },
     {
       "id": "groc-1791158626253-10-5q8",
       "name": "Texas toast",
