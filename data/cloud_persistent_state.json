@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "updatedAt": 1791172512022,
+  "updatedAt": 1791172512786,
   "mealPlanUpdatedAt": 1791172501722,
   "groceryUpdatedAt": 1791172501746,
   "suggestionsUpdatedAt": 1791168670720,
-  "babyTrackerUpdatedAt": 1791172501813,
+  "babyTrackerUpdatedAt": 1791172501825,
   "mealPlan": {
     "Monday": [
       {
@@ -154,9 +154,9 @@
       },
       "2026-10-04": {
         "date": "2026-10-04",
-        "wetDiapers": 1,
-        "dirtyDiapers": 1,
-        "totalDiapers": 2,
+        "wetDiapers": 2,
+        "dirtyDiapers": 2,
+        "totalDiapers": 4,
         "weightLbs": 7.8,
         "sleepHours": 15.5
       }
@@ -733,7 +733,7 @@
     "completedVaccines": [
       "hepb-1"
     ],
-    "updatedAt": "2026-10-05T03:55:01.813Z",
-    "updatedAtTs": 1791172501813
+    "updatedAt": "2026-10-05T03:55:01.825Z",
+    "updatedAtTs": 1791172501825
   }
 }
