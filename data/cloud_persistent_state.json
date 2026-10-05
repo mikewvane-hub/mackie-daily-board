@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791172412559,
-  "mealPlanUpdatedAt": 1791172409364,
+  "updatedAt": 1791172413307,
+  "mealPlanUpdatedAt": 1791172409376,
   "groceryUpdatedAt": 1791172409333,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 0,
@@ -15,15 +15,6 @@
         "isManual": true,
         "slot": "Custom",
         "addedAt": "2026-10-05T00:03:58.678Z"
-      },
-      {
-        "instanceId": "meal-1791172409330-v7rn",
-        "recipeId": "test-recipe-e2e",
-        "title": "E2E Test Harvest Bowl",
-        "category": "ENTREES",
-        "isManual": false,
-        "slot": "ENTREES",
-        "addedAt": "2026-10-05T03:53:29.330Z"
       }
     ],
     "Tuesday": [
