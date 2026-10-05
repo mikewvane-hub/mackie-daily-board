@@ -1,12 +1,54 @@
 {
   "days": {
-    "Monday": [],
-    "Tuesday": [],
-    "Wednesday": [],
+    "Monday": [
+      {
+        "instanceId": "meal-1791158638678-6m58",
+        "recipeId": null,
+        "title": "Teriyaki stirfry",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-05T00:03:58.678Z"
+      }
+    ],
+    "Tuesday": [
+      {
+        "instanceId": "meal-1791158651992-fs0b",
+        "recipeId": null,
+        "title": "Italian chicken thighs and potatoes",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-05T00:04:11.992Z"
+      }
+    ],
+    "Wednesday": [
+      {
+        "instanceId": "meal-1791158660585-k3cp",
+        "recipeId": null,
+        "title": "Spaghetti",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-05T00:04:20.585Z"
+      }
+    ],
     "Thursday": [],
     "Friday": [],
     "Saturday": [],
-    "Sunday": []
+    "Sunday": [
+      {
+        "instanceId": "meal-1791158626248-pu5b",
+        "recipeId": "katys-kale-soup",
+        "title": "Katy's Kale Soup",
+        "category": "Soup",
+        "page": 58,
+        "isManual": false,
+        "slot": "Soup",
+        "addedAt": "2026-10-05T00:03:46.248Z"
+      }
+    ]
   },
-  "updatedAt": "2026-10-04T04:10:49.963Z"
+  "updatedAt": "2026-10-05T00:04:20.586Z",
+  "updatedAtTs": 1791158660586
 }

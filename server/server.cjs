@@ -39,6 +39,7 @@ const GROCERY_FILE = path.join(DATA_DIR, 'grocery_list.json');
 const TUNNEL_FILE = path.join(DATA_DIR, 'tunnel_url.json');
 const BABY_TRACKER_FILE = path.join(DATA_DIR, 'baby_tracker.json');
 const SUGGESTIONS_FILE = path.join(DATA_DIR, 'suggestions.json');
+const HEALTH_FITNESS_FILE = path.join(DATA_DIR, 'health_fitness.json');
 
 app.use(cors());
 app.use(express.json());
@@ -231,6 +232,36 @@ function saveGroceryAndSync(groceryData) {
   return nowTs;
 }
 
+function getDefaultHealthFitnessData() {
+  return {
+    customRoutines: [],
+    weeklyWorkouts: getEmptyMealPlan(),
+    deliveryDate: '2026-11-03',
+    selectedPhaseId: null,
+    cycleLogs: [],
+    averageCycleLength: 28,
+    periodDurationDays: 5,
+    ouraToken: '',
+    ouraConnected: false,
+    ouraLastSynced: null,
+    dailyLogs: [],
+    updatedAt: null,
+    updatedAtTs: 0
+  };
+}
+
+function saveHealthFitnessAndSync(hfData) {
+  const nowTs = Date.now();
+  hfData.updatedAt = new Date(nowTs).toISOString();
+  hfData.updatedAtTs = nowTs;
+  writeJson(HEALTH_FITNESS_FILE, hfData);
+  pushCloudState({
+    healthFitness: hfData,
+    healthFitnessUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
 async function hydrateBoardFromCloud(force = false) {
   try {
     const cloud = await pullCloudState(force);
@@ -282,6 +313,18 @@ async function hydrateBoardFromCloud(force = false) {
         saveSuggestionsStateToDisk(mergedSug, false);
       }
     }
+
+    // 5. Hydrate Health & Fitness if cloud has newer state
+    const localHf = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+    const localHfTs = Number(localHf?.updatedAtTs) || 0;
+    const cloudHfTs = Number(cloud.healthFitnessUpdatedAt) || 0;
+    if (cloud.healthFitness && cloudHfTs > localHfTs) {
+      writeJson(HEALTH_FITNESS_FILE, {
+        ...getDefaultHealthFitnessData(),
+        ...cloud.healthFitness,
+        updatedAtTs: cloudHfTs
+      });
+    }
   } catch (err) {
     console.warn('[HydrateCloud] warning:', err.message);
   }
@@ -295,6 +338,7 @@ app.get('/api/board', async (req, res) => {
   const calConfig = readJson(CAL_CONFIG_FILE, { icalUrl: '' });
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null, updatedAtTs: 0 });
   const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null, updatedAtTs: 0 });
+  const healthFitnessData = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
   const tunnelInfo = readJson(TUNNEL_FILE, { url: null });
   const suggestionsData = typeof loadSuggestionsState === 'function'
     ? loadSuggestionsState()
@@ -314,11 +358,13 @@ app.get('/api/board', async (req, res) => {
       tunnelUrl: tunnelInfo.url || null,
       hasIcalConfigured: Boolean(calConfig.icalUrl),
       mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
-      groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0
+      groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
+      healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0
     },
     calendar: enrichScheduleEvents(scheduleData),
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
     groceryList: groceryData.items || [],
+    healthFitness: healthFitnessData,
     suggestions: suggestionsData.items || []
   });
 });
@@ -331,11 +377,14 @@ app.post('/api/board/sync', async (req, res) => {
     mealPlan: incomingMealPlan,
     mealPlanUpdatedAt: incomingMpTs,
     groceryList: incomingGroceryList,
-    groceryUpdatedAt: incomingGrTs
+    groceryUpdatedAt: incomingGrTs,
+    healthFitness: incomingHealthFitness,
+    healthFitnessUpdatedAt: incomingHfTs
   } = req.body || {};
 
   let mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
   let groceryData = readJson(GROCERY_FILE, { items: [], updatedAtTs: 0 });
+  let healthFitnessData = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
 
   const curMpTs = Number(mealPlanData.updatedAtTs) || 0;
   const incMpTs = Number(incomingMpTs) || 0;
@@ -374,12 +423,31 @@ app.post('/api/board/sync', async (req, res) => {
     }).catch(() => {});
   }
 
+  const curHfTs = Number(healthFitnessData.updatedAtTs) || 0;
+  const incHfTs = Number(incomingHfTs) || 0;
+  if (incomingHealthFitness && typeof incomingHealthFitness === 'object' && incHfTs > curHfTs) {
+    healthFitnessData = {
+      ...getDefaultHealthFitnessData(),
+      ...healthFitnessData,
+      ...incomingHealthFitness,
+      updatedAt: new Date(incHfTs || Date.now()).toISOString(),
+      updatedAtTs: incHfTs || Date.now()
+    };
+    writeJson(HEALTH_FITNESS_FILE, healthFitnessData);
+    pushCloudState({
+      healthFitness: healthFitnessData,
+      healthFitnessUpdatedAt: healthFitnessData.updatedAtTs
+    }).catch(() => {});
+  }
+
   res.json({
     success: true,
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
     mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
     groceryList: groceryData.items || [],
-    groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0
+    groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
+    healthFitness: healthFitnessData,
+    healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0
   });
 });
 
@@ -1312,6 +1380,178 @@ app.post('/api/baby-tracker/reset', async (req, res) => {
   };
   saveBabyTrackerAndSync(fresh);
   res.json(getBabyTrackerState());
+});
+
+// ============================================================================
+// 5B. Mackie's Personal Health, Fitness, Postpartum Timeline, Cycle & Oura Hub
+// ============================================================================
+app.get('/api/health-fitness', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const hf = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+  res.json({
+    ...getDefaultHealthFitnessData(),
+    ...hf
+  });
+});
+
+app.post('/api/health-fitness/update', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const current = {
+    ...getDefaultHealthFitnessData(),
+    ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
+  };
+  const updates = req.body || {};
+
+  if (Array.isArray(updates.customRoutines)) current.customRoutines = updates.customRoutines;
+  if (updates.weeklyWorkouts && typeof updates.weeklyWorkouts === 'object') {
+    current.weeklyWorkouts = updates.weeklyWorkouts;
+  }
+  if (updates.deliveryDate !== undefined) current.deliveryDate = updates.deliveryDate;
+  if (updates.selectedPhaseId !== undefined) current.selectedPhaseId = updates.selectedPhaseId;
+  if (Array.isArray(updates.cycleLogs)) current.cycleLogs = updates.cycleLogs;
+  if (updates.averageCycleLength !== undefined) {
+    current.averageCycleLength = Math.max(20, Math.min(45, Number(updates.averageCycleLength) || 28));
+  }
+  if (updates.periodDurationDays !== undefined) {
+    current.periodDurationDays = Math.max(2, Math.min(10, Number(updates.periodDurationDays) || 5));
+  }
+  if (Array.isArray(updates.dailyLogs)) current.dailyLogs = updates.dailyLogs;
+  if (updates.ouraToken !== undefined) current.ouraToken = String(updates.ouraToken || '').trim();
+  if (updates.ouraConnected !== undefined) current.ouraConnected = Boolean(updates.ouraConnected);
+
+  const ts = saveHealthFitnessAndSync(current);
+  res.json({
+    success: true,
+    healthFitness: current,
+    healthFitnessUpdatedAt: ts
+  });
+});
+
+// Connect & Sync Oura Ring Cloud API v2 (Sleep, Activity, Readiness & Cycle Temp Deviation)
+app.post('/api/health-fitness/oura/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const current = {
+    ...getDefaultHealthFitnessData(),
+    ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
+  };
+
+  const incomingToken = req.body?.token !== undefined ? String(req.body.token).trim() : current.ouraToken;
+  if (!incomingToken) {
+    return res.status(400).json({
+      error: 'Please enter your Oura Ring Personal Access Token from cloud.ouraring.com/personal-access-tokens'
+    });
+  }
+
+  try {
+    const endDate = getEstDateTime().dateStr;
+    const startObj = new Date(endDate + 'T12:00:00');
+    startObj.setDate(startObj.getDate() - 14);
+    const startDate = startObj.toISOString().split('T')[0];
+
+    const headers = {
+      Authorization: `Bearer ${incomingToken}`,
+      Accept: 'application/json'
+    };
+
+    const [sleepRes, actRes, readyRes, detailSleepRes] = await Promise.all([
+      fetch(`https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${startDate}&end_date=${endDate}`, { headers }),
+      fetch(`https://api.ouraring.com/v2/usercollection/daily_activity?start_date=${startDate}&end_date=${endDate}`, { headers }),
+      fetch(`https://api.ouraring.com/v2/usercollection/daily_readiness?start_date=${startDate}&end_date=${endDate}`, { headers }),
+      fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${startDate}&end_date=${endDate}`, { headers })
+    ]);
+
+    if (sleepRes.status === 401 || actRes.status === 401) {
+      return res.status(401).json({
+        error: 'Oura Ring token was rejected (401 Unauthorized). Please verify your Personal Access Token.'
+      });
+    }
+
+    const sleepJson = sleepRes.ok ? await sleepRes.json() : { data: [] };
+    const actJson = actRes.ok ? await actRes.json() : { data: [] };
+    const readyJson = readyRes.ok ? await readyRes.json() : { data: [] };
+    const detailSleepJson = detailSleepRes.ok ? await detailSleepRes.json() : { data: [] };
+
+    const byDate = new Map();
+    for (const item of current.dailyLogs || []) {
+      if (item && item.date) byDate.set(item.date, { ...item });
+    }
+
+    for (const s of sleepJson.data || []) {
+      if (!s.day) continue;
+      const existing = byDate.get(s.day) || { date: s.day };
+      existing.sleepScore = s.score ?? existing.sleepScore ?? null;
+      existing.source = 'Oura Ring';
+      byDate.set(s.day, existing);
+    }
+
+    for (const ds of detailSleepJson.data || []) {
+      if (!ds.day) continue;
+      const existing = byDate.get(ds.day) || { date: ds.day };
+      if (ds.total_sleep_duration) {
+        existing.sleepHours = Math.round((ds.total_sleep_duration / 3600) * 10) / 10;
+      }
+      if (ds.deep_sleep_duration) {
+        existing.deepSleepMins = Math.round(ds.deep_sleep_duration / 60);
+      }
+      if (ds.rem_sleep_duration) {
+        existing.remSleepMins = Math.round(ds.rem_sleep_duration / 60);
+      }
+      if (ds.lowest_heart_rate) {
+        existing.restingHr = ds.lowest_heart_rate;
+      }
+      if (ds.average_hrv) {
+        existing.hrvMs = ds.average_hrv;
+      }
+      existing.source = 'Oura Ring';
+      byDate.set(ds.day, existing);
+    }
+
+    for (const a of actJson.data || []) {
+      if (!a.day) continue;
+      const existing = byDate.get(a.day) || { date: a.day };
+      existing.activityScore = a.score ?? existing.activityScore ?? null;
+      existing.steps = a.steps ?? existing.steps ?? 0;
+      existing.activeCalories = a.active_calories ?? existing.activeCalories ?? 0;
+      if (a.equivalent_walking_distance) {
+        existing.walkingMiles = Math.round((a.equivalent_walking_distance / 1609.34) * 10) / 10;
+      }
+      if (a.medium_activity_time || a.high_activity_time) {
+        existing.walkingMinutes = Math.round(((a.medium_activity_time || 0) + (a.high_activity_time || 0)) / 60);
+      }
+      existing.source = 'Oura Ring';
+      byDate.set(a.day, existing);
+    }
+
+    for (const r of readyJson.data || []) {
+      if (!r.day) continue;
+      const existing = byDate.get(r.day) || { date: r.day };
+      existing.readinessScore = r.score ?? existing.readinessScore ?? null;
+      if (r.temperature_deviation !== undefined && r.temperature_deviation !== null) {
+        existing.tempDeviationC = Math.round(Number(r.temperature_deviation) * 100) / 100;
+      }
+      existing.source = 'Oura Ring';
+      byDate.set(r.day, existing);
+    }
+
+    const mergedLogs = Array.from(byDate.values()).sort((a, b) =>
+      String(b.date || '').localeCompare(String(a.date || ''))
+    );
+
+    current.ouraToken = incomingToken;
+    current.ouraConnected = true;
+    current.ouraLastSynced = new Date().toISOString();
+    current.dailyLogs = mergedLogs.slice(0, 60);
+
+    const ts = saveHealthFitnessAndSync(current);
+    res.json({
+      success: true,
+      healthFitness: current,
+      healthFitnessUpdatedAt: ts,
+      syncedDaysCount: mergedLogs.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: `Oura sync failed: ${err.message}` });
+  }
 });
 
 // ============================================================================

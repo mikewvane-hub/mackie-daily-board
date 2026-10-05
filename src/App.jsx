@@ -30,11 +30,13 @@ import {
   Baby,
   Landmark,
   MessageSquarePlus,
-  Pencil
+  Pencil,
+  HeartPulse
 } from 'lucide-react';
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
 import PostpartumBabyHub from './components/PostpartumBabyHub.jsx';
+import PersonalHealthFitnessHub from './components/PersonalHealthFitnessHub.jsx';
 import AussieDogAgent from './components/AussieDogAgent.jsx';
 import DailyNewsAndDcEvents from './components/DailyNewsAndDcEvents.jsx';
 import {
@@ -389,7 +391,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs) => {
+  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs, hfTs) => {
     try {
       if (nextBoard) {
         localStorage.setItem('mackie_saved_board_data', JSON.stringify(nextBoard));
@@ -399,6 +401,9 @@ export default function App() {
       }
       if (grTs !== undefined && grTs !== null) {
         localStorage.setItem('mackie_grocery_updated_at', String(grTs));
+      }
+      if (hfTs !== undefined && hfTs !== null) {
+        localStorage.setItem('mackie_health_fitness_updated_at', String(hfTs));
       }
     } catch {}
   };
@@ -423,15 +428,18 @@ export default function App() {
         const serverJson = await res.json();
         const serverMpTs = Number(serverJson.meta?.mealPlanUpdatedAt) || 0;
         const serverGrTs = Number(serverJson.meta?.groceryUpdatedAt) || 0;
+        const serverHfTs = Number(serverJson.meta?.healthFitnessUpdatedAt) || 0;
 
         let localBoard = null;
         let localMpTs = 0;
         let localGrTs = 0;
+        let localHfTs = 0;
         try {
           const rawB = localStorage.getItem('mackie_saved_board_data');
           if (rawB) localBoard = JSON.parse(rawB);
           localMpTs = Number(localStorage.getItem('mackie_meal_plan_updated_at')) || 0;
           localGrTs = Number(localStorage.getItem('mackie_grocery_updated_at')) || 0;
+          localHfTs = Number(localStorage.getItem('mackie_health_fitness_updated_at')) || 0;
         } catch {}
 
         const localHasNewerMeals =
@@ -444,22 +452,31 @@ export default function App() {
           (localGrTs > serverGrTs ||
             (serverGrTs === 0 && localBoard.groceryList.length > 0 && (serverJson.groceryList || []).length === 0));
 
+        const localHasNewerHf =
+          localBoard?.healthFitness && localHfTs > serverHfTs;
+
         const finalMealPlan = localHasNewerMeals ? localBoard.mealPlan : serverJson.mealPlan;
         const finalMpTs = localHasNewerMeals ? (localMpTs || Date.now()) : serverMpTs;
 
         const finalGroceryList = localHasNewerGrocery ? localBoard.groceryList : serverJson.groceryList;
         const finalGrTs = localHasNewerGrocery ? (localGrTs || Date.now()) : serverGrTs;
 
+        const finalHealthFitness = localHasNewerHf
+          ? localBoard.healthFitness
+          : serverJson.healthFitness;
+        const finalHfTs = localHasNewerHf ? (localHfTs || Date.now()) : serverHfTs;
+
         const mergedBoard = {
           ...serverJson,
           mealPlan: finalMealPlan,
-          groceryList: finalGroceryList
+          groceryList: finalGroceryList,
+          healthFitness: finalHealthFitness
         };
 
         setBoardData(mergedBoard);
-        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs);
+        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs, finalHfTs);
 
-        if (localHasNewerMeals || localHasNewerGrocery) {
+        if (localHasNewerMeals || localHasNewerGrocery || localHasNewerHf) {
           fetch(`${API_BASE}/board/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -467,7 +484,9 @@ export default function App() {
               mealPlan: finalMealPlan,
               mealPlanUpdatedAt: finalMpTs,
               groceryList: finalGroceryList,
-              groceryUpdatedAt: finalGrTs
+              groceryUpdatedAt: finalGrTs,
+              healthFitness: finalHealthFitness,
+              healthFitnessUpdatedAt: finalHfTs
             })
           }).catch(() => {});
         }
@@ -1308,6 +1327,7 @@ export default function App() {
               { id: 'calendar', label: 'Calendar (Daily / Weekly)', icon: Calendar },
               { id: 'meals', label: `Cookbook & Weekly Meals (${totalPlannedMeals})`, icon: BookOpen },
               { id: 'grocery', label: `Grocery List (${uncheckedGroceryCount})`, icon: ShoppingBag },
+              { id: 'fitness', label: 'Personal Health & Fitness', icon: HeartPulse },
               { id: 'baby', label: 'Baby Aiden & AAP Hub', icon: Baby },
               { id: 'news', label: 'U.S. Policy News & D.C. Guide', icon: Landmark }
             ].map(tab => {
@@ -2605,6 +2625,40 @@ export default function App() {
         <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={1} />
 
         {/* ================================================================= */}
+        {/* ROW 2B: MACKIE'S PERSONAL HEALTH, FITNESS, POSTPARTUM TIMELINE,   */}
+        {/*         SAVED WORKOUT ROUTINES, CYCLE & OURA RING TRACKER         */}
+        {/* ================================================================= */}
+        {(activeSection === 'all' || activeSection === 'fitness') && (
+          <>
+            <PersonalHealthFitnessHub
+              theme={theme}
+              activeSeason={activeSeasonKey}
+              healthFitness={boardData?.healthFitness}
+              onUpdateHealthFitness={nextHf => {
+                const nowTs = Date.now();
+                setBoardData(prev => {
+                  const next = {
+                    ...prev,
+                    healthFitness: nextHf
+                  };
+                  persistBoardToLocalStorage(
+                    next,
+                    undefined,
+                    undefined,
+                    nextHf?.updatedAtTs || nowTs
+                  );
+                  return next;
+                });
+              }}
+              todayDayName={todayDayName}
+              todayShortDateLabel={todayShortDateLabel}
+              showToast={showToast}
+            />
+            <SeasonalMotifRibbon season={activeSeasonKey} rowSeed={4} />
+          </>
+        )}
+
+        {/* ================================================================= */}
         {/* ROW 3: POSTPARTUM TRACKER, LIVE TREND GRAPH, AAP NEWBORN GUIDE    */}
         {/*        + HOVERING COZY TAN TEDDY BEAR AGENT ("TED", DESKTOP)      */}
         {/* ================================================================= */}
@@ -3190,6 +3244,7 @@ export default function App() {
                       'Calendar',
                       'Meals & Recipes',
                       'Grocery List',
+                      'Health & Fitness',
                       'Baby & Ted',
                       'Seasonal Decor',
                       'D.C. & News'
