@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168511169,
+  "updatedAt": 1791168569109,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168511072,
+  "groceryUpdatedAt": 1791168569108,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -55,7 +55,16 @@
       }
     ]
   },
-  "groceryList": [],
+  "groceryList": [
+    {
+      "id": "groc-manual-1791168569108-1hv",
+      "name": "Sourdough",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T02:49:29.108Z"
+    }
+  ],
   "suggestions": {
     "items": [
       {
