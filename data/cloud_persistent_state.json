@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791242774508,
+  "updatedAt": 1791243334041,
   "mealPlanUpdatedAt": 1791172501722,
-  "groceryUpdatedAt": 1791208604828,
+  "groceryUpdatedAt": 1791243334040,
   "suggestionsUpdatedAt": 1791172504292,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -56,6 +56,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791243334040-tvn",
+      "name": "Pam spray",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T23:35:34.040Z"
+    },
     {
       "id": "groc-manual-1791168583503-au9",
       "name": "Brie",
