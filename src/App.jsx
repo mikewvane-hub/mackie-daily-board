@@ -1228,7 +1228,7 @@ export default function App() {
       {/* =================================================================== */}
       {/* TOP HEADER: SEASONAL MINIMALIST BRANDING, DATE, SEASON & WIFI HUB   */}
       {/* =================================================================== */}
-      <header className={`${theme.cardBg} border-b ${theme.border} sticky top-0 z-30 backdrop-blur-md bg-opacity-95`}>
+      <header className={`${theme.cardBg} border-b ${theme.border} relative z-20`}>
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-3.5 flex flex-col gap-2.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Left: Title, Seasonal Minimalist Badge & Cutesy Squiggle (Email Removed!) */}
@@ -1885,7 +1885,7 @@ export default function App() {
                 ) : (
                   groupedRecipes.map(group => (
                     <div key={group.category.id} className="space-y-1.5">
-                      <div className="flex items-center justify-between px-2 py-1 sticky top-0 bg-[#F6F2EB]/95 backdrop-blur-xs z-10 border-b border-[#E2D9CC]">
+                      <div className="flex items-center justify-between px-2 py-1 bg-[#F6F2EB] border-b border-[#E2D9CC]">
                         <h3 className="font-editorial text-base font-bold tracking-wide text-[#2C2520]">
                           {group.category.label}
                         </h3>
