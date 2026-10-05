@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "updatedAt": 1791172509812,
+  "updatedAt": 1791172510543,
   "mealPlanUpdatedAt": 1791172501722,
   "groceryUpdatedAt": 1791172501746,
   "suggestionsUpdatedAt": 1791168670720,
-  "babyTrackerUpdatedAt": 1791172467247,
+  "babyTrackerUpdatedAt": 1791172501788,
   "mealPlan": {
     "Monday": [
       {
@@ -162,6 +162,15 @@
       }
     },
     "feedingSessions": [
+      {
+        "id": "feed-1791172501788-l13m",
+        "date": "2026-10-04",
+        "time": "10:15 AM",
+        "side": "Left Breast",
+        "durationMinutes": 15,
+        "notes": "E2E Test Feeding",
+        "createdAt": "2026-10-05T03:55:01.788Z"
+      },
       {
         "id": "feed-seed-2026-09-27-0",
         "date": "2026-09-27",
@@ -733,7 +742,7 @@
     "completedVaccines": [
       "hepb-1"
     ],
-    "updatedAt": "2026-10-05T03:54:27.247Z",
-    "updatedAtTs": 1791172467247
+    "updatedAt": "2026-10-05T03:55:01.788Z",
+    "updatedAtTs": 1791172501788
   }
 }
