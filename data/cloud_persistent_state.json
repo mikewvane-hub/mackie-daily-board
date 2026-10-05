@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791158638679,
-  "mealPlanUpdatedAt": 1791158638678,
+  "updatedAt": 1791158651993,
+  "mealPlanUpdatedAt": 1791158651992,
   "groceryUpdatedAt": 1791158626253,
   "suggestionsUpdatedAt": 0,
   "babyTrackerUpdatedAt": 0,
@@ -17,7 +17,17 @@
         "addedAt": "2026-10-05T00:03:58.678Z"
       }
     ],
-    "Tuesday": [],
+    "Tuesday": [
+      {
+        "instanceId": "meal-1791158651992-fs0b",
+        "recipeId": null,
+        "title": "Italian chicken thighs and potatoes",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-05T00:04:11.992Z"
+      }
+    ],
     "Wednesday": [],
     "Thursday": [],
     "Friday": [],
