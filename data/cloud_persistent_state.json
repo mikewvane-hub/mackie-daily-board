@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168579260,
+  "updatedAt": 1791168583504,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168579259,
+  "groceryUpdatedAt": 1791168583503,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,6 +56,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791168583503-au9",
+      "name": "Brie",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T02:49:43.503Z"
+    },
     {
       "id": "groc-manual-1791168579259-ns6",
       "name": "Turkey",
