@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791172414227,
+  "updatedAt": 1791172415050,
   "mealPlanUpdatedAt": 1791172409376,
-  "groceryUpdatedAt": 1791172409378,
+  "groceryUpdatedAt": 1791172409388,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,6 +56,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791172409388-u9g",
+      "name": "E2E Organic Raspberries",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T03:53:29.388Z"
+    },
     {
       "id": "groc-manual-1791168583503-au9",
       "name": "Brie",
