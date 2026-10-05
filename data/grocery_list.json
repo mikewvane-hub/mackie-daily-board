@@ -1,138 +1,30 @@
 {
   "items": [
     {
-      "id": "groc-1791158626249-0-2fs",
-      "name": "Butter",
+      "id": "groc-manual-1791168583503-au9",
+      "name": "Brie",
       "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.249Z"
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T02:49:43.503Z"
     },
     {
-      "id": "groc-1791158626250-1-6cf",
-      "name": "Italian sausage",
+      "id": "groc-manual-1791168579259-ns6",
+      "name": "Turkey",
       "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.250Z"
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T02:49:39.259Z"
     },
     {
-      "id": "groc-1791158626250-2-9dm",
-      "name": "Onion",
+      "id": "groc-manual-1791168569108-1hv",
+      "name": "Sourdough",
       "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.250Z"
-    },
-    {
-      "id": "groc-1791158626251-3-64f",
-      "name": "Russet potatoes",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.251Z"
-    },
-    {
-      "id": "groc-1791158626251-4-98v",
-      "name": "Half and half",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.251Z"
-    },
-    {
-      "id": "groc-1791158626251-5-30a",
-      "name": "Fresh kale",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.251Z"
-    },
-    {
-      "id": "groc-1791158626251-6-hiz",
-      "name": "Zucchini",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.251Z"
-    },
-    {
-      "id": "groc-1791158626252-7-jlh",
-      "name": "Pasta shells",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.252Z"
-    },
-    {
-      "id": "groc-1791158626253-8-5d5",
-      "name": "Chicken broth",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.253Z"
-    },
-    {
-      "id": "groc-1791158626253-9-o6b",
-      "name": "Parmesan cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.253Z"
-    },
-    {
-      "id": "groc-1791158626253-10-5q8",
-      "name": "Texas toast",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.253Z"
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-05T02:49:29.108Z"
     }
   ],
-  "updatedAt": "2026-10-05T00:03:46.253Z",
-  "updatedAtTs": 1791158626253
+  "updatedAt": "2026-10-05T03:55:01.746Z",
+  "updatedAtTs": 1791172501746
 }

@@ -493,10 +493,35 @@ export default function App() {
       }
       if (babyRes.ok) {
         const babyJson = await babyRes.json();
-        setBabyTracker(babyJson);
+        const serverBtTs = Number(babyJson?.updatedAtTs) || 0;
+        let localBt = null;
+        let localBtTs = 0;
         try {
-          localStorage.setItem('mackie_saved_baby_tracker', JSON.stringify(babyJson));
+          const rawBt = localStorage.getItem('mackie_saved_baby_tracker');
+          if (rawBt) localBt = JSON.parse(rawBt);
+          localBtTs = Number(localStorage.getItem('mackie_baby_tracker_updated_at')) || 0;
         } catch {}
+
+        const localHasNewerBt = localBt && localBtTs > serverBtTs;
+        const finalBt = localHasNewerBt ? localBt : babyJson;
+        const finalBtTs = localHasNewerBt ? localBtTs : (serverBtTs || Date.now());
+
+        setBabyTracker(finalBt);
+        try {
+          localStorage.setItem('mackie_saved_baby_tracker', JSON.stringify(finalBt));
+          localStorage.setItem('mackie_baby_tracker_updated_at', String(finalBtTs));
+        } catch {}
+
+        if (localHasNewerBt) {
+          fetch(`${API_BASE}/board/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              babyTracker: finalBt,
+              babyTrackerUpdatedAt: finalBtTs
+            })
+          }).catch(() => {});
+        }
       }
     } catch (e) {
       console.error('Error fetching board:', e);
@@ -1006,7 +1031,11 @@ export default function App() {
       const res = await fetch(`${API_BASE}/calendar/sync`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, calendar: json.calendar }));
+        setBoardData(prev => {
+          const next = { ...prev, calendar: json.calendar };
+          persistBoardToLocalStorage(next);
+          return next;
+        });
         showToast('Synced Google Calendar (amblair92@gmail.com)');
       }
     } catch (err) {
@@ -1038,7 +1067,11 @@ export default function App() {
       });
       const json = await res.json();
       if (res.ok && json.success) {
-        setBoardData(prev => ({ ...prev, calendar: json.calendar }));
+        setBoardData(prev => {
+          const next = { ...prev, calendar: json.calendar };
+          persistBoardToLocalStorage(next);
+          return next;
+        });
         setCalSaveStatus('Connected! Calendar events synced.');
         setTimeout(() => {
           setShowCalSettingsModal(false);
@@ -1077,7 +1110,11 @@ export default function App() {
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, calendar: json.calendar }));
+        setBoardData(prev => {
+          const next = { ...prev, calendar: json.calendar };
+          persistBoardToLocalStorage(next);
+          return next;
+        });
         setShowAddEventModal(false);
         setNewEvent({
           title: '',
@@ -1100,7 +1137,11 @@ export default function App() {
       const res = await fetch(`${API_BASE}/calendar/event/${id}`, { method: 'DELETE' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => ({ ...prev, calendar: json.calendar }));
+        setBoardData(prev => {
+          const next = { ...prev, calendar: json.calendar };
+          persistBoardToLocalStorage(next);
+          return next;
+        });
         showToast('Removed event from schedule');
       }
     } catch (err) {
@@ -2668,7 +2709,17 @@ export default function App() {
               theme={theme}
               activeSeason={activeSeasonKey}
               babyTracker={babyTracker}
-              onUpdateBabyTracker={setBabyTracker}
+              onUpdateBabyTracker={(nextBt) => {
+                const nowTs = Date.now();
+                const stamped = nextBt ? { ...nextBt, updatedAtTs: nextBt.updatedAtTs || nowTs } : nextBt;
+                setBabyTracker(stamped);
+                try {
+                  if (stamped) {
+                    localStorage.setItem('mackie_saved_baby_tracker', JSON.stringify(stamped));
+                    localStorage.setItem('mackie_baby_tracker_updated_at', String(stamped.updatedAtTs || nowTs));
+                  }
+                } catch {}
+              }}
               showToast={showToast}
               onOpenAussieAgent={() => setAussieAgentOpen(true)}
             />
@@ -2694,10 +2745,14 @@ export default function App() {
             activeSeason={activeSeasonKey}
             showToast={showToast}
             onCalendarUpdated={newCal =>
-              setBoardData(prev => ({
-                ...prev,
-                calendar: newCal
-              }))
+              setBoardData(prev => {
+                const next = {
+                  ...prev,
+                  calendar: newCal
+                };
+                persistBoardToLocalStorage(next);
+                return next;
+              })
             }
           />
         )}

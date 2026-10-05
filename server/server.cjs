@@ -154,13 +154,16 @@ function enrichScheduleEvents(scheduleData) {
     }
   }
 
-  if (Array.isArray(scheduleData.events)) {
-    for (const evt of scheduleData.events) {
-      const dKey = evt.date || dateStr;
-      weekSchedule[dKey] = weekSchedule[dKey] || [];
-      if (!weekSchedule[dKey].some(e => e.id === evt.id)) {
-        weekSchedule[dKey].push(evt);
-      }
+  const allKnownEvents = [
+    ...(Array.isArray(scheduleData.events) ? scheduleData.events : []),
+    ...(Array.isArray(scheduleData.customEvents) ? scheduleData.customEvents : [])
+  ];
+  for (const evt of allKnownEvents) {
+    const dKey = evt.date || dateStr;
+    weekSchedule[dKey] = weekSchedule[dKey] || [];
+    if (!weekSchedule[dKey].some(e => e.id === evt.id)) {
+      weekSchedule[dKey].push(evt);
+      weekSchedule[dKey].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
     }
   }
 
@@ -262,6 +265,30 @@ function saveHealthFitnessAndSync(hfData) {
   return nowTs;
 }
 
+function saveScheduleAndSync(schedData) {
+  const nowTs = Date.now();
+  schedData.updatedAt = new Date(nowTs).toISOString();
+  schedData.updatedAtTs = nowTs;
+  writeJson(SCHEDULE_FILE, schedData);
+  pushCloudState({
+    schedule: schedData,
+    scheduleUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
+function saveCalConfigAndSync(configData) {
+  const nowTs = Date.now();
+  configData.updatedAt = new Date(nowTs).toISOString();
+  configData.updatedAtTs = nowTs;
+  writeJson(CAL_CONFIG_FILE, configData);
+  pushCloudState({
+    calConfig: configData,
+    calConfigUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
 async function hydrateBoardFromCloud(force = false) {
   try {
     const cloud = await pullCloudState(force);
@@ -325,6 +352,30 @@ async function hydrateBoardFromCloud(force = false) {
         updatedAtTs: cloudHfTs
       });
     }
+
+    // 6. Hydrate Schedule & Custom Calendar Events if cloud has newer state
+    const localSched = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], updatedAtTs: 0 });
+    const localSchedTs = Number(localSched?.updatedAtTs) || 0;
+    const cloudSchedTs = Number(cloud.scheduleUpdatedAt) || 0;
+    if (cloud.schedule && (cloudSchedTs > localSchedTs || (localSchedTs === 0 && (cloud.schedule.customEvents || []).length > 0))) {
+      writeJson(SCHEDULE_FILE, {
+        ...localSched,
+        ...cloud.schedule,
+        updatedAtTs: cloudSchedTs || Date.now()
+      });
+    }
+
+    // 7. Hydrate Calendar iCal Config if cloud has newer state
+    const localCalCfg = readJson(CAL_CONFIG_FILE, { icalUrl: '', updatedAtTs: 0 });
+    const localCalCfgTs = Number(localCalCfg?.updatedAtTs) || 0;
+    const cloudCalCfgTs = Number(cloud.calConfigUpdatedAt) || 0;
+    if (cloud.calConfig && (cloudCalCfgTs > localCalCfgTs || (!localCalCfg.icalUrl && cloud.calConfig.icalUrl))) {
+      writeJson(CAL_CONFIG_FILE, {
+        ...localCalCfg,
+        ...cloud.calConfig,
+        updatedAtTs: cloudCalCfgTs || Date.now()
+      });
+    }
   } catch (err) {
     console.warn('[HydrateCloud] warning:', err.message);
   }
@@ -359,7 +410,8 @@ app.get('/api/board', async (req, res) => {
       hasIcalConfigured: Boolean(calConfig.icalUrl),
       mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
       groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
-      healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0
+      healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0,
+      scheduleUpdatedAt: Number(scheduleData.updatedAtTs) || 0
     },
     calendar: enrichScheduleEvents(scheduleData),
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
@@ -379,7 +431,9 @@ app.post('/api/board/sync', async (req, res) => {
     groceryList: incomingGroceryList,
     groceryUpdatedAt: incomingGrTs,
     healthFitness: incomingHealthFitness,
-    healthFitnessUpdatedAt: incomingHfTs
+    healthFitnessUpdatedAt: incomingHfTs,
+    babyTracker: incomingBabyTracker,
+    babyTrackerUpdatedAt: incomingBtTs
   } = req.body || {};
 
   let mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
@@ -440,6 +494,23 @@ app.post('/api/board/sync', async (req, res) => {
     }).catch(() => {});
   }
 
+  let babyTrackerData = readJson(BABY_TRACKER_FILE, null);
+  const curBtTs = Number(babyTrackerData?.updatedAtTs) || 0;
+  const incBtTs = Number(incomingBtTs) || 0;
+  if (incomingBabyTracker && typeof incomingBabyTracker === 'object' && incBtTs > curBtTs) {
+    babyTrackerData = {
+      ...(babyTrackerData || {}),
+      ...incomingBabyTracker,
+      updatedAt: new Date(incBtTs || Date.now()).toISOString(),
+      updatedAtTs: incBtTs || Date.now()
+    };
+    writeJson(BABY_TRACKER_FILE, babyTrackerData);
+    pushCloudState({
+      babyTracker: babyTrackerData,
+      babyTrackerUpdatedAt: babyTrackerData.updatedAtTs
+    }).catch(() => {});
+  }
+
   res.json({
     success: true,
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
@@ -447,7 +518,9 @@ app.post('/api/board/sync', async (req, res) => {
     groceryList: groceryData.items || [],
     groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
     healthFitness: healthFitnessData,
-    healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0
+    healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0,
+    babyTracker: babyTrackerData,
+    babyTrackerUpdatedAt: Number(babyTrackerData?.updatedAtTs) || 0
   });
 });
 
@@ -961,8 +1034,10 @@ app.post('/api/grocery/clear-all', async (req, res) => {
 // 4. Google Calendar Sync & OAuth Endpoints (amblair92@gmail.com)
 // ============================================================================
 app.post('/api/calendar/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   try {
     const synced = await syncCalendar();
+    saveScheduleAndSync(synced);
     res.json({
       success: true,
       calendar: enrichScheduleEvents(synced)
@@ -972,22 +1047,25 @@ app.post('/api/calendar/sync', async (req, res) => {
   }
 });
 
-app.get('/api/calendar/config', (req, res) => {
+app.get('/api/calendar/config', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const config = readJson(CAL_CONFIG_FILE, { icalUrl: '', account: TARGET_ACCOUNT });
   res.json(config);
 });
 
 app.post('/api/calendar/config', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   const { icalUrl } = req.body;
   const config = {
     icalUrl: String(icalUrl || '').trim(),
     account: TARGET_ACCOUNT,
     updatedAt: new Date().toISOString()
   };
-  writeJson(CAL_CONFIG_FILE, config);
+  saveCalConfigAndSync(config);
 
   try {
     const synced = await syncCalendar();
+    saveScheduleAndSync(synced);
     res.json({
       success: true,
       config,
@@ -999,9 +1077,11 @@ app.post('/api/calendar/config', async (req, res) => {
 });
 
 app.post('/api/calendar/event', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   try {
     const result = await addCalendarEvent(req.body);
-    const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {} });
+    const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [] });
+    saveScheduleAndSync(scheduleData);
     res.json({
       success: true,
       event: result.event,
@@ -1013,9 +1093,11 @@ app.post('/api/calendar/event', async (req, res) => {
   }
 });
 
-app.delete('/api/calendar/event/:id', (req, res) => {
+app.delete('/api/calendar/event/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
   deleteCalendarEvent(req.params.id);
-  const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {} });
+  const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [] });
+  saveScheduleAndSync(scheduleData);
   res.json({
     success: true,
     calendar: enrichScheduleEvents(scheduleData)

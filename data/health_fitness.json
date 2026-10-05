@@ -1,0 +1,23 @@
+{
+  "customRoutines": [],
+  "weeklyWorkouts": {
+    "Monday": [],
+    "Tuesday": [],
+    "Wednesday": [],
+    "Thursday": [],
+    "Friday": [],
+    "Saturday": [],
+    "Sunday": []
+  },
+  "deliveryDate": "2026-11-03",
+  "selectedPhaseId": null,
+  "cycleLogs": [],
+  "averageCycleLength": 28,
+  "periodDurationDays": 5,
+  "ouraToken": "",
+  "ouraConnected": false,
+  "ouraLastSynced": null,
+  "dailyLogs": [],
+  "updatedAt": "2026-10-05T03:55:48.136Z",
+  "updatedAtTs": 1791172548136
+}
