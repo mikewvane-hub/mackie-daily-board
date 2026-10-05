@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791172415050,
+  "updatedAt": 1791172415886,
   "mealPlanUpdatedAt": 1791172409376,
-  "groceryUpdatedAt": 1791172409388,
+  "groceryUpdatedAt": 1791172409398,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -59,7 +59,7 @@
     {
       "id": "groc-manual-1791172409388-u9g",
       "name": "E2E Organic Raspberries",
-      "checked": false,
+      "checked": true,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-05T03:53:29.388Z"
