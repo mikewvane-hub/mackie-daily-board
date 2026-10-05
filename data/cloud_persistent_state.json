@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791172409335,
+  "updatedAt": 1791172410117,
   "mealPlanUpdatedAt": 1791172409330,
-  "groceryUpdatedAt": 1791172371991,
+  "groceryUpdatedAt": 1791172409333,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -88,6 +88,42 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-05T02:49:29.108Z"
+    },
+    {
+      "id": "groc-1791172409333-0-sof",
+      "name": "Olive oil",
+      "checked": false,
+      "sourceRecipeTitle": "E2E Test Harvest Bowl",
+      "sourceDay": "Monday",
+      "sourceInstanceIds": [
+        "meal-1791172409330-v7rn"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-05T03:53:29.333Z"
+    },
+    {
+      "id": "groc-1791172409333-1-w21",
+      "name": "Eggs",
+      "checked": false,
+      "sourceRecipeTitle": "E2E Test Harvest Bowl",
+      "sourceDay": "Monday",
+      "sourceInstanceIds": [
+        "meal-1791172409330-v7rn"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-05T03:53:29.333Z"
+    },
+    {
+      "id": "groc-1791172409333-2-d0i",
+      "name": "Sweet potatoes",
+      "checked": false,
+      "sourceRecipeTitle": "E2E Test Harvest Bowl",
+      "sourceDay": "Monday",
+      "sourceInstanceIds": [
+        "meal-1791172409330-v7rn"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-05T03:53:29.333Z"
     }
   ],
   "suggestions": {
