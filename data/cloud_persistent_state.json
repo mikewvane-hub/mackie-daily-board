@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791172467867,
-  "mealPlanUpdatedAt": 1791172467060,
+  "updatedAt": 1791172468620,
+  "mealPlanUpdatedAt": 1791172467074,
   "groceryUpdatedAt": 1791172467062,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 1791172409490,
@@ -24,6 +24,15 @@
         "isManual": false,
         "slot": "ENTREES",
         "addedAt": "2026-10-05T03:54:27.060Z"
+      },
+      {
+        "instanceId": "meal-1791172467074-0edm",
+        "recipeId": null,
+        "title": "E2E Custom Takeout Sushi",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-05T03:54:27.074Z"
       }
     ],
     "Tuesday": [
