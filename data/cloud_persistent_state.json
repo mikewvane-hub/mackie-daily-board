@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791168499325,
+  "updatedAt": 1791168500421,
   "mealPlanUpdatedAt": 1791158660586,
-  "groceryUpdatedAt": 1791168499324,
+  "groceryUpdatedAt": 1791168500421,
   "suggestionsUpdatedAt": 1791158809206,
   "babyTrackerUpdatedAt": 0,
   "mealPlan": {
@@ -56,18 +56,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-1791158626250-1-6cf",
-      "name": "Italian sausage",
-      "checked": false,
-      "sourceRecipeTitle": "Katy's Kale Soup",
-      "sourceDay": "Sunday",
-      "sourceInstanceIds": [
-        "meal-1791158626248-pu5b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-05T00:03:46.250Z"
-    },
     {
       "id": "groc-1791158626250-2-9dm",
       "name": "Onion",
