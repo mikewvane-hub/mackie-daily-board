@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "updatedAt": 1791172478075,
+  "updatedAt": 1791172478854,
   "mealPlanUpdatedAt": 1791172467108,
   "groceryUpdatedAt": 1791172467139,
   "suggestionsUpdatedAt": 1791168670720,
-  "babyTrackerUpdatedAt": 1791172467233,
+  "babyTrackerUpdatedAt": 1791172467247,
   "mealPlan": {
     "Monday": [
       {
@@ -730,8 +730,10 @@
         "createdAt": "2026-10-04T03:40:03.987Z"
       }
     ],
-    "completedVaccines": [],
-    "updatedAt": "2026-10-05T03:54:27.233Z",
-    "updatedAtTs": 1791172467233
+    "completedVaccines": [
+      "hepb-1"
+    ],
+    "updatedAt": "2026-10-05T03:54:27.247Z",
+    "updatedAtTs": 1791172467247
   }
 }
