@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791172374177,
-  "mealPlanUpdatedAt": 1791172371936,
+  "updatedAt": 1791172374920,
+  "mealPlanUpdatedAt": 1791172371946,
   "groceryUpdatedAt": 1791172371910,
   "suggestionsUpdatedAt": 1791168670720,
   "babyTrackerUpdatedAt": 0,
@@ -24,16 +24,6 @@
         "isManual": false,
         "slot": "ENTREES",
         "addedAt": "2026-10-05T03:52:51.905Z"
-      },
-      {
-        "instanceId": "meal-1791172371924-o45e",
-        "recipeId": null,
-        "title": "E2E Edited Takeout Thai",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-05T03:52:51.924Z",
-        "updatedAt": "2026-10-05T03:52:51.936Z"
       }
     ],
     "Tuesday": [
