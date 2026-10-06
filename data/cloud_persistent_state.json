@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791259761286,
+  "updatedAt": 1791259762104,
   "mealPlanUpdatedAt": 1791172501722,
-  "groceryUpdatedAt": 1791259761278,
+  "groceryUpdatedAt": 1791259761318,
   "suggestionsUpdatedAt": 1791243388426,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -57,14 +57,6 @@
   },
   "groceryList": [
     {
-      "id": "groc-manual-1791259704742-mkm",
-      "name": "Temp Checkoff Item",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-06T04:08:24.742Z"
-    },
-    {
       "id": "groc-manual-1791243338764-sff",
       "name": "Oats",
       "checked": false,
@@ -79,30 +71,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-05T23:35:34.040Z"
-    },
-    {
-      "id": "groc-manual-1791168583503-au9",
-      "name": "Brie",
-      "checked": true,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-05T02:49:43.503Z"
-    },
-    {
-      "id": "groc-manual-1791168579259-ns6",
-      "name": "Turkey",
-      "checked": true,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-05T02:49:39.259Z"
-    },
-    {
-      "id": "groc-manual-1791168569108-1hv",
-      "name": "Sourdough",
-      "checked": true,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-05T02:49:29.108Z"
     }
   ],
   "suggestions": {
