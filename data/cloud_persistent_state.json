@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "updatedAt": 1791330214219,
+  "updatedAt": 1791330297892,
   "mealPlanUpdatedAt": 1791288192725,
   "groceryUpdatedAt": 1791330214218,
-  "suggestionsUpdatedAt": 1791326821052,
+  "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [
@@ -140,7 +140,16 @@
     }
   ],
   "suggestions": {
-    "items": [],
+    "items": [
+      {
+        "id": "sug-1791330297776-rler",
+        "text": "Is it possible for the grocery list to automatically add the items to the Walmart cart of the Walmart app?",
+        "category": "Meals & Recipes",
+        "author": "Mackie",
+        "createdAt": "2026-10-06T23:44:57.776Z",
+        "formattedDate": "Oct 6, 2026 at 7:44 PM EST"
+      }
+    ],
     "deletedIds": [
       "sug-test-sync",
       "sug-1791158808969-dboh",
