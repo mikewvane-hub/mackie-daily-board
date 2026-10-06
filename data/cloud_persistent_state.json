@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791288192730,
+  "updatedAt": 1791290822849,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791259761318,
+  "groceryUpdatedAt": 1791290822844,
   "suggestionsUpdatedAt": 1791243388426,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,6 +66,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791290822844-578",
+      "name": "Lavender bounce sheets",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-06T12:47:02.844Z"
+    },
     {
       "id": "groc-manual-1791243338764-sff",
       "name": "Oats",
