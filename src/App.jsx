@@ -943,20 +943,32 @@ export default function App() {
     }
   };
 
-  const handleToggleGroceryItem = async (id) => {
+  const handleToggleGroceryItem = async (id, itemName) => {
+    const nowTs = Date.now();
+    // Immediately drop the item from the list when checked as gotten
+    setBoardData(prev => {
+      if (!prev) return prev;
+      const nextList = (prev.groceryList || []).filter(i => i.id !== id && !i.checked);
+      const next = { ...prev, groceryList: nextList };
+      persistBoardToLocalStorage(next, undefined, nowTs);
+      return next;
+    });
+    if (itemName) {
+      showToast(`Checked off "${itemName}"`);
+    }
     try {
       const res = await fetch(`${API_BASE}/grocery/${id}/toggle`, { method: 'POST' });
       if (res.ok) {
         const json = await res.json();
-        const nowTs = Date.now();
+        const serverTs = json.groceryUpdatedAt || Date.now();
         setBoardData(prev => {
           const next = { ...prev, groceryList: json.groceryList };
-          persistBoardToLocalStorage(next, undefined, json.groceryUpdatedAt || nowTs);
+          persistBoardToLocalStorage(next, undefined, serverTs);
           return next;
         });
       }
     } catch (err) {
-      console.error('Failed to toggle item:', err);
+      console.error('Failed to check off grocery item:', err);
     }
   };
 
@@ -2513,7 +2525,7 @@ export default function App() {
                       <CutesyBadgeDoodle season={activeSeasonKey} variant={1} />
                     </div>
                     <p className={`text-xs ${theme.textSecondary}`}>
-                      {uncheckedGroceryCount} to buy • {checkedGroceryCount} checked off
+                      {uncheckedGroceryCount} {uncheckedGroceryCount === 1 ? 'item' : 'items'} to buy • Tap checkbox when gotten
                     </p>
                   </div>
                 </div>
@@ -2527,16 +2539,6 @@ export default function App() {
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
-                  {checkedGroceryCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleClearCheckedGrocery}
-                      className={`px-2 py-1 rounded-xl border ${theme.border} text-[11px] ${theme.textSecondary} hover:text-stone-900`}
-                      title="Remove checked items"
-                    >
-                      Clear Checked
-                    </button>
-                  )}
                   {groceryList.length > 0 && (
                     <button
                       type="button"
@@ -2568,33 +2570,9 @@ export default function App() {
                 </button>
               </form>
 
-              {/* Filter Tabs */}
-              <div className="flex items-center justify-between text-xs gap-1">
-                <div className={`flex items-center gap-1 p-0.5 rounded-lg ${theme.cardSubtle} border ${theme.border}`}>
-                  {[
-                    { id: 'all', label: `All (${groceryList.length})` },
-                    { id: 'unchecked', label: `Need (${uncheckedGroceryCount})` },
-                    { id: 'checked', label: `Got (${checkedGroceryCount})` }
-                  ].map(f => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setGroceryFilter(f.id)}
-                      className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition ${
-                        groceryFilter === f.id
-                          ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
-                          : theme.textSecondary
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Grocery Items Scrollable List */}
               <div className="flex flex-col gap-2 max-h-[550px] overflow-y-auto pr-1 scrollbar-minimal">
-                {filteredGroceryList.length === 0 ? (
+                {groceryList.filter(i => !i.checked).length === 0 ? (
                   <div className={`p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5`}>
                     <ShoppingBag className={`w-6 h-6 mx-auto ${theme.textMuted}`} />
                     <div className="font-editorial text-lg font-medium">
@@ -2605,58 +2583,47 @@ export default function App() {
                     </p>
                   </div>
                 ) : (
-                  filteredGroceryList.map(item => (
-                    <div
-                      key={item.id}
-                      className={`p-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${
-                        item.checked
-                          ? `${theme.bgPage} ${theme.border} opacity-60`
-                          : `${theme.cardSubtle} ${theme.border}`
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => handleToggleGroceryItem(item.id)}
-                        className="flex items-start gap-2.5 text-left min-w-0 flex-1"
+                  groceryList
+                    .filter(i => !i.checked)
+                    .map(item => (
+                      <div
+                        key={item.id}
+                        className={`p-2.5 rounded-xl border transition flex items-center justify-between gap-2 ${theme.cardSubtle} ${theme.border} hover:border-[#9E5A43]/40 group`}
                       >
-                        <div
-                          className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition ${
-                            item.checked
-                              ? `${theme.accentBg} border-transparent text-white`
-                              : `border-[#9C9084] bg-white`
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleGroceryItem(item.id, item.name)}
+                          className="flex items-start gap-2.5 text-left min-w-0 flex-1"
+                          title={`Check off "${item.name}" as gotten (removes from list)`}
                         >
-                          {item.checked && <Check className="w-3 h-3" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className={`text-xs sm:text-sm font-medium leading-snug break-words ${
-                              item.checked ? 'line-through text-stone-400' : ''
-                            }`}
-                          >
-                            {item.name}
+                          <div className="mt-0.5 w-4 h-4 rounded-md border border-[#9C9084] bg-white group-hover:border-[#9E5A43] flex items-center justify-center shrink-0 transition">
+                            <Check className="w-3 h-3 text-[#9E5A43] opacity-0 group-hover:opacity-60 transition" />
                           </div>
-                          {item.sourceRecipeTitle && (
-                            <div className={`text-[10px] ${theme.textSecondary} truncate mt-0.5`}>
-                              {item.sourceRecipeTitle}
-                              {item.sourceDay ? ` (${item.sourceDay.slice(0, 3)})` : ''}
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs sm:text-sm font-medium leading-snug break-words">
+                              {item.name}
                             </div>
-                          )}
-                        </div>
-                      </button>
+                            {item.sourceRecipeTitle && (
+                              <div className={`text-[10px] ${theme.textSecondary} truncate mt-0.5`}>
+                                {item.sourceRecipeTitle}
+                                {item.sourceDay ? ` (${item.sourceDay.slice(0, 3)})` : ''}
+                              </div>
+                            )}
+                          </div>
+                        </button>
 
-                      {/* Remove Item Button */}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteGroceryItem(item.id)}
-                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
-                        title="Remove item from grocery list"
-                        aria-label={`Remove ${item.name}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))
+                        {/* Remove Item Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGroceryItem(item.id)}
+                          className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
+                          title="Remove item from grocery list"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
                 )}
               </div>
             </section>

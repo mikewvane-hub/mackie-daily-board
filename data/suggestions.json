@@ -1,9 +1,18 @@
 {
-  "items": [],
+  "items": [
+    {
+      "id": "sug-1791243388182-w6l3",
+      "text": "When items are check as gotten on the grocery list, they can go ahead and fall off rather than sitting there marked.",
+      "category": "Meals & Recipes",
+      "author": "Mackie",
+      "createdAt": "2026-10-05T23:36:28.182Z",
+      "formattedDate": "Oct 5, 2026 at 7:36 PM EST"
+    }
+  ],
   "deletedIds": [
     "sug-test-sync",
     "sug-1791158808969-dboh",
     "sug-e2e-test-1791172504270"
   ],
-  "updatedAt": "2026-10-05T14:02:26.150Z"
+  "updatedAt": "2026-10-06T04:09:27.681Z"
 }

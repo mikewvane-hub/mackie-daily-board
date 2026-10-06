@@ -1,30 +1,22 @@
 {
   "items": [
     {
-      "id": "groc-manual-1791168583503-au9",
-      "name": "Brie",
-      "checked": true,
+      "id": "groc-manual-1791243338764-sff",
+      "name": "Oats",
+      "checked": false,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
-      "createdAt": "2026-10-05T02:49:43.503Z"
+      "createdAt": "2026-10-05T23:35:38.764Z"
     },
     {
-      "id": "groc-manual-1791168579259-ns6",
-      "name": "Turkey",
-      "checked": true,
+      "id": "groc-manual-1791243334040-tvn",
+      "name": "Pam spray",
+      "checked": false,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
-      "createdAt": "2026-10-05T02:49:39.259Z"
-    },
-    {
-      "id": "groc-manual-1791168569108-1hv",
-      "name": "Sourdough",
-      "checked": true,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-05T02:49:29.108Z"
+      "createdAt": "2026-10-05T23:35:34.040Z"
     }
   ],
-  "updatedAt": "2026-10-05T13:56:44.828Z",
-  "updatedAtTs": 1791208604828
+  "updatedAt": "2026-10-06T04:09:21.318Z",
+  "updatedAtTs": 1791259761318
 }

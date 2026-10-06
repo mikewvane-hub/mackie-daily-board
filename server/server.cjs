@@ -996,20 +996,23 @@ app.post('/api/grocery/:id/toggle', async (req, res) => {
   await hydrateBoardFromCloud(false);
 
   const groceryData = readJson(GROCERY_FILE, { items: [] });
-  const item = (groceryData.items || []).find(i => i.id === req.params.id);
-  let grTs = Number(groceryData.updatedAtTs) || Date.now();
-  if (item) {
-    item.checked = !item.checked;
-    grTs = saveGroceryAndSync(groceryData);
-  }
-  res.json({ success: true, groceryList: groceryData.items || [], groceryUpdatedAt: grTs });
+  const targetId = req.params.id;
+  const removedItem = (groceryData.items || []).find(i => i.id === targetId);
+  groceryData.items = (groceryData.items || []).filter(i => i.id !== targetId && !i.checked);
+  const grTs = saveGroceryAndSync(groceryData);
+  res.json({
+    success: true,
+    removedItem: removedItem || null,
+    groceryList: groceryData.items || [],
+    groceryUpdatedAt: grTs
+  });
 });
 
 app.delete('/api/grocery/:id', async (req, res) => {
   await hydrateBoardFromCloud(false);
 
   const groceryData = readJson(GROCERY_FILE, { items: [] });
-  groceryData.items = (groceryData.items || []).filter(i => i.id !== req.params.id);
+  groceryData.items = (groceryData.items || []).filter(i => i.id !== req.params.id && !i.checked);
   const grTs = saveGroceryAndSync(groceryData);
   res.json({ success: true, groceryList: groceryData.items, groceryUpdatedAt: grTs });
 });
