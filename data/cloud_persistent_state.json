@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791259704761,
+  "updatedAt": 1791259705843,
   "mealPlanUpdatedAt": 1791172501722,
-  "groceryUpdatedAt": 1791259704743,
+  "groceryUpdatedAt": 1791259704855,
   "suggestionsUpdatedAt": 1791243388426,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -59,7 +59,7 @@
     {
       "id": "groc-manual-1791259704742-mkm",
       "name": "Temp Checkoff Item",
-      "checked": false,
+      "checked": true,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-06T04:08:24.742Z"
