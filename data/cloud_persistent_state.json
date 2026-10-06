@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791329944163,
+  "updatedAt": 1791329947637,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791329944163,
+  "groceryUpdatedAt": 1791329947636,
   "suggestionsUpdatedAt": 1791326821052,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,6 +66,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791329947636-er5",
+      "name": "Pepperjack",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-06T23:39:07.636Z"
+    },
     {
       "id": "groc-manual-1791329944163-nnm",
       "name": "Mushrooms",
