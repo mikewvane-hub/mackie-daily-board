@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "updatedAt": 1791322060059,
+  "updatedAt": 1791326821052,
   "mealPlanUpdatedAt": 1791288192725,
   "groceryUpdatedAt": 1791290823240,
-  "suggestionsUpdatedAt": 1791243388426,
+  "suggestionsUpdatedAt": 1791326821052,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [
@@ -92,20 +92,12 @@
     }
   ],
   "suggestions": {
-    "items": [
-      {
-        "id": "sug-1791243388182-w6l3",
-        "text": "When items are check as gotten on the grocery list, they can go ahead and fall off rather than sitting there marked.",
-        "category": "Meals & Recipes",
-        "author": "Mackie",
-        "createdAt": "2026-10-05T23:36:28.182Z",
-        "formattedDate": "Oct 5, 2026 at 7:36 PM EST"
-      }
-    ],
+    "items": [],
     "deletedIds": [
       "sug-test-sync",
       "sug-1791158808969-dboh",
-      "sug-e2e-test-1791172504270"
+      "sug-e2e-test-1791172504270",
+      "sug-1791243388182-w6l3"
     ]
   },
   "babyTracker": {
