@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791329915901,
+  "updatedAt": 1791329925639,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791329915900,
+  "groceryUpdatedAt": 1791329925637,
   "suggestionsUpdatedAt": 1791326821052,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,6 +66,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791329925637-6ap",
+      "name": "Sausage patties",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-06T23:38:45.637Z"
+    },
     {
       "id": "groc-manual-1791329915900-2oc",
       "name": "English muffins",
