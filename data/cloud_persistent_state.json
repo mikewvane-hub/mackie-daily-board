@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791556459499,
+  "updatedAt": 1791556461132,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791556459498,
+  "groceryUpdatedAt": 1791556461132,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -81,14 +81,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-06T23:38:59.613Z"
-    },
-    {
-      "id": "groc-manual-1791329915900-2oc",
-      "name": "English muffins",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-06T23:38:35.900Z"
     },
     {
       "id": "groc-manual-1791290822844-578",
