@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791556478264,
+  "updatedAt": 1791556855302,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791556478264,
+  "groceryUpdatedAt": 1791556855302,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -81,14 +81,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-06T12:47:02.844Z"
-    },
-    {
-      "id": "groc-manual-1791243338764-sff",
-      "name": "Oats",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-05T23:35:38.764Z"
     }
   ],
   "suggestions": {
