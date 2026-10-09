@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791556457484,
+  "updatedAt": 1791556459499,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791556457483,
+  "groceryUpdatedAt": 1791556459498,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -81,14 +81,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-06T23:38:59.613Z"
-    },
-    {
-      "id": "groc-manual-1791329925637-6ap",
-      "name": "Sausage patties",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-06T23:38:45.637Z"
     },
     {
       "id": "groc-manual-1791329915900-2oc",
