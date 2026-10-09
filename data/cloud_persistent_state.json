@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791556456086,
+  "updatedAt": 1791556457484,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791556456086,
+  "groceryUpdatedAt": 1791556457483,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -81,14 +81,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-06T23:38:59.613Z"
-    },
-    {
-      "id": "groc-manual-1791329929586-6an",
-      "name": "Turkey bacon",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-06T23:38:49.586Z"
     },
     {
       "id": "groc-manual-1791329925637-6ap",
