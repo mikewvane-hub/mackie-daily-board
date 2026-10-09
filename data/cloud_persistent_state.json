@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791548853807,
+  "updatedAt": 1791548861902,
   "mealPlanUpdatedAt": 1791288192725,
-  "groceryUpdatedAt": 1791548850924,
+  "groceryUpdatedAt": 1791548861901,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,6 +66,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791548861901-lez",
+      "name": "Dish detergent",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-09T12:27:41.901Z"
+    },
     {
       "id": "groc-manual-1791548849930-dxu",
       "name": "Cereal",
