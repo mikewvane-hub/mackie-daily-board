@@ -1,24 +1,14 @@
 {
   "version": 2,
-  "updatedAt": 1791575852748,
-  "mealPlanUpdatedAt": 1791575851197,
+  "updatedAt": 1791575853714,
+  "mealPlanUpdatedAt": 1791575853446,
   "groceryUpdatedAt": 1791575851197,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [],
     "Tuesday": [],
-    "Wednesday": [
-      {
-        "instanceId": "meal-1791158660585-k3cp",
-        "recipeId": null,
-        "title": "Spaghetti",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-05T00:04:20.585Z"
-      }
-    ],
+    "Wednesday": [],
     "Thursday": [
       {
         "instanceId": "meal-1791288192725-on24",
