@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791575854552,
-  "mealPlanUpdatedAt": 1791575853446,
+  "updatedAt": 1791575855500,
+  "mealPlanUpdatedAt": 1791575854885,
   "groceryUpdatedAt": 1791575853446,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -9,17 +9,7 @@
     "Monday": [],
     "Tuesday": [],
     "Wednesday": [],
-    "Thursday": [
-      {
-        "instanceId": "meal-1791288192725-on24",
-        "recipeId": null,
-        "title": "Teriyaki meatball stirfry",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-06T12:03:12.725Z"
-      }
-    ],
+    "Thursday": [],
     "Friday": [],
     "Saturday": [],
     "Sunday": [
