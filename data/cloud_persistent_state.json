@@ -1,22 +1,12 @@
 {
   "version": 2,
-  "updatedAt": 1791556855302,
-  "mealPlanUpdatedAt": 1791288192725,
+  "updatedAt": 1791575846841,
+  "mealPlanUpdatedAt": 1791575846840,
   "groceryUpdatedAt": 1791556855302,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
-    "Monday": [
-      {
-        "instanceId": "meal-1791158638678-6m58",
-        "recipeId": null,
-        "title": "Teriyaki stirfry",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-05T00:03:58.678Z"
-      }
-    ],
+    "Monday": [],
     "Tuesday": [
       {
         "instanceId": "meal-1791158651992-fs0b",
