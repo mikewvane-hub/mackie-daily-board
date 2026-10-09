@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791575856405,
-  "mealPlanUpdatedAt": 1791575854885,
+  "updatedAt": 1791575860993,
+  "mealPlanUpdatedAt": 1791575860992,
   "groceryUpdatedAt": 1791575854885,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -12,18 +12,7 @@
     "Thursday": [],
     "Friday": [],
     "Saturday": [],
-    "Sunday": [
-      {
-        "instanceId": "meal-1791158626248-pu5b",
-        "recipeId": "katys-kale-soup",
-        "title": "Katy's Kale Soup",
-        "category": "Soup",
-        "page": 58,
-        "isManual": false,
-        "slot": "Soup",
-        "addedAt": "2026-10-05T00:03:46.248Z"
-      }
-    ]
+    "Sunday": []
   },
   "groceryList": [
     {
