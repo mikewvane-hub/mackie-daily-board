@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791575869075,
-  "mealPlanUpdatedAt": 1791575869074,
+  "updatedAt": 1791575888335,
+  "mealPlanUpdatedAt": 1791575888331,
   "groceryUpdatedAt": 1791575860992,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -21,7 +21,17 @@
         "addedAt": "2026-10-09T19:57:49.074Z"
       }
     ],
-    "Saturday": [],
+    "Saturday": [
+      {
+        "instanceId": "meal-1791575888331-ke9g",
+        "recipeId": null,
+        "title": "Crack dip, lil smokies, game night",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-09T19:58:08.331Z"
+      }
+    ],
     "Sunday": []
   },
   "groceryList": [
