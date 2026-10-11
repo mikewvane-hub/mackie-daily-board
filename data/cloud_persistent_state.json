@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791735943442,
+  "updatedAt": 1791736018733,
   "mealPlanUpdatedAt": 1791575903061,
-  "groceryUpdatedAt": 1791735943441,
+  "groceryUpdatedAt": 1791736018732,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -45,6 +45,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791736018732-9ra",
+      "name": "Shredded coconut",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-11T16:26:58.732Z"
+    },
     {
       "id": "groc-manual-1791735943441-oeo",
       "name": "Dates",
