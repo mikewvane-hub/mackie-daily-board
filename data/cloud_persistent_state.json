@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1791739812750,
-  "mealPlanUpdatedAt": 1791739812749,
+  "updatedAt": 1791739821180,
+  "mealPlanUpdatedAt": 1791739821180,
   "groceryUpdatedAt": 1791736018732,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -28,7 +28,17 @@
         "addedAt": "2026-10-11T17:30:12.749Z"
       }
     ],
-    "Wednesday": [],
+    "Wednesday": [
+      {
+        "instanceId": "meal-1791739821180-xu4b",
+        "recipeId": null,
+        "title": "HelloFresh",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-11T17:30:21.180Z"
+      }
+    ],
     "Thursday": [],
     "Friday": [
       {
