@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791824630581,
+  "updatedAt": 1791824640961,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791813156836,
+  "groceryUpdatedAt": 1791824640961,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -65,6 +65,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791824640961-rpl",
+      "name": "Trash bags",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-12T17:04:00.961Z"
+    },
     {
       "id": "groc-manual-1791813156836-1il",
       "name": "Egg whites",
