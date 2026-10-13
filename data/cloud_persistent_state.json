@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791904525008,
+  "updatedAt": 1791904540398,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791858803135,
+  "groceryUpdatedAt": 1791904540396,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -65,6 +65,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791904540396-kr6",
+      "name": "Eggs",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-13T15:15:40.396Z"
+    },
     {
       "id": "groc-manual-1791858803135-4vb",
       "name": "Pumpkin pie spice",
