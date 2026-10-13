@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791851199822,
+  "updatedAt": 1791851238408,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791851199821,
+  "groceryUpdatedAt": 1791851238407,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -65,6 +65,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791851238407-e6x",
+      "name": "Mini chocolate chips",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-13T00:27:18.407Z"
+    },
     {
       "id": "groc-manual-1791851168220-b5g",
       "name": "Vanilla Greek yogurt",
