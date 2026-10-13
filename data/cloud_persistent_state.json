@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791851238408,
+  "updatedAt": 1791858803136,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791851238407,
+  "groceryUpdatedAt": 1791858803135,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -65,6 +65,14 @@
     ]
   },
   "groceryList": [
+    {
+      "id": "groc-manual-1791858803135-4vb",
+      "name": "Pumpkin pie spice",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-13T02:33:23.135Z"
+    },
     {
       "id": "groc-manual-1791851238407-e6x",
       "name": "Mini chocolate chips",
