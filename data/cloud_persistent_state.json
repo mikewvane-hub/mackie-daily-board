@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791910024087,
+  "updatedAt": 1791910079225,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791910024087,
+  "groceryUpdatedAt": 1791910079224,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -120,14 +120,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-11T16:26:58.732Z"
-    },
-    {
-      "id": "groc-manual-1791735943441-oeo",
-      "name": "Dates",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-11T16:25:43.441Z"
     },
     {
       "id": "groc-manual-1791735937086-jl6",
