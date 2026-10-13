@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1791911684688,
+  "updatedAt": 1791911685719,
   "mealPlanUpdatedAt": 1791739848009,
-  "groceryUpdatedAt": 1791911682164,
+  "groceryUpdatedAt": 1791911682560,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -65,14 +65,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-manual-1791851168220-b5g",
-      "name": "Vanilla Greek yogurt",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-13T00:26:08.220Z"
-    },
     {
       "id": "groc-manual-1791735937086-jl6",
       "name": "Turkey",
