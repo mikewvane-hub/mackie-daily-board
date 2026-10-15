@@ -31,7 +31,8 @@ import {
   Landmark,
   MessageSquarePlus,
   Pencil,
-  HeartPulse
+  HeartPulse,
+  ShoppingCart
 } from 'lucide-react';
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
@@ -241,6 +242,9 @@ export default function App() {
   const [manualItemName, setManualItemName] = useState('');
   const [groceryFilter, setGroceryFilter] = useState('all'); // 'all' | 'unchecked' | 'checked'
   const [toastMessage, setToastMessage] = useState(null);
+  const [isGeneratingWalmart, setIsGeneratingWalmart] = useState(false);
+  const [walmartCartResult, setWalmartCartResult] = useState(null);
+  const [showWalmartModal, setShowWalmartModal] = useState(false);
 
   // iPhone & Riverpoint WiFi / ADP Modal
   const [showWifiModal, setShowWifiModal] = useState(false);
@@ -1034,6 +1038,35 @@ export default function App() {
     const text = items.map(i => `• ${i.name}`).join('\n');
     navigator.clipboard.writeText(`Mackie's Grocery List:\n${text}`);
     showToast('Copied grocery list to clipboard!');
+  };
+
+  // Walmart Cart Automation (Great Value & Lowest Price Batch Add)
+  const handleOpenWalmartCart = async () => {
+    const unchecked = (boardData?.groceryList || []).filter(i => !i.checked);
+    if (unchecked.length === 0) {
+      showToast('No active grocery items to add to Walmart Cart');
+      return;
+    }
+    setIsGeneratingWalmart(true);
+    try {
+      const res = await fetch(`${API_BASE}/walmart/cart-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: unchecked.map(i => i.name) })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setWalmartCartResult(json);
+        setShowWalmartModal(true);
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        showToast(`Walmart cart error: ${errJson.error || 'Could not generate cart'}`);
+      }
+    } catch (e) {
+      showToast(`Error connecting to Walmart cart service: ${e.message}`);
+    } finally {
+      setIsGeneratingWalmart(false);
+    }
   };
 
   // Calendar Handlers
@@ -2530,7 +2563,19 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Walmart Cart Quick-Add Button (Great Value & Lowest Price) */}
+                  <button
+                    type="button"
+                    onClick={handleOpenWalmartCart}
+                    disabled={isGeneratingWalmart || groceryList.filter(i => !i.checked).length === 0}
+                    className="px-2.5 py-1.5 rounded-xl bg-[#0071DC] hover:bg-[#005bb5] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs disabled:opacity-50"
+                    title="Automatically add all items to Walmart Cart (Great Value / Lowest Price)"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+                    <span>{isGeneratingWalmart ? 'Matching Great Value...' : 'Add to Walmart Cart'}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleCopyGroceryList}
@@ -2612,16 +2657,31 @@ export default function App() {
                           </div>
                         </button>
 
-                        {/* Remove Item Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteGroceryItem(item.id)}
-                          className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
-                          title="Remove item from grocery list"
-                          aria-label={`Remove ${item.name}`}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* 1-Tap Walmart Great Value Search Link */}
+                          <a
+                            href={`https://www.walmart.com/search?q=${encodeURIComponent('Great Value ' + item.name)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="px-2 py-1 rounded-lg bg-[#0071DC]/10 hover:bg-[#0071DC]/20 text-[#0071DC] text-[11px] font-bold flex items-center gap-1 transition"
+                            title={`Search "${item.name}" on Walmart (Great Value / Lowest Price)`}
+                          >
+                            <span>Walmart</span>
+                            <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                          </a>
+
+                          {/* Remove Item Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteGroceryItem(item.id)}
+                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition shrink-0"
+                            title="Remove item from grocery list"
+                            aria-label={`Remove ${item.name}`}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))
                 )}
@@ -3398,6 +3458,203 @@ export default function App() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Walmart Cart Sync Modal */}
+      {showWalmartModal && walmartCartResult && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setShowWalmartModal(false)}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className={`${theme.cardBg} ${theme.textPrimary} border ${theme.border} rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden text-xs sm:text-sm`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b px-5 py-4 border-[#E2D9CC]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-50 text-[#0071DC] border border-blue-200">
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-editorial text-2xl font-bold leading-none">
+                      Walmart Cart Sync
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0071DC] text-white tracking-wide uppercase">
+                      Great Value Priority
+                    </span>
+                  </div>
+                  <p className={`text-xs ${theme.textSecondary} mt-1`}>
+                    Auto-selected Great Value brand when available (or lowest price alternative)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWalmartModal(false)}
+                className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600"
+                aria-label="Close Walmart cart modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-4 flex-1">
+              {/* Primary Call to Action Banner */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 via-sky-500/10 to-indigo-500/10 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#0071DC] shrink-0" />
+                    <span className="font-semibold text-sm text-stone-900">
+                      {walmartCartResult.matchedCount} of {walmartCartResult.totalItems} Items Ready for Cart
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Tapping the button opens your Walmart Cart directly on the web or in the Walmart iOS App with your items loaded.
+                  </p>
+                </div>
+
+                {walmartCartResult.cartUrl ? (
+                  <a
+                    href={walmartCartResult.cartUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 px-4 py-2.5 rounded-xl bg-[#0071DC] hover:bg-[#005bb5] text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Open in Walmart Cart / App</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+                ) : (
+                  <span className="text-xs text-stone-500 italic">No direct cart link generated</span>
+                )}
+              </div>
+
+              {/* Matched Items */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold px-1">
+                  <span>Selected Products ({walmartCartResult.matches?.length || 0})</span>
+                  <span className="text-[11px] text-stone-500 font-normal">
+                    Prioritizing Great Value for maximum savings
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-[38vh] overflow-y-auto pr-1">
+                  {(walmartCartResult.matches || []).map((m, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-xl ${theme.cardSubtle} border ${theme.border} flex items-center justify-between gap-3`}
+                    >
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-xs text-stone-900">
+                            {m.originalQuery}
+                          </span>
+                          {m.isGreatValue ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#0071DC]/15 text-[#0071DC] border border-[#0071DC]/30">
+                              Great Value
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-800 border border-amber-500/30">
+                              Best Value Alternative
+                            </span>
+                          )}
+                          {m.priceEstimate && (
+                            <span className="text-[11px] font-mono text-stone-500">
+                              {m.priceEstimate}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-stone-600 truncate">
+                          {m.title}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {m.itemId && (
+                          <a
+                            href={`https://www.walmart.com/ip/${m.itemId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`p-1.5 rounded-lg border ${theme.borderStrong} ${theme.cardBg} hover:${theme.accentSoft} text-stone-600 transition`}
+                            title="View product on Walmart"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Unmatched Items if any */}
+                  {(walmartCartResult.unmatched || []).map((u, idx) => (
+                    <div
+                      key={`unmatched-${idx}`}
+                      className="p-3 rounded-xl bg-stone-50 border border-dashed border-stone-300 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-xs text-stone-700">
+                          {u.originalQuery}
+                        </span>
+                        <p className="text-[11px] text-stone-500">
+                          Custom item — 1 tap to search and pick on Walmart
+                        </p>
+                      </div>
+                      <a
+                        href={u.searchUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded-lg bg-white border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-medium flex items-center gap-1 transition"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        <span>Search Walmart</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom Information Tip */}
+              <div className={`p-3 rounded-xl ${theme.cardSubtle} border ${theme.border} text-[11px] ${theme.textSecondary} flex items-center gap-2`}>
+                <Sparkles className="w-4 h-4 shrink-0 text-amber-600" />
+                <span>
+                  Tip: When you tap <strong>Open in Walmart Cart / App</strong> on your iPhone, iOS will automatically offer to open the Walmart App with all your grocery items in the cart!
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className={`px-5 py-3 border-t ${theme.border} flex items-center justify-between gap-2`}>
+              <span className={`text-[11px] ${theme.textSecondary}`}>
+                Automatic Great Value &amp; Cheapest Match Engine
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowWalmartModal(false)}
+                  className={`px-3 py-1.5 rounded-xl border ${theme.borderStrong} ${theme.cardBg} hover:${theme.accentSoft} text-xs font-medium transition`}
+                >
+                  Close
+                </button>
+                {walmartCartResult.cartUrl && (
+                  <a
+                    href={walmartCartResult.cartUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-1.5 rounded-xl bg-[#0071DC] hover:bg-[#005bb5] text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-xs"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>Open Cart</span>
+                  </a>
                 )}
               </div>
             </div>

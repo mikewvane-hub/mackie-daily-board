@@ -2,53 +2,62 @@
   "days": {
     "Monday": [
       {
-        "instanceId": "meal-1791158638678-6m58",
+        "instanceId": "meal-1791739804549-dbxv",
         "recipeId": null,
-        "title": "Teriyaki stirfry",
+        "title": "HelloFresh",
         "category": "Custom Meal",
         "isManual": true,
         "slot": "Custom",
-        "addedAt": "2026-10-05T00:03:58.678Z"
+        "addedAt": "2026-10-11T17:30:04.549Z"
       }
     ],
     "Tuesday": [
       {
-        "instanceId": "meal-1791158651992-fs0b",
+        "instanceId": "meal-1791739812749-arc8",
         "recipeId": null,
-        "title": "Italian chicken thighs and potatoes",
+        "title": "HelloFresh",
         "category": "Custom Meal",
         "isManual": true,
         "slot": "Custom",
-        "addedAt": "2026-10-05T00:04:11.992Z"
+        "addedAt": "2026-10-11T17:30:12.749Z"
       }
     ],
     "Wednesday": [
       {
-        "instanceId": "meal-1791158660585-k3cp",
+        "instanceId": "meal-1791739821180-xu4b",
         "recipeId": null,
-        "title": "Spaghetti",
+        "title": "HelloFresh",
         "category": "Custom Meal",
         "isManual": true,
         "slot": "Custom",
-        "addedAt": "2026-10-05T00:04:20.585Z"
+        "addedAt": "2026-10-11T17:30:21.180Z"
       }
     ],
-    "Thursday": [],
+    "Thursday": [
+      {
+        "instanceId": "meal-1791739829791-qfnq",
+        "recipeId": null,
+        "title": "HelloFresh",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-11T17:30:29.791Z"
+      }
+    ],
     "Friday": [],
     "Saturday": [],
     "Sunday": [
       {
-        "instanceId": "meal-1791158626248-pu5b",
-        "recipeId": "katys-kale-soup",
-        "title": "Katy's Kale Soup",
-        "category": "Soup",
-        "page": 58,
-        "isManual": false,
-        "slot": "Soup",
-        "addedAt": "2026-10-05T00:03:46.248Z"
+        "instanceId": "meal-1791575903061-gddh",
+        "recipeId": null,
+        "title": "Football Sunday pizza?",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-09T19:58:23.061Z"
       }
     ]
   },
-  "updatedAt": "2026-10-05T03:55:01.722Z",
-  "updatedAtTs": 1791172501722
+  "updatedAt": "2026-10-11T17:30:48.009Z",
+  "updatedAtTs": 1791739848009
 }

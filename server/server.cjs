@@ -20,6 +20,7 @@ const {
 } = require('./services/newsAndEvents.cjs');
 const { askNewbornMedicalAgent } = require('./services/babyMedicalAgent.cjs');
 const { pullCloudState, pushCloudState } = require('./services/cloudStore.cjs');
+const { generateWalmartCartPayload } = require('./services/walmartCart.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -1031,6 +1032,30 @@ app.post('/api/grocery/clear-all', async (req, res) => {
 
   const grTs = saveGroceryAndSync({ items: [] });
   res.json({ success: true, groceryList: [], groceryUpdatedAt: grTs });
+});
+
+// ============================================================================
+// 3B. Walmart Cart Automation (Great Value / Lowest Price Automatic Batch Add)
+// ============================================================================
+app.post('/api/walmart/cart-url', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+
+  let itemsToMap = req.body?.items;
+  if (!Array.isArray(itemsToMap) || itemsToMap.length === 0) {
+    const groceryData = readJson(GROCERY_FILE, { items: [] });
+    itemsToMap = (groceryData.items || []).filter(i => !i.checked).map(i => i.name);
+  }
+
+  if (itemsToMap.length === 0) {
+    return res.status(400).json({ error: 'No active grocery items to add to Walmart cart' });
+  }
+
+  try {
+    const payload = await generateWalmartCartPayload(itemsToMap);
+    res.json(payload);
+  } catch (err) {
+    res.status(500).json({ error: `Could not generate Walmart cart: ${err.message}` });
+  }
 });
 
 // ============================================================================
