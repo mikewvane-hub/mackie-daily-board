@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792265069158,
-  "mealPlanUpdatedAt": 1792265067843,
+  "updatedAt": 1792265074807,
+  "mealPlanUpdatedAt": 1792265074806,
   "groceryUpdatedAt": 1792265067844,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -12,17 +12,7 @@
     "Thursday": [],
     "Friday": [],
     "Saturday": [],
-    "Sunday": [
-      {
-        "instanceId": "meal-1791575903061-gddh",
-        "recipeId": null,
-        "title": "Football Sunday pizza?",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-09T19:58:23.061Z"
-      }
-    ]
+    "Sunday": []
   },
   "groceryList": [
     {
