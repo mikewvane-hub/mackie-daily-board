@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792336309665,
-  "mealPlanUpdatedAt": 1792336308765,
+  "updatedAt": 1792336410417,
+  "mealPlanUpdatedAt": 1792336410398,
   "groceryUpdatedAt": 1792336308766,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -18,7 +18,18 @@
         "addedAt": "2026-10-18T15:11:29.742Z"
       }
     ],
-    "Wednesday": [],
+    "Wednesday": [
+      {
+        "instanceId": "meal-1792336410398-kkql",
+        "recipeId": "mikeys-favorite-buffalo-chicken-wraps",
+        "title": "Mikey's Favorite Buffalo Chicken Wraps",
+        "category": "Main Dishes",
+        "page": 23,
+        "isManual": false,
+        "slot": "Main Dishes",
+        "addedAt": "2026-10-18T15:13:30.398Z"
+      }
+    ],
     "Thursday": [
       {
         "instanceId": "meal-1792336234185-3kir",
