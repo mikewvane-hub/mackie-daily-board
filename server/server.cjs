@@ -41,6 +41,7 @@ const TUNNEL_FILE = path.join(DATA_DIR, 'tunnel_url.json');
 const BABY_TRACKER_FILE = path.join(DATA_DIR, 'baby_tracker.json');
 const SUGGESTIONS_FILE = path.join(DATA_DIR, 'suggestions.json');
 const HEALTH_FITNESS_FILE = path.join(DATA_DIR, 'health_fitness.json');
+const OURA_CONFIG_FILE = path.join(DATA_DIR, 'oura_config.json');
 
 app.use(cors());
 app.use(express.json());
@@ -398,6 +399,18 @@ async function hydrateBoardFromCloud(force = false) {
         ...localCalCfg,
         ...cloud.calConfig,
         updatedAtTs: cloudCalCfgTs || Date.now()
+      });
+    }
+
+    // 8. Hydrate Oura OAuth Config if cloud has newer state
+    const localOuraCfg = readJson(OURA_CONFIG_FILE, {});
+    const localOuraCfgTs = Number(localOuraCfg?.updatedAtTs) || 0;
+    const cloudOuraCfgTs = Number(cloud.ouraConfigUpdatedAt) || 0;
+    if (cloud.ouraConfig && cloudOuraCfgTs > localOuraCfgTs) {
+      writeJson(OURA_CONFIG_FILE, {
+        ...localOuraCfg,
+        ...cloud.ouraConfig,
+        updatedAtTs: cloudOuraCfgTs
       });
     }
   } catch (err) {
@@ -1633,18 +1646,77 @@ function generateDemoOuraData() {
   return logs;
 }
 
-// Connect & Sync Oura Ring Cloud API v2 (Sleep, Activity, Readiness & Cycle Temp Deviation)
-app.post('/api/health-fitness/oura/sync', async (req, res) => {
-  await hydrateBoardFromCloud(false);
-  const current = {
-    ...getDefaultHealthFitnessData(),
-    ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
-  };
+// ============================================================================
+// 5C. Oura Ring API v2 Official OAuth 2.0 Integration & Cloud Sync
+// ============================================================================
+function getOuraRedirectUri(req) {
+  if (req?.query?.redirect_uri) return String(req.query.redirect_uri).trim();
+  if (req?.body?.redirect_uri) return String(req.body.redirect_uri).trim();
 
-  const incomingRaw = req.body?.token !== undefined ? String(req.body.token).trim() : current.ouraToken;
-  const isDemoRequest = req.body?.isDemo === true || /^demo$/i.test(incomingRaw);
+  const host = req?.get ? req.get('host') : (req?.headers?.host || '');
+  if (IS_RENDER_ENV || host.includes('onrender.com')) {
+    return 'https://daily-executive-dashboard.onrender.com/api/health-fitness/oura/callback';
+  }
 
-  if (isDemoRequest) {
+  const clientOrigin = req?.query?.origin || req?.body?.origin;
+  if (clientOrigin && clientOrigin.startsWith('http')) {
+    return `${clientOrigin.replace(/\/$/, '')}/api/health-fitness/oura/callback`;
+  }
+
+  const protocol = req?.secure || req?.get?.('x-forwarded-proto') === 'https' ? 'https' : 'http';
+  return `${protocol}://${host || 'localhost:3005'}/api/health-fitness/oura/callback`;
+}
+
+async function getValidOuraAccessToken() {
+  let cfg = readJson(OURA_CONFIG_FILE, {});
+  let hf = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+
+  let token = cfg.accessToken || hf.ouraToken;
+  if (!token) return null;
+
+  if (token === 'DEMO_MODE') return 'DEMO_MODE';
+
+  const now = Date.now();
+  const isExpiring = cfg.expiresAt && (cfg.expiresAt - now < 30 * 60 * 1000); // within 30 min of expiry
+  if (isExpiring && cfg.refreshToken && (cfg.clientId || process.env.OURA_CLIENT_ID) && (cfg.clientSecret || process.env.OURA_CLIENT_SECRET)) {
+    try {
+      console.log('[OuraOAuth] Refreshing Oura access token...');
+      const res = await fetch('https://api.ouraring.com/oauth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json'
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: cfg.refreshToken,
+          client_id: cfg.clientId || process.env.OURA_CLIENT_ID,
+          client_secret: cfg.clientSecret || process.env.OURA_CLIENT_SECRET
+        }).toString()
+      });
+
+      if (res.ok) {
+        const tokenData = await res.json();
+        cfg.accessToken = tokenData.access_token;
+        cfg.refreshToken = tokenData.refresh_token || cfg.refreshToken;
+        cfg.expiresAt = now + (Number(tokenData.expires_in) || 86400) * 1000;
+        cfg.updatedAtTs = now;
+        writeJson(OURA_CONFIG_FILE, cfg);
+        pushCloudState({ ouraConfig: cfg, ouraConfigUpdatedAt: now }).catch(() => {});
+        return cfg.accessToken;
+      } else {
+        console.warn('[OuraOAuth] Token refresh returned status', res.status);
+      }
+    } catch (refErr) {
+      console.warn('[OuraOAuth] Token refresh error:', refErr.message);
+    }
+  }
+
+  return token;
+}
+
+async function fetchAndApplyOuraData(cleanToken, current) {
+  if (cleanToken === 'DEMO_MODE') {
     const demoLogs = generateDemoOuraData();
     current.ouraToken = 'DEMO_MODE';
     current.ouraConnected = true;
@@ -1653,186 +1725,357 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
     current.dailyLogs = demoLogs;
 
     const ts = saveHealthFitnessAndSync(current);
-    return res.json({
+    return {
       success: true,
       healthFitness: current,
       healthFitnessUpdatedAt: ts,
       syncedDaysCount: demoLogs.length,
       ouraEmail: current.ouraEmail,
       isDemo: true
+    };
+  }
+
+  const headers = {
+    Authorization: `Bearer ${cleanToken}`,
+    Accept: 'application/json'
+  };
+
+  let ouraEmail = current.ouraEmail || null;
+  try {
+    const personalRes = await fetch('https://api.ouraring.com/v2/usercollection/personal_info', { headers });
+    if (personalRes.ok) {
+      const pJson = await personalRes.json();
+      if (pJson && pJson.email) ouraEmail = pJson.email;
+    }
+  } catch (tokenCheckErr) {
+    console.warn('[Oura] personal_info pre-flight note:', tokenCheckErr.message);
+  }
+
+  const endDate = getEstDateTime().dateStr;
+  const startObj = new Date(endDate + 'T12:00:00');
+  startObj.setDate(startObj.getDate() - 30);
+  const startDate = formatOuraDate(startObj);
+
+  const [sleepRes, actRes, readyRes, detailSleepRes] = await Promise.all([
+    fetch(`https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${startDate}&end_date=${endDate}`, { headers }),
+    fetch(`https://api.ouraring.com/v2/usercollection/daily_activity?start_date=${startDate}&end_date=${endDate}`, { headers }),
+    fetch(`https://api.ouraring.com/v2/usercollection/daily_readiness?start_date=${startDate}&end_date=${endDate}`, { headers }),
+    fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${startDate}&end_date=${endDate}`, { headers })
+  ]);
+
+  const responses = [sleepRes, actRes, readyRes, detailSleepRes];
+  if (responses.some(r => r.status === 401 || r.status === 403)) {
+    throw new Error('Oura Ring token was rejected (401 Unauthorized). Please reconnect Oura Ring via OAuth.');
+  }
+  if (responses.some(r => r.status === 429)) {
+    throw new Error('Oura Ring API rate limit reached. Please wait a minute and try again.');
+  }
+
+  const sleepJson = sleepRes.ok ? await sleepRes.json() : { data: [] };
+  const actJson = actRes.ok ? await actRes.json() : { data: [] };
+  const readyJson = readyRes.ok ? await readyRes.json() : { data: [] };
+  const detailSleepJson = detailSleepRes.ok ? await detailSleepRes.json() : { data: [] };
+
+  const byDate = new Map();
+  for (const item of current.dailyLogs || []) {
+    if (item && item.date) byDate.set(item.date, { ...item });
+  }
+
+  // A. Daily Sleep Summaries (Composite Sleep Score)
+  for (const s of (sleepJson.data || [])) {
+    if (!s.day) continue;
+    const existing = byDate.get(s.day) || { date: s.day };
+    existing.sleepScore = s.score ?? existing.sleepScore ?? null;
+    existing.source = 'Oura Ring';
+    byDate.set(s.day, existing);
+  }
+
+  // B. Sleep Periods: Prioritize long_sleep (overnight)
+  for (const ds of (detailSleepJson.data || [])) {
+    if (!ds.day) continue;
+    const existing = byDate.get(ds.day) || { date: ds.day };
+    const isPrimary = ds.type === 'long_sleep' || !existing._hasPrimarySleep;
+
+    if (isPrimary || !existing.sleepHours) {
+      if (ds.total_sleep_duration) {
+        existing.sleepHours = Math.round((ds.total_sleep_duration / 3600) * 10) / 10;
+      }
+      if (ds.deep_sleep_duration) {
+        existing.deepSleepMins = Math.round(ds.deep_sleep_duration / 60);
+      }
+      if (ds.rem_sleep_duration) {
+        existing.remSleepMins = Math.round(ds.rem_sleep_duration / 60);
+      }
+      if (ds.lowest_heart_rate) {
+        existing.restingHr = ds.lowest_heart_rate;
+      }
+      if (ds.average_hrv) {
+        existing.hrvMs = ds.average_hrv;
+      }
+      if (ds.type === 'long_sleep') {
+        existing._hasPrimarySleep = true;
+      }
+    } else if (ds.total_sleep_duration && existing.sleepHours) {
+      existing.napHours = Math.round(((existing.napHours || 0) + (ds.total_sleep_duration / 3600)) * 10) / 10;
+    }
+    existing.source = 'Oura Ring';
+    byDate.set(ds.day, existing);
+  }
+
+  for (const entry of byDate.values()) {
+    delete entry._hasPrimarySleep;
+  }
+
+  // C. Daily Activity Summaries
+  for (const a of (actJson.data || [])) {
+    if (!a.day) continue;
+    const existing = byDate.get(a.day) || { date: a.day };
+    existing.activityScore = a.score ?? existing.activityScore ?? null;
+    existing.steps = a.steps ?? existing.steps ?? 0;
+    existing.activeCalories = a.active_calories ?? existing.activeCalories ?? 0;
+    if (a.equivalent_walking_distance) {
+      existing.walkingMiles = Math.round((a.equivalent_walking_distance / 1609.34) * 10) / 10;
+    }
+    if (a.medium_activity_time || a.high_activity_time) {
+      existing.walkingMinutes = Math.round(((a.medium_activity_time || 0) + (a.high_activity_time || 0)) / 60);
+    }
+    existing.source = 'Oura Ring';
+    byDate.set(a.day, existing);
+  }
+
+  // D. Daily Readiness Summaries & Skin Temperature Deviations
+  for (const r of (readyJson.data || [])) {
+    if (!r.day) continue;
+    const existing = byDate.get(r.day) || { date: r.day };
+    existing.readinessScore = r.score ?? existing.readinessScore ?? null;
+    if (r.temperature_deviation !== undefined && r.temperature_deviation !== null) {
+      existing.tempDeviationC = Math.round(Number(r.temperature_deviation) * 100) / 100;
+    }
+    if (r.temperature_trend_deviation !== undefined && r.temperature_trend_deviation !== null) {
+      existing.tempTrendDeviationC = Math.round(Number(r.temperature_trend_deviation) * 100) / 100;
+    }
+    existing.source = 'Oura Ring';
+    byDate.set(r.day, existing);
+  }
+
+  const mergedLogs = Array.from(byDate.values()).sort((a, b) =>
+    String(b.date || '').localeCompare(String(a.date || ''))
+  );
+
+  current.ouraToken = cleanToken;
+  current.ouraConnected = true;
+  current.ouraLastSynced = new Date().toISOString();
+  if (ouraEmail) current.ouraEmail = ouraEmail;
+  current.dailyLogs = mergedLogs.slice(0, 60);
+
+  const ts = saveHealthFitnessAndSync(current);
+  return {
+    success: true,
+    healthFitness: current,
+    healthFitnessUpdatedAt: ts,
+    syncedDaysCount: mergedLogs.length,
+    ouraEmail: current.ouraEmail
+  };
+}
+
+// Oura OAuth2 Config / Status Endpoint
+app.get('/api/health-fitness/oura/config', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const cfg = readJson(OURA_CONFIG_FILE, {});
+  const hf = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+  const redirectUri = getOuraRedirectUri(req);
+  const clientId = cfg.clientId || process.env.OURA_CLIENT_ID || '';
+
+  res.json({
+    configured: Boolean(clientId && (cfg.clientSecret || process.env.OURA_CLIENT_SECRET)),
+    clientId,
+    redirectUri,
+    hasToken: Boolean(cfg.accessToken || hf.ouraToken),
+    connected: Boolean(hf.ouraConnected),
+    lastSynced: hf.ouraLastSynced || null,
+    ouraEmail: hf.ouraEmail || null
+  });
+});
+
+// Save Oura OAuth Credentials (Client ID & Client Secret)
+app.post('/api/health-fitness/oura/credentials', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const { clientId, clientSecret, token } = req.body || {};
+  let cfg = readJson(OURA_CONFIG_FILE, {});
+
+  if (clientId !== undefined) cfg.clientId = String(clientId).trim();
+  if (clientSecret !== undefined) cfg.clientSecret = String(clientSecret).trim();
+  if (token !== undefined && String(token).trim()) {
+    cfg.accessToken = String(token).trim();
+  }
+
+  cfg.updatedAt = new Date().toISOString();
+  cfg.updatedAtTs = Date.now();
+  writeJson(OURA_CONFIG_FILE, cfg);
+  pushCloudState({ ouraConfig: cfg, ouraConfigUpdatedAt: cfg.updatedAtTs }).catch(() => {});
+
+  const redirectUri = getOuraRedirectUri(req);
+  let authUrl = null;
+  const activeClientId = cfg.clientId || process.env.OURA_CLIENT_ID;
+  if (activeClientId) {
+    const origin = req.body?.origin || req.query?.origin || '';
+    const state = Buffer.from(JSON.stringify({ origin, t: Date.now() })).toString('base64');
+    authUrl = `https://cloud.ouraring.com/oauth/authorize?client_id=${encodeURIComponent(activeClientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=daily%20heartrate%20personal%20workout%20email&state=${encodeURIComponent(state)}`;
+  }
+
+  res.json({
+    success: true,
+    configured: Boolean(activeClientId && (cfg.clientSecret || process.env.OURA_CLIENT_SECRET)),
+    clientId: activeClientId || '',
+    redirectUri,
+    authUrl
+  });
+});
+
+// Generate Oura Authorization URL
+app.get('/api/health-fitness/oura/auth-url', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const cfg = readJson(OURA_CONFIG_FILE, {});
+  const clientId = cfg.clientId || process.env.OURA_CLIENT_ID;
+  if (!clientId) {
+    return res.status(400).json({
+      error: 'Oura Client ID not configured. Please enter your Client ID from cloud.ouraring.com/oauth/applications.'
     });
   }
 
-  // Sanitize incoming personal access token: strip 'Bearer ' prefix and whitespace/quotes
-  const cleanToken = incomingRaw
-    .replace(/^Bearer\s+/i, '')
-    .replace(/^["']|["']$/g, '')
-    .trim();
+  const redirectUri = getOuraRedirectUri(req);
+  const origin = req.query?.origin || '';
+  const state = Buffer.from(JSON.stringify({ origin, t: Date.now() })).toString('base64');
+  const authUrl = `https://cloud.ouraring.com/oauth/authorize?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=daily%20heartrate%20personal%20workout%20email&state=${encodeURIComponent(state)}`;
 
-  if (!cleanToken) {
+  res.json({ authUrl, redirectUri });
+});
+
+// OAuth Callback Handler (Handles code exchange & initial sync)
+async function handleOuraOAuthCallback(req, res) {
+  const { code, state, error, error_description } = req.query || {};
+  let returnOrigin = '/';
+  if (state) {
+    try {
+      const parsed = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
+      if (parsed && parsed.origin) returnOrigin = parsed.origin;
+    } catch {}
+  }
+
+  if (error) {
+    console.error('[OuraOAuth] Error returned from Oura:', error, error_description);
+    const redirectTarget = returnOrigin.includes('?')
+      ? `${returnOrigin}&oura_error=${encodeURIComponent(error_description || error)}#fitness`
+      : `${returnOrigin}?oura_error=${encodeURIComponent(error_description || error)}#fitness`;
+    return res.redirect(redirectTarget);
+  }
+
+  if (!code) {
+    const redirectTarget = returnOrigin.includes('?')
+      ? `${returnOrigin}&oura_error=Missing_authorization_code#fitness`
+      : `${returnOrigin}?oura_error=Missing_authorization_code#fitness`;
+    return res.redirect(redirectTarget);
+  }
+
+  try {
+    const cfg = readJson(OURA_CONFIG_FILE, {});
+    const clientId = cfg.clientId || process.env.OURA_CLIENT_ID;
+    const clientSecret = cfg.clientSecret || process.env.OURA_CLIENT_SECRET;
+    const redirectUri = getOuraRedirectUri(req);
+
+    if (!clientId || !clientSecret) {
+      throw new Error('Oura Client ID or Client Secret missing on server');
+    }
+
+    const tokenRes = await fetch('https://api.ouraring.com/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json'
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: String(code),
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri
+      }).toString()
+    });
+
+    if (!tokenRes.ok) {
+      const errBody = await tokenRes.text().catch(() => '');
+      throw new Error(`Oura token exchange failed (${tokenRes.status}): ${errBody.slice(0, 150)}`);
+    }
+
+    const tokenData = await tokenRes.json();
+    cfg.accessToken = tokenData.access_token;
+    cfg.refreshToken = tokenData.refresh_token || cfg.refreshToken;
+    cfg.expiresIn = tokenData.expires_in;
+    cfg.expiresAt = Date.now() + (Number(tokenData.expires_in) || 86400) * 1000;
+    cfg.updatedAt = new Date().toISOString();
+    cfg.updatedAtTs = Date.now();
+
+    writeJson(OURA_CONFIG_FILE, cfg);
+    pushCloudState({ ouraConfig: cfg, ouraConfigUpdatedAt: cfg.updatedAtTs }).catch(() => {});
+
+    // Sync fresh Oura data immediately
+    const current = {
+      ...getDefaultHealthFitnessData(),
+      ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
+    };
+    await fetchAndApplyOuraData(cfg.accessToken, current);
+
+    const redirectTarget = returnOrigin.includes('?')
+      ? `${returnOrigin}&oura_connected=true#fitness`
+      : `${returnOrigin}?oura_connected=true#fitness`;
+    res.redirect(redirectTarget);
+  } catch (err) {
+    console.error('[OuraOAuth] Callback error:', err.message);
+    const redirectTarget = returnOrigin.includes('?')
+      ? `${returnOrigin}&oura_error=${encodeURIComponent(err.message)}#fitness`
+      : `${returnOrigin}?oura_error=${encodeURIComponent(err.message)}#fitness`;
+    res.redirect(redirectTarget);
+  }
+}
+
+app.get('/api/health-fitness/oura/callback', handleOuraOAuthCallback);
+app.get('/mackie/api/health-fitness/oura/callback', handleOuraOAuthCallback);
+
+// Connect & Sync Oura Ring Cloud API v2 (supports manual token or stored OAuth access token)
+app.post('/api/health-fitness/oura/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const current = {
+    ...getDefaultHealthFitnessData(),
+    ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
+  };
+
+  const incomingRaw = req.body?.token !== undefined ? String(req.body.token).trim() : null;
+  const isDemoRequest = req.body?.isDemo === true || (incomingRaw && /^demo$/i.test(incomingRaw));
+
+  if (isDemoRequest) {
+    const result = await fetchAndApplyOuraData('DEMO_MODE', current);
+    return res.json(result);
+  }
+
+  let tokenToUse = incomingRaw;
+  if (!tokenToUse) {
+    tokenToUse = await getValidOuraAccessToken();
+  }
+
+  // Clean token
+  if (tokenToUse) {
+    tokenToUse = tokenToUse.replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+  }
+
+  if (!tokenToUse) {
     return res.status(400).json({
-      error: 'Please enter your Oura Ring Personal Access Token from cloud.ouraring.com/personal-access-tokens'
+      error: 'Oura Ring is not connected yet. Please connect your Oura account via OAuth2 or enter a valid access token.'
     });
   }
 
   try {
-    const headers = {
-      Authorization: `Bearer ${cleanToken}`,
-      Accept: 'application/json'
-    };
-
-    // 1. Validate token upfront via personal_info endpoint
-    let ouraEmail = current.ouraEmail || null;
-    try {
-      const personalRes = await fetch('https://api.ouraring.com/v2/usercollection/personal_info', { headers });
-      if (personalRes.status === 401 || personalRes.status === 403) {
-        return res.status(401).json({
-          error: 'Oura Ring token was rejected (401 Unauthorized). Please verify that you copied the complete Personal Access Token from cloud.ouraring.com/personal-access-tokens.'
-        });
-      }
-      if (personalRes.status === 429) {
-        return res.status(429).json({
-          error: 'Oura Ring API rate limit reached. Please wait a minute and try again.'
-        });
-      }
-      if (personalRes.ok) {
-        const pJson = await personalRes.json();
-        if (pJson && pJson.email) ouraEmail = pJson.email;
-      }
-    } catch (tokenCheckErr) {
-      console.warn('Oura personal_info pre-flight note:', tokenCheckErr.message);
-    }
-
-    // 2. Fetch full 30-day baseline window (ensures complete menstrual cycle & postpartum recovery tracking)
-    const endDate = getEstDateTime().dateStr;
-    const startObj = new Date(endDate + 'T12:00:00');
-    startObj.setDate(startObj.getDate() - 30);
-    const startDate = formatOuraDate(startObj);
-
-    const [sleepRes, actRes, readyRes, detailSleepRes] = await Promise.all([
-      fetch(`https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${startDate}&end_date=${endDate}`, { headers }),
-      fetch(`https://api.ouraring.com/v2/usercollection/daily_activity?start_date=${startDate}&end_date=${endDate}`, { headers }),
-      fetch(`https://api.ouraring.com/v2/usercollection/daily_readiness?start_date=${startDate}&end_date=${endDate}`, { headers }),
-      fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${startDate}&end_date=${endDate}`, { headers })
-    ]);
-
-    const responses = [sleepRes, actRes, readyRes, detailSleepRes];
-    if (responses.some(r => r.status === 401 || r.status === 403)) {
-      return res.status(401).json({
-        error: 'Oura Ring token was rejected (401 Unauthorized). Please verify your Personal Access Token from cloud.ouraring.com/personal-access-tokens.'
-      });
-    }
-    if (responses.some(r => r.status === 429)) {
-      return res.status(429).json({
-        error: 'Oura Ring API rate limit reached. Please wait a minute and try again.'
-      });
-    }
-
-    const sleepJson = sleepRes.ok ? await sleepRes.json() : { data: [] };
-    const actJson = actRes.ok ? await actRes.json() : { data: [] };
-    const readyJson = readyRes.ok ? await readyRes.json() : { data: [] };
-    const detailSleepJson = detailSleepRes.ok ? await detailSleepRes.json() : { data: [] };
-
-    const byDate = new Map();
-    for (const item of current.dailyLogs || []) {
-      if (item && item.date) byDate.set(item.date, { ...item });
-    }
-
-    // A. Daily Sleep Summaries (Composite Sleep Score)
-    for (const s of (sleepJson.data || [])) {
-      if (!s.day) continue;
-      const existing = byDate.get(s.day) || { date: s.day };
-      existing.sleepScore = s.score ?? existing.sleepScore ?? null;
-      existing.source = 'Oura Ring';
-      byDate.set(s.day, existing);
-    }
-
-    // B. Sleep Periods: Prioritize long_sleep (overnight) so afternoon naps do NOT overwrite overnight metrics
-    for (const ds of (detailSleepJson.data || [])) {
-      if (!ds.day) continue;
-      const existing = byDate.get(ds.day) || { date: ds.day };
-      const isPrimary = ds.type === 'long_sleep' || !existing._hasPrimarySleep;
-
-      if (isPrimary || !existing.sleepHours) {
-        if (ds.total_sleep_duration) {
-          existing.sleepHours = Math.round((ds.total_sleep_duration / 3600) * 10) / 10;
-        }
-        if (ds.deep_sleep_duration) {
-          existing.deepSleepMins = Math.round(ds.deep_sleep_duration / 60);
-        }
-        if (ds.rem_sleep_duration) {
-          existing.remSleepMins = Math.round(ds.rem_sleep_duration / 60);
-        }
-        if (ds.lowest_heart_rate) {
-          existing.restingHr = ds.lowest_heart_rate;
-        }
-        if (ds.average_hrv) {
-          existing.hrvMs = ds.average_hrv;
-        }
-        if (ds.type === 'long_sleep') {
-          existing._hasPrimarySleep = true;
-        }
-      } else if (ds.total_sleep_duration && existing.sleepHours) {
-        existing.napHours = Math.round(((existing.napHours || 0) + (ds.total_sleep_duration / 3600)) * 10) / 10;
-      }
-      existing.source = 'Oura Ring';
-      byDate.set(ds.day, existing);
-    }
-
-    for (const entry of byDate.values()) {
-      delete entry._hasPrimarySleep;
-    }
-
-    // C. Daily Activity Summaries (Steps, Cal, Walking Miles, Active Mins)
-    for (const a of (actJson.data || [])) {
-      if (!a.day) continue;
-      const existing = byDate.get(a.day) || { date: a.day };
-      existing.activityScore = a.score ?? existing.activityScore ?? null;
-      existing.steps = a.steps ?? existing.steps ?? 0;
-      existing.activeCalories = a.active_calories ?? existing.activeCalories ?? 0;
-      if (a.equivalent_walking_distance) {
-        existing.walkingMiles = Math.round((a.equivalent_walking_distance / 1609.34) * 10) / 10;
-      }
-      if (a.medium_activity_time || a.high_activity_time) {
-        existing.walkingMinutes = Math.round(((a.medium_activity_time || 0) + (a.high_activity_time || 0)) / 60);
-      }
-      existing.source = 'Oura Ring';
-      byDate.set(a.day, existing);
-    }
-
-    // D. Daily Readiness Summaries & Nightly Skin Temperature Deviations (Cycle BBT Tracking)
-    for (const r of (readyJson.data || [])) {
-      if (!r.day) continue;
-      const existing = byDate.get(r.day) || { date: r.day };
-      existing.readinessScore = r.score ?? existing.readinessScore ?? null;
-      if (r.temperature_deviation !== undefined && r.temperature_deviation !== null) {
-        existing.tempDeviationC = Math.round(Number(r.temperature_deviation) * 100) / 100;
-      }
-      if (r.temperature_trend_deviation !== undefined && r.temperature_trend_deviation !== null) {
-        existing.tempTrendDeviationC = Math.round(Number(r.temperature_trend_deviation) * 100) / 100;
-      }
-      existing.source = 'Oura Ring';
-      byDate.set(r.day, existing);
-    }
-
-    const mergedLogs = Array.from(byDate.values()).sort((a, b) =>
-      String(b.date || '').localeCompare(String(a.date || ''))
-    );
-
-    current.ouraToken = cleanToken;
-    current.ouraConnected = true;
-    current.ouraLastSynced = new Date().toISOString();
-    if (ouraEmail) current.ouraEmail = ouraEmail;
-    current.dailyLogs = mergedLogs.slice(0, 60);
-
-    const ts = saveHealthFitnessAndSync(current);
-    res.json({
-      success: true,
-      healthFitness: current,
-      healthFitnessUpdatedAt: ts,
-      syncedDaysCount: mergedLogs.length,
-      ouraEmail: current.ouraEmail
-    });
+    const result = await fetchAndApplyOuraData(tokenToUse, current);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Oura sync failed: ${err.message}` });
   }
@@ -1850,6 +2093,14 @@ app.post('/api/health-fitness/oura/disconnect', async (req, res) => {
   current.ouraConnected = false;
   current.ouraLastSynced = null;
   current.ouraEmail = null;
+
+  let cfg = readJson(OURA_CONFIG_FILE, {});
+  cfg.accessToken = '';
+  cfg.refreshToken = '';
+  cfg.expiresAt = null;
+  cfg.updatedAtTs = Date.now();
+  writeJson(OURA_CONFIG_FILE, cfg);
+  pushCloudState({ ouraConfig: cfg, ouraConfigUpdatedAt: cfg.updatedAtTs }).catch(() => {});
 
   const ts = saveHealthFitnessAndSync(current);
   res.json({
@@ -2194,6 +2445,24 @@ cron.schedule(
       await refreshDailyNews();
     } catch (e) {
       console.warn('[Cron 07:00 AM EST] News refresh warning:', e.message);
+    }
+  },
+  { timezone: 'America/New_York' }
+);
+
+// Daily Oura Ring automatic morning sync at 06:30 AM EST (Sleep, Recovery & Cycle Temp)
+cron.schedule(
+  '30 6 * * *',
+  async () => {
+    try {
+      const token = await getValidOuraAccessToken();
+      if (token && token !== 'DEMO_MODE') {
+        console.log('[Cron 06:30 AM EST] Automatically syncing Oura Ring sleep & readiness...');
+        const current = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+        await fetchAndApplyOuraData(token, current);
+      }
+    } catch (e) {
+      console.warn('[Cron 06:30 AM EST] Oura morning sync note:', e.message);
     }
   },
   { timezone: 'America/New_York' }

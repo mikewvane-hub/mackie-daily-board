@@ -21,6 +21,7 @@ import {
   Info,
   ExternalLink,
   ShieldCheck,
+  Copy,
   X
 } from 'lucide-react';
 import {
@@ -126,6 +127,11 @@ export default function PersonalHealthFitnessHub({
   // Oura Ring & Daily Sleep/Activity Log States
   const [showOuraModal, setShowOuraModal] = useState(false);
   const [ouraTokenInput, setOuraTokenInput] = useState(hf.ouraToken || '');
+  const [ouraClientId, setOuraClientId] = useState('');
+  const [ouraClientSecret, setOuraClientSecret] = useState('');
+  const [ouraRedirectUri, setOuraRedirectUri] = useState('');
+  const [copiedRedirectUri, setCopiedRedirectUri] = useState(false);
+  const [showAdvancedOuraToken, setShowAdvancedOuraToken] = useState(false);
   const [isSyncingOura, setIsSyncingOura] = useState(false);
   const [ouraError, setOuraError] = useState(null);
 
@@ -135,6 +141,37 @@ export default function PersonalHealthFitnessHub({
       setOuraTokenInput(hf.ouraToken);
     }
   }, [hf.ouraToken]);
+
+  // Load stored Oura OAuth client configuration when opening modal
+  useEffect(() => {
+    if (!showOuraModal) return;
+    fetch(`${API_BASE}/health-fitness/oura/config`)
+      .then(r => r.json())
+      .then(cfg => {
+        if (cfg.clientId) setOuraClientId(cfg.clientId);
+        if (cfg.redirectUri) setOuraRedirectUri(cfg.redirectUri);
+      })
+      .catch(() => {});
+  }, [showOuraModal]);
+
+  // Check URL parameters for OAuth return or error
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('oura_connected') === 'true') {
+      showToast('🎉 Oura Ring connected successfully! Live sleep, activity & readiness synced.');
+      urlParams.delete('oura_connected');
+      const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    } else if (urlParams.get('oura_error')) {
+      const err = urlParams.get('oura_error');
+      setOuraError(`Oura connection note: ${err}`);
+      setShowOuraModal(true);
+      urlParams.delete('oura_error');
+      const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '') + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
   const [showManualDailyForm, setShowManualDailyForm] = useState(false);
   const [manualDailyInput, setManualDailyInput] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -540,6 +577,54 @@ export default function PersonalHealthFitnessHub({
     } catch (err) {
       setOuraError(err.message);
     } finally {
+      setIsSyncingOura(false);
+    }
+  };
+
+  // Copy Redirect URI Handler
+  const handleCopyRedirectUri = (uri) => {
+    const toCopy = uri || ouraRedirectUri || (typeof window !== 'undefined' ? `${window.location.origin}/api/health-fitness/oura/callback` : 'https://daily-executive-dashboard.onrender.com/api/health-fitness/oura/callback');
+    try {
+      navigator.clipboard.writeText(toCopy);
+      setCopiedRedirectUri(true);
+      showToast('Copied Redirect URI to clipboard!');
+      setTimeout(() => setCopiedRedirectUri(false), 2500);
+    } catch {
+      showToast('Redirect URI: ' + toCopy);
+    }
+  };
+
+  // Connect Oura via Official OAuth 2.0
+  const handleConnectOuraOAuth = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!ouraClientId.trim() || !ouraClientSecret.trim()) {
+      setOuraError('Please enter both your Client ID and Client Secret from cloud.ouraring.com/oauth/applications');
+      return;
+    }
+    setIsSyncingOura(true);
+    setOuraError(null);
+    try {
+      const returnOrigin = typeof window !== 'undefined'
+        ? (window.location.origin + window.location.pathname)
+        : '';
+      const res = await fetch(`${API_BASE}/health-fitness/oura/credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: ouraClientId.trim(),
+          clientSecret: ouraClientSecret.trim(),
+          origin: returnOrigin
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save credentials');
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error('Could not generate Oura authorization URL');
+      }
+    } catch (err) {
+      setOuraError(err.message);
       setIsSyncingOura(false);
     }
   };
@@ -2320,70 +2405,134 @@ export default function PersonalHealthFitnessHub({
                   </div>
                 </div>
 
-                {/* Option to Update Token */}
+                {/* Option to Update OAuth or Token */}
                 <details className="text-xs text-stone-500 pt-2 border-t border-stone-200">
                   <summary className="cursor-pointer font-medium hover:text-stone-800">
-                    Need to update or replace your Personal Access Token?
+                    Need to update your Oura OAuth credentials or manual token?
                   </summary>
-                  <form onSubmit={handleSyncOuraRing} className="space-y-2 pt-2">
-                    <input
-                      type="password"
-                      value={ouraTokenInput}
-                      onChange={e => setOuraTokenInput(e.target.value)}
-                      placeholder="Paste new Oura Personal Access Token..."
-                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
-                    />
-                    <div className="flex justify-end">
+                  <form onSubmit={handleConnectOuraOAuth} className="space-y-2 pt-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-600 mb-0.5">Oura Client ID</label>
+                      <input
+                        type="text"
+                        value={ouraClientId}
+                        onChange={e => setOuraClientId(e.target.value)}
+                        placeholder="Paste Client ID..."
+                        className={`w-full px-3 py-1.5 rounded-lg ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-stone-600 mb-0.5">Oura Client Secret</label>
+                      <input
+                        type="password"
+                        value={ouraClientSecret}
+                        onChange={e => setOuraClientSecret(e.target.value)}
+                        placeholder="Paste new Client Secret..."
+                        className={`w-full px-3 py-1.5 rounded-lg ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                      />
+                    </div>
+                    <div className="flex justify-end pt-1">
                       <button
                         type="submit"
                         disabled={isSyncingOura}
                         className={`px-3.5 py-1.5 rounded-xl ${theme.accentBg} text-white font-semibold`}
                       >
-                        {isSyncingOura ? 'Updating...' : 'Save New Token'}
+                        {isSyncingOura ? 'Re-authorizing...' : 'Save & Reconnect Oura'}
                       </button>
                     </div>
                   </form>
                 </details>
               </div>
             ) : (
-              /* NOT YET CONNECTED VIEW */
-              <div className={`p-4 rounded-xl ${theme.cardSubtle} border ${theme.border} space-y-3 text-xs`}>
-                <div className="font-bold text-sm">How to Connect Your Oura Ring (1-Minute Setup):</div>
-                <ol className="list-decimal list-inside space-y-1.5 leading-relaxed">
-                  <li>
-                    Open{' '}
-                    <a
-                      href="https://cloud.ouraring.com/personal-access-tokens"
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`underline font-semibold ${theme.accentText} inline-flex items-center gap-1`}
-                    >
-                      <span>cloud.ouraring.com/personal-access-tokens</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>{' '}
-                    and sign in with your Oura account.
-                  </li>
-                  <li>
-                    Tap <strong>&ldquo;Create A New Personal Access Token&rdquo;</strong> and copy the token.
-                  </li>
-                  <li>
-                    Paste your token below to automatically pull your Oura Ring <strong>Sleep</strong>, <strong>Activity / Steps</strong>, <strong>Readiness</strong>, and <strong>Cycle Temperature Shifts</strong>!
-                  </li>
-                </ol>
+              /* NOT YET CONNECTED VIEW - OFFICIAL OAUTH 2.0 FLOW */
+              <div className={`p-4 rounded-xl ${theme.cardSubtle} border ${theme.border} space-y-4 text-xs`}>
+                <div className="space-y-1">
+                  <div className="font-bold text-sm text-stone-800 flex items-center justify-between">
+                    <span>Connect Oura Ring (OAuth 2.0)</span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Official API v2
+                    </span>
+                  </div>
+                  <p className="text-stone-600 leading-relaxed text-[11px]">
+                    Oura recently transitioned to official OAuth 2.0. In just 60 seconds, connect your ring for automated 24/7 background syncing of your <strong>Sleep Stages</strong>, <strong>Readiness Score</strong>, <strong>Daily Steps</strong>, and <strong>Cycle Temperature Shifts</strong>.
+                  </p>
+                </div>
 
-                <form onSubmit={handleSyncOuraRing} className="space-y-3 pt-1">
+                <div className="bg-white/80 rounded-xl p-3 border border-stone-200 space-y-2.5">
+                  <div className="font-bold text-[11px] uppercase tracking-wider text-stone-700">Quick 3-Step Setup:</div>
+                  <ol className="list-decimal list-inside space-y-2 text-stone-600 leading-relaxed text-[11.5px]">
+                    <li>
+                      Go to{' '}
+                      <a
+                        href="https://cloud.ouraring.com/oauth/applications"
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`underline font-semibold ${theme.accentText} inline-flex items-center gap-1`}
+                      >
+                        <span>cloud.ouraring.com/oauth/applications</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>{' '}
+                      <em>(or click &ldquo;My Applications&rdquo; in Oura&apos;s left menu)</em>.
+                    </li>
+                    <li className="space-y-1.5">
+                      <div>
+                        Click <strong>&ldquo;+ New Application&rdquo;</strong>, enter <code>Mackie Daily Board</code> as the name, and copy/paste this exact <strong>Redirect URI</strong>:
+                      </div>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <code className="flex-1 px-2.5 py-1.5 rounded-lg bg-stone-100 border border-stone-300 text-[11px] font-mono text-stone-800 break-all select-all">
+                          {ouraRedirectUri || (typeof window !== 'undefined' ? `${window.location.origin}/api/health-fitness/oura/callback` : 'https://daily-executive-dashboard.onrender.com/api/health-fitness/oura/callback')}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyRedirectUri(ouraRedirectUri)}
+                          className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition ${
+                            copiedRedirectUri
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                              : 'bg-stone-50 hover:bg-stone-100 border-stone-300 text-stone-700'
+                          }`}
+                          title="Copy Redirect URI"
+                        >
+                          {copiedRedirectUri ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedRedirectUri ? 'Copied!' : 'Copy'}</span>
+                        </button>
+                      </div>
+                    </li>
+                    <li>
+                      Copy the generated <strong>Client ID</strong> &amp; <strong>Client Secret</strong> and paste them below:
+                    </li>
+                  </ol>
+                </div>
+
+                <form onSubmit={handleConnectOuraOAuth} className="space-y-3 pt-1">
                   <div>
-                    <label className="block font-medium mb-1">Oura Personal Access Token</label>
+                    <label className="block font-semibold text-stone-700 mb-1 text-[11.5px]">
+                      Oura Client ID <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type="password"
-                      value={ouraTokenInput}
-                      onChange={e => setOuraTokenInput(e.target.value)}
-                      placeholder="Paste your Oura token here..."
-                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                      type="text"
+                      required
+                      value={ouraClientId}
+                      onChange={e => setOuraClientId(e.target.value)}
+                      placeholder="e.g. 3ABCD1234EFGH..."
+                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none focus:ring-2 focus:ring-[#9E5A43]/20`}
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                  <div>
+                    <label className="block font-semibold text-stone-700 mb-1 text-[11.5px]">
+                      Oura Client Secret <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={ouraClientSecret}
+                      onChange={e => setOuraClientSecret(e.target.value)}
+                      placeholder="Paste your Oura Client Secret here..."
+                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none focus:ring-2 focus:ring-[#9E5A43]/20`}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 flex-wrap">
                     <button
                       type="button"
                       onClick={() => handleSyncOuraRing(null, 'DEMO')}
@@ -2404,14 +2553,39 @@ export default function PersonalHealthFitnessHub({
                       <button
                         type="submit"
                         disabled={isSyncingOura}
-                        className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white font-semibold shadow-xs flex items-center gap-1.5`}
+                        className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white font-semibold shadow-xs flex items-center gap-1.5 transition`}
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>{isSyncingOura ? 'Connecting & Syncing...' : 'Save & Sync Oura Ring'}</span>
+                        <span>{isSyncingOura ? 'Connecting...' : 'Connect & Authorize Oura'}</span>
                       </button>
                     </div>
                   </div>
                 </form>
+
+                {/* Legacy / Direct Token Fallback Accordion */}
+                <details className="text-xs text-stone-500 pt-2 border-t border-stone-200">
+                  <summary className="cursor-pointer font-medium hover:text-stone-800">
+                    Have an existing Personal Access Token or Developer Bearer Token?
+                  </summary>
+                  <form onSubmit={handleSyncOuraRing} className="space-y-2 pt-2">
+                    <input
+                      type="password"
+                      value={ouraTokenInput}
+                      onChange={e => setOuraTokenInput(e.target.value)}
+                      placeholder="Paste existing token..."
+                      className={`w-full px-3 py-1.5 rounded-lg ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSyncingOura}
+                        className={`px-3 py-1 rounded-lg ${theme.accentBg} text-white font-semibold text-[11px]`}
+                      >
+                        Sync with Token
+                      </button>
+                    </div>
+                  </form>
+                </details>
               </div>
             )}
           </div>

@@ -1,9 +1,51 @@
 {
   "days": {
-    "Monday": [],
-    "Tuesday": [],
-    "Wednesday": [],
-    "Thursday": [],
+    "Monday": [
+      {
+        "instanceId": "meal-1792336427257-2edt",
+        "recipeId": null,
+        "title": "HelloFresh",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-18T15:13:47.257Z"
+      }
+    ],
+    "Tuesday": [
+      {
+        "instanceId": "meal-1792336289742-a6so",
+        "recipeId": null,
+        "title": "Lemon Chicken Spaghetti",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-18T15:11:29.742Z"
+      }
+    ],
+    "Wednesday": [
+      {
+        "instanceId": "meal-1792336410398-kkql",
+        "recipeId": "mikeys-favorite-buffalo-chicken-wraps",
+        "title": "Mikey's Favorite Buffalo Chicken Wraps",
+        "category": "Main Dishes",
+        "page": 23,
+        "isManual": false,
+        "slot": "Main Dishes",
+        "addedAt": "2026-10-18T15:13:30.398Z"
+      }
+    ],
+    "Thursday": [
+      {
+        "instanceId": "meal-1792336234185-3kir",
+        "recipeId": "mackies-magic-grilled-cheese",
+        "title": "Mackie's Magic Grilled Cheese",
+        "category": "Main Dishes",
+        "page": 31,
+        "isManual": false,
+        "slot": "Main Dishes",
+        "addedAt": "2026-10-18T15:10:34.185Z"
+      }
+    ],
     "Friday": [],
     "Saturday": [],
     "Sunday": [
@@ -18,6 +60,6 @@
       }
     ]
   },
-  "updatedAt": "2026-10-17T19:24:39.351Z",
-  "updatedAtTs": 1792265079351
+  "updatedAt": "2026-10-18T15:13:47.257Z",
+  "updatedAtTs": 1792336427257
 }

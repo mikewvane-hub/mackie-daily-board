@@ -1,0 +1,9 @@
+{
+  "clientId": "TEST_CLIENT_ID",
+  "clientSecret": "TEST_SECRET",
+  "updatedAt": "2026-10-18T15:24:30.602Z",
+  "updatedAtTs": 1792337075207,
+  "accessToken": "",
+  "refreshToken": "",
+  "expiresAt": null
+}
