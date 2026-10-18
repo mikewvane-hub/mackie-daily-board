@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792335392107,
-  "mealPlanUpdatedAt": 1792265079351,
+  "updatedAt": 1792336234218,
+  "mealPlanUpdatedAt": 1792336234185,
   "groceryUpdatedAt": 1792265097763,
   "suggestionsUpdatedAt": 1791330297891,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -9,7 +9,18 @@
     "Monday": [],
     "Tuesday": [],
     "Wednesday": [],
-    "Thursday": [],
+    "Thursday": [
+      {
+        "instanceId": "meal-1792336234185-3kir",
+        "recipeId": "mackies-magic-grilled-cheese",
+        "title": "Mackie's Magic Grilled Cheese",
+        "category": "Main Dishes",
+        "page": 31,
+        "isManual": false,
+        "slot": "Main Dishes",
+        "addedAt": "2026-10-18T15:10:34.185Z"
+      }
+    ],
     "Friday": [],
     "Saturday": [],
     "Sunday": [
