@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "updatedAt": 1792361763371,
+  "updatedAt": 1792361848921,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
-  "suggestionsUpdatedAt": 1792336263645,
+  "suggestionsUpdatedAt": 1792361848920,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [
@@ -77,7 +77,16 @@
     }
   ],
   "suggestions": {
-    "items": [],
+    "items": [
+      {
+        "id": "sug-1792361848243-cs4p",
+        "text": "I’d like the dashboard to pull things I add to the weekly meal plan and work out plan and add those to the “Mackie’s calendar”",
+        "category": "General",
+        "author": "Mackie",
+        "createdAt": "2026-10-18T22:17:28.242Z",
+        "formattedDate": "Oct 18, 2026 at 6:17 PM EST"
+      }
+    ],
     "deletedIds": [
       "sug-test-sync",
       "sug-1791158808969-dboh",
