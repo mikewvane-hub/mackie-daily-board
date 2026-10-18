@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792336470015,
+  "updatedAt": 1792336471120,
   "mealPlanUpdatedAt": 1792336427257,
-  "groceryUpdatedAt": 1792336470015,
+  "groceryUpdatedAt": 1792336471043,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -74,18 +74,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-16T12:58:22.476Z"
-    },
-    {
-      "id": "groc-1792336234189-2-pnb",
-      "name": "Pepperjack cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
-      "sourceDay": "Thursday",
-      "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-18T15:10:34.189Z"
     },
     {
       "id": "groc-1792336234189-3-wvi",
