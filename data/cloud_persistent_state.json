@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792336307635,
-  "mealPlanUpdatedAt": 1792336306712,
+  "updatedAt": 1792336308766,
+  "mealPlanUpdatedAt": 1792336308765,
   "groceryUpdatedAt": 1792336306721,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -18,18 +18,7 @@
         "addedAt": "2026-10-18T15:11:29.742Z"
       }
     ],
-    "Wednesday": [
-      {
-        "instanceId": "meal-1792336306712-cd71",
-        "recipeId": "mackies-magic-grilled-cheese",
-        "title": "Mackie's Magic Grilled Cheese",
-        "category": "Main Dishes",
-        "page": 31,
-        "isManual": false,
-        "slot": "Main Dishes",
-        "addedAt": "2026-10-18T15:11:46.712Z"
-      }
-    ],
+    "Wednesday": [],
     "Thursday": [
       {
         "instanceId": "meal-1792336234185-3kir",
