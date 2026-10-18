@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792336410417,
+  "updatedAt": 1792336411257,
   "mealPlanUpdatedAt": 1792336410398,
-  "groceryUpdatedAt": 1792336308766,
+  "groceryUpdatedAt": 1792336410405,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -148,6 +148,102 @@
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.217Z"
+    },
+    {
+      "id": "groc-1792336410402-0-20r",
+      "name": "Flour tortillas",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.402Z"
+    },
+    {
+      "id": "groc-1792336410403-1-eie",
+      "name": "Just Bare chicken bites",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.403Z"
+    },
+    {
+      "id": "groc-1792336410404-2-mnk",
+      "name": "Spinach",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.404Z"
+    },
+    {
+      "id": "groc-1792336410404-3-r57",
+      "name": "Banana peppers",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.404Z"
+    },
+    {
+      "id": "groc-1792336410404-4-6vu",
+      "name": "Cherry tomatoes",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.404Z"
+    },
+    {
+      "id": "groc-1792336410404-5-jbg",
+      "name": "Monterey Jack cheese",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.404Z"
+    },
+    {
+      "id": "groc-1792336410405-6-lfv",
+      "name": "Ranch dressing",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.405Z"
+    },
+    {
+      "id": "groc-1792336410405-7-19d",
+      "name": "Buffalo wing sauce",
+      "checked": false,
+      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1792336410398-kkql"
+      ],
+      "isManual": false,
+      "createdAt": "2026-10-18T15:13:30.405Z"
     }
   ],
   "suggestions": {
