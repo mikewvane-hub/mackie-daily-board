@@ -248,6 +248,7 @@ function getDefaultHealthFitnessData() {
     ouraToken: '',
     ouraConnected: false,
     ouraLastSynced: null,
+    ouraEmail: null,
     dailyLogs: [],
     updatedAt: null,
     updatedAtTs: 0
@@ -1528,6 +1529,7 @@ app.post('/api/health-fitness/update', async (req, res) => {
   if (Array.isArray(updates.dailyLogs)) current.dailyLogs = updates.dailyLogs;
   if (updates.ouraToken !== undefined) current.ouraToken = String(updates.ouraToken || '').trim();
   if (updates.ouraConnected !== undefined) current.ouraConnected = Boolean(updates.ouraConnected);
+  if (updates.ouraEmail !== undefined) current.ouraEmail = updates.ouraEmail;
 
   const ts = saveHealthFitnessAndSync(current);
   res.json({
@@ -1537,6 +1539,57 @@ app.post('/api/health-fitness/update', async (req, res) => {
   });
 });
 
+// Helper to format date YYYY-MM-DD
+function formatOuraDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Generate realistic simulated Oura Ring data for Demo / Test verification
+function generateDemoOuraData() {
+  const logs = [];
+  const today = new Date();
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = formatOuraDate(d);
+
+    // Realistic biphasic cycle temperature curve:
+    // Days 0-6 (recent): Luteal elevated temperature (+0.20°C to +0.38°C)
+    // Days 7-8: Ovulation transition (+0.05°C)
+    // Days 9-13: Follicular baseline (-0.12°C to -0.25°C)
+    let tempDev = 0;
+    if (i <= 6) {
+      tempDev = +(0.20 + (Math.sin(i) * 0.12)).toFixed(2);
+    } else if (i <= 8) {
+      tempDev = +(0.05 + (Math.sin(i) * 0.05)).toFixed(2);
+    } else {
+      tempDev = -(0.12 + (Math.cos(i) * 0.08)).toFixed(2);
+    }
+
+    logs.push({
+      date: dateStr,
+      sleepHours: +(7.1 + ((i * 3) % 15) / 10).toFixed(1), // 7.1h - 8.5h
+      sleepScore: 80 + ((i * 7) % 14), // 80 - 93
+      deepSleepMins: 75 + ((i * 5) % 35), // 75 - 105 min
+      remSleepMins: 85 + ((i * 4) % 35), // 85 - 115 min
+      restingHr: 54 + ((i * 2) % 8), // 54 - 61 bpm
+      hrvMs: 52 + ((i * 6) % 20), // 52 - 70 ms
+      steps: 6400 + ((i * 650) % 4500), // 6,400 - 10,800 steps
+      walkingMinutes: 30 + ((i * 5) % 30), // 30 - 55 mins
+      walkingMiles: +(3.2 + ((i * 4) % 18) / 10).toFixed(1), // 3.2 - 4.9 miles
+      activeCalories: 310 + ((i * 35) % 180), // 310 - 480 kcal
+      readinessScore: 81 + ((i * 3) % 12), // 81 - 92
+      tempDeviationC: tempDev,
+      tempTrendDeviationC: +(tempDev * 0.8).toFixed(2),
+      source: 'Oura Ring (Demo)'
+    });
+  }
+  return logs;
+}
+
 // Connect & Sync Oura Ring Cloud API v2 (Sleep, Activity, Readiness & Cycle Temp Deviation)
 app.post('/api/health-fitness/oura/sync', async (req, res) => {
   await hydrateBoardFromCloud(false);
@@ -1545,23 +1598,73 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
     ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
   };
 
-  const incomingToken = req.body?.token !== undefined ? String(req.body.token).trim() : current.ouraToken;
-  if (!incomingToken) {
+  const incomingRaw = req.body?.token !== undefined ? String(req.body.token).trim() : current.ouraToken;
+  const isDemoRequest = req.body?.isDemo === true || /^demo$/i.test(incomingRaw);
+
+  if (isDemoRequest) {
+    const demoLogs = generateDemoOuraData();
+    current.ouraToken = 'DEMO_MODE';
+    current.ouraConnected = true;
+    current.ouraEmail = 'mackie.vane@demo.oura.com';
+    current.ouraLastSynced = new Date().toISOString();
+    current.dailyLogs = demoLogs;
+
+    const ts = saveHealthFitnessAndSync(current);
+    return res.json({
+      success: true,
+      healthFitness: current,
+      healthFitnessUpdatedAt: ts,
+      syncedDaysCount: demoLogs.length,
+      ouraEmail: current.ouraEmail,
+      isDemo: true
+    });
+  }
+
+  // Sanitize incoming personal access token: strip 'Bearer ' prefix and whitespace/quotes
+  const cleanToken = incomingRaw
+    .replace(/^Bearer\s+/i, '')
+    .replace(/^["']|["']$/g, '')
+    .trim();
+
+  if (!cleanToken) {
     return res.status(400).json({
       error: 'Please enter your Oura Ring Personal Access Token from cloud.ouraring.com/personal-access-tokens'
     });
   }
 
   try {
-    const endDate = getEstDateTime().dateStr;
-    const startObj = new Date(endDate + 'T12:00:00');
-    startObj.setDate(startObj.getDate() - 14);
-    const startDate = startObj.toISOString().split('T')[0];
-
     const headers = {
-      Authorization: `Bearer ${incomingToken}`,
+      Authorization: `Bearer ${cleanToken}`,
       Accept: 'application/json'
     };
+
+    // 1. Validate token upfront via personal_info endpoint
+    let ouraEmail = current.ouraEmail || null;
+    try {
+      const personalRes = await fetch('https://api.ouraring.com/v2/usercollection/personal_info', { headers });
+      if (personalRes.status === 401 || personalRes.status === 403) {
+        return res.status(401).json({
+          error: 'Oura Ring token was rejected (401 Unauthorized). Please verify that you copied the complete Personal Access Token from cloud.ouraring.com/personal-access-tokens.'
+        });
+      }
+      if (personalRes.status === 429) {
+        return res.status(429).json({
+          error: 'Oura Ring API rate limit reached. Please wait a minute and try again.'
+        });
+      }
+      if (personalRes.ok) {
+        const pJson = await personalRes.json();
+        if (pJson && pJson.email) ouraEmail = pJson.email;
+      }
+    } catch (tokenCheckErr) {
+      console.warn('Oura personal_info pre-flight note:', tokenCheckErr.message);
+    }
+
+    // 2. Fetch full 30-day baseline window (ensures complete menstrual cycle & postpartum recovery tracking)
+    const endDate = getEstDateTime().dateStr;
+    const startObj = new Date(endDate + 'T12:00:00');
+    startObj.setDate(startObj.getDate() - 30);
+    const startDate = formatOuraDate(startObj);
 
     const [sleepRes, actRes, readyRes, detailSleepRes] = await Promise.all([
       fetch(`https://api.ouraring.com/v2/usercollection/daily_sleep?start_date=${startDate}&end_date=${endDate}`, { headers }),
@@ -1570,9 +1673,15 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       fetch(`https://api.ouraring.com/v2/usercollection/sleep?start_date=${startDate}&end_date=${endDate}`, { headers })
     ]);
 
-    if (sleepRes.status === 401 || actRes.status === 401) {
+    const responses = [sleepRes, actRes, readyRes, detailSleepRes];
+    if (responses.some(r => r.status === 401 || r.status === 403)) {
       return res.status(401).json({
-        error: 'Oura Ring token was rejected (401 Unauthorized). Please verify your Personal Access Token.'
+        error: 'Oura Ring token was rejected (401 Unauthorized). Please verify your Personal Access Token from cloud.ouraring.com/personal-access-tokens.'
+      });
+    }
+    if (responses.some(r => r.status === 429)) {
+      return res.status(429).json({
+        error: 'Oura Ring API rate limit reached. Please wait a minute and try again.'
       });
     }
 
@@ -1586,7 +1695,8 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       if (item && item.date) byDate.set(item.date, { ...item });
     }
 
-    for (const s of sleepJson.data || []) {
+    // A. Daily Sleep Summaries (Composite Sleep Score)
+    for (const s of (sleepJson.data || [])) {
       if (!s.day) continue;
       const existing = byDate.get(s.day) || { date: s.day };
       existing.sleepScore = s.score ?? existing.sleepScore ?? null;
@@ -1594,29 +1704,44 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       byDate.set(s.day, existing);
     }
 
-    for (const ds of detailSleepJson.data || []) {
+    // B. Sleep Periods: Prioritize long_sleep (overnight) so afternoon naps do NOT overwrite overnight metrics
+    for (const ds of (detailSleepJson.data || [])) {
       if (!ds.day) continue;
       const existing = byDate.get(ds.day) || { date: ds.day };
-      if (ds.total_sleep_duration) {
-        existing.sleepHours = Math.round((ds.total_sleep_duration / 3600) * 10) / 10;
-      }
-      if (ds.deep_sleep_duration) {
-        existing.deepSleepMins = Math.round(ds.deep_sleep_duration / 60);
-      }
-      if (ds.rem_sleep_duration) {
-        existing.remSleepMins = Math.round(ds.rem_sleep_duration / 60);
-      }
-      if (ds.lowest_heart_rate) {
-        existing.restingHr = ds.lowest_heart_rate;
-      }
-      if (ds.average_hrv) {
-        existing.hrvMs = ds.average_hrv;
+      const isPrimary = ds.type === 'long_sleep' || !existing._hasPrimarySleep;
+
+      if (isPrimary || !existing.sleepHours) {
+        if (ds.total_sleep_duration) {
+          existing.sleepHours = Math.round((ds.total_sleep_duration / 3600) * 10) / 10;
+        }
+        if (ds.deep_sleep_duration) {
+          existing.deepSleepMins = Math.round(ds.deep_sleep_duration / 60);
+        }
+        if (ds.rem_sleep_duration) {
+          existing.remSleepMins = Math.round(ds.rem_sleep_duration / 60);
+        }
+        if (ds.lowest_heart_rate) {
+          existing.restingHr = ds.lowest_heart_rate;
+        }
+        if (ds.average_hrv) {
+          existing.hrvMs = ds.average_hrv;
+        }
+        if (ds.type === 'long_sleep') {
+          existing._hasPrimarySleep = true;
+        }
+      } else if (ds.total_sleep_duration && existing.sleepHours) {
+        existing.napHours = Math.round(((existing.napHours || 0) + (ds.total_sleep_duration / 3600)) * 10) / 10;
       }
       existing.source = 'Oura Ring';
       byDate.set(ds.day, existing);
     }
 
-    for (const a of actJson.data || []) {
+    for (const entry of byDate.values()) {
+      delete entry._hasPrimarySleep;
+    }
+
+    // C. Daily Activity Summaries (Steps, Cal, Walking Miles, Active Mins)
+    for (const a of (actJson.data || [])) {
       if (!a.day) continue;
       const existing = byDate.get(a.day) || { date: a.day };
       existing.activityScore = a.score ?? existing.activityScore ?? null;
@@ -1632,12 +1757,16 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       byDate.set(a.day, existing);
     }
 
-    for (const r of readyJson.data || []) {
+    // D. Daily Readiness Summaries & Nightly Skin Temperature Deviations (Cycle BBT Tracking)
+    for (const r of (readyJson.data || [])) {
       if (!r.day) continue;
       const existing = byDate.get(r.day) || { date: r.day };
       existing.readinessScore = r.score ?? existing.readinessScore ?? null;
       if (r.temperature_deviation !== undefined && r.temperature_deviation !== null) {
         existing.tempDeviationC = Math.round(Number(r.temperature_deviation) * 100) / 100;
+      }
+      if (r.temperature_trend_deviation !== undefined && r.temperature_trend_deviation !== null) {
+        existing.tempTrendDeviationC = Math.round(Number(r.temperature_trend_deviation) * 100) / 100;
       }
       existing.source = 'Oura Ring';
       byDate.set(r.day, existing);
@@ -1647,9 +1776,10 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       String(b.date || '').localeCompare(String(a.date || ''))
     );
 
-    current.ouraToken = incomingToken;
+    current.ouraToken = cleanToken;
     current.ouraConnected = true;
     current.ouraLastSynced = new Date().toISOString();
+    if (ouraEmail) current.ouraEmail = ouraEmail;
     current.dailyLogs = mergedLogs.slice(0, 60);
 
     const ts = saveHealthFitnessAndSync(current);
@@ -1657,11 +1787,33 @@ app.post('/api/health-fitness/oura/sync', async (req, res) => {
       success: true,
       healthFitness: current,
       healthFitnessUpdatedAt: ts,
-      syncedDaysCount: mergedLogs.length
+      syncedDaysCount: mergedLogs.length,
+      ouraEmail: current.ouraEmail
     });
   } catch (err) {
     res.status(500).json({ error: `Oura sync failed: ${err.message}` });
   }
+});
+
+// Disconnect Oura Ring
+app.post('/api/health-fitness/oura/disconnect', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const current = {
+    ...getDefaultHealthFitnessData(),
+    ...readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData())
+  };
+
+  current.ouraToken = '';
+  current.ouraConnected = false;
+  current.ouraLastSynced = null;
+  current.ouraEmail = null;
+
+  const ts = saveHealthFitnessAndSync(current);
+  res.json({
+    success: true,
+    healthFitness: current,
+    healthFitnessUpdatedAt: ts
+  });
 });
 
 // ============================================================================

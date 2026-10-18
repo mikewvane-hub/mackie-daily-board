@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dumbbell,
   Footprints,
@@ -19,6 +19,8 @@ import {
   Thermometer,
   CheckCircle2,
   Info,
+  ExternalLink,
+  ShieldCheck,
   X
 } from 'lucide-react';
 import {
@@ -126,6 +128,13 @@ export default function PersonalHealthFitnessHub({
   const [ouraTokenInput, setOuraTokenInput] = useState(hf.ouraToken || '');
   const [isSyncingOura, setIsSyncingOura] = useState(false);
   const [ouraError, setOuraError] = useState(null);
+
+  // Keep ouraTokenInput in sync when hf.ouraToken updates from server/cloud
+  useEffect(() => {
+    if (hf.ouraToken) {
+      setOuraTokenInput(hf.ouraToken);
+    }
+  }, [hf.ouraToken]);
   const [showManualDailyForm, setShowManualDailyForm] = useState(false);
   const [manualDailyInput, setManualDailyInput] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -504,12 +513,13 @@ export default function PersonalHealthFitnessHub({
   };
 
   // Oura Ring API v2 Sync Handler
-  const handleSyncOuraRing = async (e) => {
-    if (e) e.preventDefault();
+  const handleSyncOuraRing = async (e, forceToken = null) => {
+    if (e && e.preventDefault) e.preventDefault();
     setIsSyncingOura(true);
     setOuraError(null);
     try {
-      const tokenToUse = (ouraTokenInput || hf.ouraToken || '').trim();
+      const raw = forceToken !== null ? forceToken : (ouraTokenInput || hf.ouraToken || '');
+      const tokenToUse = String(raw).trim();
       const res = await fetch(`${API_BASE}/health-fitness/oura/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -521,7 +531,36 @@ export default function PersonalHealthFitnessHub({
       } else {
         onUpdateHealthFitness(json.healthFitness);
         setShowOuraModal(false);
-        showToast(`Synced ${json.syncedDaysCount || 0} days of Sleep, Activity & Cycle Temp from Oura Ring!`);
+        showToast(
+          json.isDemo
+            ? `Connected Oura Ring (Demo Mode)! Loaded ${json.syncedDaysCount || 0} days of sleep & activity.`
+            : `Synced ${json.syncedDaysCount || 0} days of Sleep, Activity & Cycle Temp from Oura Ring!`
+        );
+      }
+    } catch (err) {
+      setOuraError(err.message);
+    } finally {
+      setIsSyncingOura(false);
+    }
+  };
+
+  // Disconnect Oura Ring Handler
+  const handleDisconnectOuraRing = async () => {
+    setIsSyncingOura(true);
+    setOuraError(null);
+    try {
+      const res = await fetch(`${API_BASE}/health-fitness/oura/disconnect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const json = await res.json();
+      if (res.ok && json.healthFitness) {
+        onUpdateHealthFitness(json.healthFitness);
+        setOuraTokenInput('');
+        setShowOuraModal(false);
+        showToast('Disconnected Oura Ring from your dashboard.');
+      } else {
+        setOuraError(json.error || 'Failed to disconnect Oura Ring');
       }
     } catch (err) {
       setOuraError(err.message);
@@ -1689,6 +1728,44 @@ export default function PersonalHealthFitnessHub({
             </div>
           )}
 
+          {/* Oura Ring Basal Body Temperature (BBT) & Hormone Shift Card */}
+          {hf.ouraConnected && latestDailyLog?.tempDeviationC !== undefined && (
+            <div className={`p-3.5 rounded-xl border ${theme.border} ${theme.bgPage} space-y-1.5`}>
+              <div className="flex items-center justify-between flex-wrap gap-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#9E5A43] flex items-center gap-1.5">
+                  <Thermometer className="w-4 h-4" />
+                  <span>Oura Nightly Temp Shift (Cycle BBT)</span>
+                </span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                    latestDailyLog.tempDeviationC >= 0.15
+                      ? 'bg-amber-50 text-amber-900 border-amber-300'
+                      : latestDailyLog.tempDeviationC <= -0.15
+                      ? 'bg-blue-50 text-blue-900 border-blue-300'
+                      : 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                  }`}
+                >
+                  {latestDailyLog.tempDeviationC >= 0.15
+                    ? 'Elevated Temp (Luteal / Post-Ovulation)'
+                    : latestDailyLog.tempDeviationC <= -0.15
+                    ? 'Lower Temp Baseline (Follicular)'
+                    : 'Normal Baseline Range'}
+                </span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="font-editorial text-2xl font-bold">
+                  {latestDailyLog.tempDeviationC >= 0 ? `+${latestDailyLog.tempDeviationC}` : latestDailyLog.tempDeviationC}°C
+                </span>
+                <span className="text-xs text-stone-500">
+                  nightly deviation relative to baseline ({latestDailyLog.date})
+                </span>
+              </div>
+              <p className={`text-[11px] ${theme.textSecondary} leading-relaxed`}>
+                Oura Ring tracks nocturnal skin temperature shifts. A sustained rise of +0.2°C to +0.5°C confirms ovulation and the luteal phase, while a sudden drop signals the onset of your menstrual period.
+              </p>
+            </div>
+          )}
+
           {/* Cycle Phases Quick Reference */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {CYCLE_PHASES_GUIDE.map(cp => (
@@ -1755,15 +1832,20 @@ export default function PersonalHealthFitnessHub({
                   <h3 className="font-editorial text-xl font-semibold leading-none">
                     Oura Ring Sleep, Readiness &amp; Activity Tracker
                   </h3>
-                  <span
+                  <button
+                    type="button"
+                    onClick={() => setShowOuraModal(true)}
                     className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
                       hf.ouraConnected
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                        : theme.badgeNeutral
-                    }`}
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                        : `${theme.badgeNeutral} hover:opacity-80`
+                    } transition cursor-pointer`}
+                    title="Click to view Oura Ring connection details or sync"
                   >
-                    {hf.ouraConnected ? 'Oura Cloud Synced' : 'Oura API + Manual Ready'}
-                  </span>
+                    {hf.ouraConnected
+                      ? (hf.ouraEmail ? `Oura Synced (${hf.ouraEmail.split('@')[0]})` : 'Oura Cloud Synced')
+                      : 'Oura API + Manual Ready'}
+                  </button>
                 </div>
                 <p className={`text-xs ${theme.textSecondary} mt-1`}>
                   Pulls Sleep Score, Hours, Steps, Active Calories &amp; Cycle Temp from Oura Ring or manual log
@@ -1773,20 +1855,31 @@ export default function PersonalHealthFitnessHub({
 
             <div className="flex items-center gap-1.5">
               {hf.ouraConnected ? (
-                <button
-                  type="button"
-                  onClick={handleSyncOuraRing}
-                  disabled={isSyncingOura}
-                  className={`px-3 py-1.5 rounded-xl ${theme.accentBg} text-white text-xs font-semibold flex items-center gap-1`}
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingOura ? 'animate-spin' : ''}`} />
-                  <span>{isSyncingOura ? 'Syncing...' : 'Sync Oura'}</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleSyncOuraRing()}
+                    disabled={isSyncingOura}
+                    className={`px-3 py-1.5 rounded-xl ${theme.accentBg} text-white text-xs font-semibold flex items-center gap-1 shadow-2xs hover:opacity-90 transition disabled:opacity-50`}
+                    title="Sync latest sleep, activity & temperature from Oura Ring"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingOura ? 'animate-spin' : ''}`} />
+                    <span>{isSyncingOura ? 'Syncing...' : 'Sync Oura'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowOuraModal(true)}
+                    className={`p-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} text-stone-600 hover:${theme.accentSoft} transition`}
+                    title="Oura Ring settings & management"
+                  >
+                    <Activity className="w-3.5 h-3.5 text-purple-700" />
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
                   onClick={() => setShowOuraModal(true)}
-                  className={`px-3 py-1.5 rounded-xl ${theme.accentBg} text-white text-xs font-semibold flex items-center gap-1`}
+                  className={`px-3 py-1.5 rounded-xl ${theme.accentBg} text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs hover:opacity-90 transition`}
                 >
                   <Activity className="w-3.5 h-3.5" />
                   <span>Connect Oura</span>
@@ -1795,7 +1888,7 @@ export default function PersonalHealthFitnessHub({
               <button
                 type="button"
                 onClick={() => setShowManualDailyForm(prev => !prev)}
-                className={`px-2.5 py-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} text-xs font-medium`}
+                className={`px-2.5 py-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} text-xs font-medium hover:${theme.accentSoft} transition`}
               >
                 {showManualDailyForm ? 'Close' : '+ Log Today'}
               </button>
@@ -1938,6 +2031,7 @@ export default function PersonalHealthFitnessHub({
               </div>
               <div className="text-[11px] text-stone-500">
                 Score: {latestDailyLog?.sleepScore ?? '—'}
+                {latestDailyLog?.restingHr ? ` • ${latestDailyLog.restingHr} bpm HR` : ''}
               </div>
             </div>
 
@@ -1952,6 +2046,8 @@ export default function PersonalHealthFitnessHub({
               <div className="text-[11px] text-stone-500">
                 {latestDailyLog?.walkingMinutes
                   ? `${latestDailyLog.walkingMinutes} mins walk`
+                  : latestDailyLog?.walkingMiles
+                  ? `${latestDailyLog.walkingMiles} miles`
                   : 'Daily steps'}
               </div>
             </div>
@@ -1964,7 +2060,9 @@ export default function PersonalHealthFitnessHub({
               <div className="font-editorial text-2xl font-bold mt-0.5">
                 {latestDailyLog?.activeCalories ? `${latestDailyLog.activeCalories}` : '—'}
               </div>
-              <div className="text-[11px] text-stone-500">Active kcal</div>
+              <div className="text-[11px] text-stone-500">
+                {latestDailyLog?.walkingMiles ? `${latestDailyLog.walkingMiles} mi • Active kcal` : 'Active kcal'}
+              </div>
             </div>
 
             <div className={`p-3 rounded-xl ${theme.cardSubtle} border ${theme.border}`}>
@@ -1980,6 +2078,7 @@ export default function PersonalHealthFitnessHub({
                 {latestDailyLog?.tempDeviationC !== undefined
                   ? `${latestDailyLog.tempDeviationC >= 0 ? '+' : ''}${latestDailyLog.tempDeviationC}°C`
                   : '—'}
+                {latestDailyLog?.hrvMs ? ` • ${latestDailyLog.hrvMs}ms HRV` : ''}
               </div>
             </div>
           </div>
@@ -2005,15 +2104,17 @@ export default function PersonalHealthFitnessHub({
                     <div className="flex items-center gap-3 flex-wrap text-[11px]">
                       <span>
                         <strong>Sleep:</strong> {log.sleepHours ?? '—'}h (Score {log.sleepScore ?? '—'})
+                        {log.restingHr ? ` • ${log.restingHr}bpm` : ''}
                       </span>
                       <span>
                         <strong>Steps:</strong> {log.steps ? log.steps.toLocaleString() : '—'}
                       </span>
                       <span>
                         <strong>Readiness:</strong> {log.readinessScore ?? '—'}
+                        {log.hrvMs ? ` (${log.hrvMs}ms)` : ''}
                       </span>
                       {log.tempDeviationC !== undefined && (
-                        <span className="font-mono">
+                        <span className={`font-mono font-medium ${log.tempDeviationC >= 0.15 ? 'text-amber-700' : log.tempDeviationC <= -0.15 ? 'text-blue-700' : 'text-stone-700'}`}>
                           {log.tempDeviationC >= 0 ? `+${log.tempDeviationC}` : log.tempDeviationC}°C
                         </span>
                       )}
@@ -2124,78 +2225,195 @@ export default function PersonalHealthFitnessHub({
             className={`${theme.cardBg} ${theme.textPrimary} border ${theme.border} rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs sm:text-sm`}
           >
             <div className="flex items-center justify-between border-b pb-3 border-[#E2D9CC]">
-              <div>
-                <h3 className="font-editorial text-2xl font-bold">
-                  Connect Mackie&apos;s Oura Ring App
-                </h3>
-                <p className={`text-xs ${theme.textSecondary}`}>
-                  Syncs Daily Sleep, Activity, Readiness &amp; Cycle Temperature Trends via Oura Cloud API v2
-                </p>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-editorial text-2xl font-bold leading-none">
+                    Mackie&apos;s Oura Ring Sync
+                  </h3>
+                  <p className={`text-xs ${theme.textSecondary} mt-1`}>
+                    Sleep stages, daily activity, readiness &amp; cycle temperature trends
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowOuraModal(false)}
-                className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200"
+                className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {ouraError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                {ouraError}
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Oura Connection Note</span>
+                </div>
+                <div>{ouraError}</div>
               </div>
             )}
 
-            <div className={`p-4 rounded-xl ${theme.cardSubtle} border ${theme.border} space-y-2.5 text-xs`}>
-              <div className="font-bold text-sm">How to Connect Your Oura Ring (1-Minute Setup):</div>
-              <ol className="list-decimal list-inside space-y-1.5 leading-relaxed">
-                <li>
-                  Open{' '}
-                  <a
-                    href="https://cloud.ouraring.com/personal-access-tokens"
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`underline font-semibold ${theme.accentText}`}
-                  >
-                    cloud.ouraring.com/personal-access-tokens
-                  </a>{' '}
-                  and sign in with your Oura account.
-                </li>
-                <li>
-                  Tap <strong>&ldquo;Create A New Personal Access Token&rdquo;</strong> and copy the token.
-                </li>
-                <li>
-                  Paste your token below to automatically pull your Oura Ring <strong>Sleep</strong>, <strong>Activity / Steps</strong>, <strong>Readiness</strong>, and <strong>Body Temperature Deviation</strong> for Cycle Tracking!
-                </li>
-              </ol>
+            {hf.ouraConnected ? (
+              /* ALREADY CONNECTED VIEW */
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 text-emerald-800">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Oura Ring Connected &amp; Active</span>
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-white border border-emerald-300 font-mono text-emerald-700">
+                      API v2 Live
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed">
+                    {hf.ouraEmail ? (
+                      <span>Connected to Mackie&apos;s Oura account: <strong>{hf.ouraEmail}</strong>.</span>
+                    ) : (
+                      <span>Connected with your Personal Access Token.</span>
+                    )}{' '}
+                    Your daily sleep stages, resting HR, HRV, daily steps, and nocturnal temperature shifts are automatically synced to your dashboard.
+                  </p>
+                  {hf.ouraLastSynced && (
+                    <div className="text-[11px] text-emerald-700 font-medium">
+                      Last synchronized: {new Date(hf.ouraLastSynced).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  )}
+                </div>
 
-              <form onSubmit={handleSyncOuraRing} className="space-y-2.5 pt-2">
-                <input
-                  type="password"
-                  value={ouraTokenInput}
-                  onChange={e => setOuraTokenInput(e.target.value)}
-                  placeholder="Paste Oura Personal Access Token..."
-                  className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
-                />
-                <div className="flex justify-end gap-2">
+                <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
                   <button
                     type="button"
-                    onClick={() => setShowOuraModal(false)}
-                    className={`px-3.5 py-2 rounded-xl border ${theme.border}`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
+                    onClick={handleDisconnectOuraRing}
                     disabled={isSyncingOura}
-                    className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white font-semibold`}
+                    className="px-3 py-2 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold transition"
                   >
-                    {isSyncingOura ? 'Connecting & Syncing...' : 'Save & Sync Oura Ring'}
+                    Disconnect Ring
                   </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowOuraModal(false)}
+                      className={`px-3.5 py-2 rounded-xl border ${theme.border} text-xs font-medium`}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSyncOuraRing()}
+                      disabled={isSyncingOura}
+                      className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white text-xs font-semibold flex items-center gap-1.5 transition`}
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncingOura ? 'animate-spin' : ''}`} />
+                      <span>{isSyncingOura ? 'Syncing...' : 'Sync Latest Data Now'}</span>
+                    </button>
+                  </div>
                 </div>
-              </form>
-            </div>
+
+                {/* Option to Update Token */}
+                <details className="text-xs text-stone-500 pt-2 border-t border-stone-200">
+                  <summary className="cursor-pointer font-medium hover:text-stone-800">
+                    Need to update or replace your Personal Access Token?
+                  </summary>
+                  <form onSubmit={handleSyncOuraRing} className="space-y-2 pt-2">
+                    <input
+                      type="password"
+                      value={ouraTokenInput}
+                      onChange={e => setOuraTokenInput(e.target.value)}
+                      placeholder="Paste new Oura Personal Access Token..."
+                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSyncingOura}
+                        className={`px-3.5 py-1.5 rounded-xl ${theme.accentBg} text-white font-semibold`}
+                      >
+                        {isSyncingOura ? 'Updating...' : 'Save New Token'}
+                      </button>
+                    </div>
+                  </form>
+                </details>
+              </div>
+            ) : (
+              /* NOT YET CONNECTED VIEW */
+              <div className={`p-4 rounded-xl ${theme.cardSubtle} border ${theme.border} space-y-3 text-xs`}>
+                <div className="font-bold text-sm">How to Connect Your Oura Ring (1-Minute Setup):</div>
+                <ol className="list-decimal list-inside space-y-1.5 leading-relaxed">
+                  <li>
+                    Open{' '}
+                    <a
+                      href="https://cloud.ouraring.com/personal-access-tokens"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`underline font-semibold ${theme.accentText} inline-flex items-center gap-1`}
+                    >
+                      <span>cloud.ouraring.com/personal-access-tokens</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>{' '}
+                    and sign in with your Oura account.
+                  </li>
+                  <li>
+                    Tap <strong>&ldquo;Create A New Personal Access Token&rdquo;</strong> and copy the token.
+                  </li>
+                  <li>
+                    Paste your token below to automatically pull your Oura Ring <strong>Sleep</strong>, <strong>Activity / Steps</strong>, <strong>Readiness</strong>, and <strong>Cycle Temperature Shifts</strong>!
+                  </li>
+                </ol>
+
+                <form onSubmit={handleSyncOuraRing} className="space-y-3 pt-1">
+                  <div>
+                    <label className="block font-medium mb-1">Oura Personal Access Token</label>
+                    <input
+                      type="password"
+                      value={ouraTokenInput}
+                      onChange={e => setOuraTokenInput(e.target.value)}
+                      placeholder="Paste your Oura token here..."
+                      className={`w-full px-3 py-2 rounded-xl ${theme.cardBg} border ${theme.borderStrong} font-mono text-xs outline-none`}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-1 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleSyncOuraRing(null, 'DEMO')}
+                      disabled={isSyncingOura}
+                      className="text-[11px] text-[#9E5A43] hover:underline font-semibold"
+                    >
+                      + Test with Demo Oura Data
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowOuraModal(false)}
+                        className={`px-3.5 py-2 rounded-xl border ${theme.border}`}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSyncingOura}
+                        className={`px-4 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white font-semibold shadow-xs flex items-center gap-1.5`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>{isSyncingOura ? 'Connecting & Syncing...' : 'Save & Sync Oura Ring'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}

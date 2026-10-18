@@ -1,14 +1,14 @@
 {
   "items": [
     {
-      "id": "groc-manual-1791735937086-jl6",
-      "name": "Turkey",
+      "id": "groc-manual-1792155502476-f70",
+      "name": "New England hazelnut decaf coffee",
       "checked": false,
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
-      "createdAt": "2026-10-11T16:25:37.086Z"
+      "createdAt": "2026-10-16T12:58:22.476Z"
     }
   ],
-  "updatedAt": "2026-10-13T17:14:42.560Z",
-  "updatedAtTs": 1791911682560
+  "updatedAt": "2026-10-17T19:24:57.763Z",
+  "updatedAtTs": 1792265097763
 }

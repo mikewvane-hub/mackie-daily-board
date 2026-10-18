@@ -1,63 +1,23 @@
 {
   "days": {
-    "Monday": [
-      {
-        "instanceId": "meal-1791739804549-dbxv",
-        "recipeId": null,
-        "title": "HelloFresh",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-11T17:30:04.549Z"
-      }
-    ],
-    "Tuesday": [
-      {
-        "instanceId": "meal-1791739812749-arc8",
-        "recipeId": null,
-        "title": "HelloFresh",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-11T17:30:12.749Z"
-      }
-    ],
-    "Wednesday": [
-      {
-        "instanceId": "meal-1791739821180-xu4b",
-        "recipeId": null,
-        "title": "HelloFresh",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-11T17:30:21.180Z"
-      }
-    ],
-    "Thursday": [
-      {
-        "instanceId": "meal-1791739829791-qfnq",
-        "recipeId": null,
-        "title": "HelloFresh",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-11T17:30:29.791Z"
-      }
-    ],
+    "Monday": [],
+    "Tuesday": [],
+    "Wednesday": [],
+    "Thursday": [],
     "Friday": [],
     "Saturday": [],
     "Sunday": [
       {
-        "instanceId": "meal-1791575903061-gddh",
+        "instanceId": "meal-1792265079351-zqns",
         "recipeId": null,
-        "title": "Football Sunday pizza?",
+        "title": "Brats",
         "category": "Custom Meal",
         "isManual": true,
         "slot": "Custom",
-        "addedAt": "2026-10-09T19:58:23.061Z"
+        "addedAt": "2026-10-17T19:24:39.351Z"
       }
     ]
   },
-  "updatedAt": "2026-10-11T17:30:48.009Z",
-  "updatedAtTs": 1791739848009
+  "updatedAt": "2026-10-17T19:24:39.351Z",
+  "updatedAtTs": 1792265079351
 }
