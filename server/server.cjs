@@ -1,3 +1,11 @@
+// Process guards to ensure continuous 24/7 server stability against any transient network or async timeouts
+process.on('uncaughtException', (err) => {
+  console.error('[Daemon Guard] Uncaught Exception:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[Daemon Guard] Unhandled Rejection:', reason && reason.message ? reason.message : reason);
+});
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
