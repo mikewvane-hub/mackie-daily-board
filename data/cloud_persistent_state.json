@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792336480958,
+  "updatedAt": 1792336482598,
   "mealPlanUpdatedAt": 1792336427257,
-  "groceryUpdatedAt": 1792336480957,
+  "groceryUpdatedAt": 1792336482597,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -74,18 +74,6 @@
       "sourceRecipeTitle": "Manual Addition",
       "isManual": true,
       "createdAt": "2026-10-16T12:58:22.476Z"
-    },
-    {
-      "id": "groc-1792336410402-0-20r",
-      "name": "Flour tortillas",
-      "checked": false,
-      "sourceRecipeTitle": "Mikey's Favorite Buffalo Chicken Wraps",
-      "sourceDay": "Wednesday",
-      "sourceInstanceIds": [
-        "meal-1792336410398-kkql"
-      ],
-      "isManual": false,
-      "createdAt": "2026-10-18T15:13:30.402Z"
     },
     {
       "id": "groc-1792336410403-1-eie",
