@@ -189,10 +189,32 @@ function enrichScheduleEvents(scheduleData) {
     return { ...evt, status };
   });
 
+  // Calculate chronological upcoming events starting from tomorrow onwards (up to 30 days ahead)
+  const upcomingEvents = [];
+  const futureKeys = Object.keys(weekSchedule)
+    .filter(k => k > dateStr)
+    .sort();
+
+  for (const fKey of futureKeys) {
+    const dayList = weekSchedule[fKey] || [];
+    for (const evt of dayList) {
+      upcomingEvents.push(evt);
+    }
+  }
+
+  const activeTodayCount = todayEvents.filter(e => e.status !== 'completed').length;
+  let weekUpcomingCount = activeTodayCount;
+  for (const k of weekKeys.slice(1)) {
+    weekUpcomingCount += (weekSchedule[k] || []).length;
+  }
+
   return {
     todayDate: dateStr,
     currentTime: timeStr,
     todayEvents,
+    upcomingEvents,
+    activeTodayCount,
+    weekUpcomingCount,
     weekSchedule,
     authorized: Boolean(scheduleData.authorized),
     lastSynced: scheduleData.lastSynced || null,
@@ -383,12 +405,31 @@ async function hydrateBoardFromCloud(force = false) {
   }
 }
 
+let inFlightCalendarSync = null;
+
 app.get('/api/board', async (req, res) => {
   await hydrateBoardFromCloud(false);
 
   const { dateStr, timeStr, autoSeason } = getEstDateTime();
-  const scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, authorized: false });
+  let scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, authorized: false });
   const calConfig = readJson(CAL_CONFIG_FILE, { icalUrl: '' });
+
+  // Proactive Auto-Sync: if calendar data is older than 3 minutes, has no events, or is missing today's slot, sync now!
+  const calAgeMs = scheduleData.lastSynced ? (Date.now() - new Date(scheduleData.lastSynced).getTime()) : Infinity;
+  const isStale = !scheduleData.lastSynced || calAgeMs > (3 * 60 * 1000) || !scheduleData.weekSchedule || !scheduleData.weekSchedule[dateStr];
+  if (isStale && (calConfig.icalUrl || scheduleData.authorized)) {
+    try {
+      if (!inFlightCalendarSync) {
+        inFlightCalendarSync = syncCalendar().finally(() => {
+          inFlightCalendarSync = null;
+        });
+      }
+      scheduleData = await inFlightCalendarSync;
+    } catch (err) {
+      console.warn('[Board] Auto calendar refresh warning:', err.message);
+    }
+  }
+
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null, updatedAtTs: 0 });
   const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null, updatedAtTs: 0 });
   const healthFitnessData = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
@@ -410,6 +451,8 @@ app.get('/api/board', async (req, res) => {
       lanUrl: `http://${lanIp}:${PORT}`,
       tunnelUrl: tunnelInfo.url || null,
       hasIcalConfigured: Boolean(calConfig.icalUrl),
+      calendarLastSynced: scheduleData.lastSynced || null,
+      calendarAuthorized: Boolean(scheduleData.authorized),
       mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
       groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
       healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0,
@@ -2129,13 +2172,18 @@ if (!IS_RENDER_ENV) {
 // ============================================================================
 // 8. Automated Background Sync (Every 15 Mins Calendar + 07:00 AM EST News)
 // ============================================================================
-cron.schedule('*/15 * * * *', async () => {
+// Calendar background sync: every 5 minutes via cron + every 3 minutes via native interval
+cron.schedule('*/5 * * * *', async () => {
   try {
     await syncCalendar();
   } catch (e) {
     console.warn('[Cron] Calendar background sync warning:', e.message);
   }
 });
+
+setInterval(() => {
+  syncCalendar().catch(e => console.warn('[Interval] Calendar auto-sync warning:', e.message));
+}, 3 * 60 * 1000);
 
 // Daily News automatic update at 07:00 AM EST every day
 cron.schedule(

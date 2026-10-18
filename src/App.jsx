@@ -537,7 +537,20 @@ export default function App() {
   useEffect(() => {
     fetchBoard(true);
     const poll = setInterval(() => fetchBoard(false), 20000);
-    return () => clearInterval(poll);
+
+    const onVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBoard(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityOrFocus);
+    window.addEventListener('focus', onVisibilityOrFocus);
+
+    return () => {
+      clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVisibilityOrFocus);
+      window.removeEventListener('focus', onVisibilityOrFocus);
+    };
   }, []);
 
   // Poll suggestions every 8 seconds while the Suggest Updates modal is open
@@ -1480,15 +1493,29 @@ export default function App() {
                     </h2>
                     <CutesyBadgeDoodle season={activeSeasonKey} variant={2} />
                   </div>
-                  <button
-                    type="button"
-                    onClick={openCalSettings}
-                    className={`text-[11px] ${theme.textSecondary} hover:${theme.accentText} flex items-center gap-1 underline decoration-dotted`}
-                  >
-                    <span>Google Calendar</span>
-                    <span>•</span>
-                    <span>{calendar.authorized ? 'Live Synced' : 'Connect Feed'}</span>
-                  </button>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={openCalSettings}
+                      className={`text-[11px] ${theme.textSecondary} hover:${theme.accentText} flex items-center gap-1.5 underline decoration-dotted transition`}
+                      title="Google Calendar feed settings (amblair92@gmail.com)"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                      <span className="font-medium text-stone-700">amblair92@gmail.com</span>
+                      <span>•</span>
+                      <span>{calendar.authorized ? 'Live Synced' : 'Connect Feed'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSyncCalendar}
+                      disabled={isSyncingCal}
+                      className={`p-1 rounded-md text-stone-400 hover:${theme.accentText} hover:bg-black/5 transition disabled:opacity-50`}
+                      title="Force sync Google Calendar now"
+                      aria-label="Force sync Google Calendar now"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isSyncingCal ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1501,13 +1528,18 @@ export default function App() {
                       setCalendarView('today');
                       setCalendarWeekOffset(0);
                     }}
-                    className={`px-3 py-1 rounded-lg font-medium text-xs transition ${
+                    className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
                       calendarView === 'today'
                         ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
                         : theme.textSecondary
                     }`}
                   >
-                    Daily
+                    <span>Daily</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                      calendarView === 'today' ? 'bg-black/5 font-semibold text-stone-800' : 'opacity-60'
+                    }`}>
+                      {calendar.activeTodayCount ?? (calendar.todayEvents || []).filter(e => e.status !== 'completed').length}
+                    </span>
                   </button>
                   <button
                     type="button"
@@ -1520,15 +1552,26 @@ export default function App() {
                       }
                     }}
                     title="Select Weekly 7-day forecast (click again to cycle to the following week)"
-                    className={`px-3 py-1 rounded-lg font-medium text-xs transition ${
+                    className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
                       calendarView === 'week'
                         ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
                         : theme.textSecondary
                     }`}
                   >
-                    {calendarView === 'week' && calendarWeekOffset > 0
-                      ? `Weekly (+${calendarWeekOffset}w)`
-                      : 'Weekly'}
+                    <span>
+                      {calendarView === 'week' && calendarWeekOffset > 0
+                        ? `Weekly (+${calendarWeekOffset}w)`
+                        : 'Weekly'}
+                    </span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                      calendarView === 'week' ? 'bg-black/5 font-semibold text-stone-800' : 'opacity-60'
+                    }`}>
+                      {calendar.weekUpcomingCount ?? (
+                        Object.keys(calendar.weekSchedule || {})
+                          .filter(k => k >= (calendar.todayDate || ''))
+                          .reduce((sum, k) => sum + (calendar.weekSchedule[k] || []).length, 0)
+                      )}
+                    </span>
                   </button>
                 </div>
 
@@ -1572,6 +1615,19 @@ export default function App() {
                   const activeList = todayEvents.filter(e => e.status !== 'completed');
                   const pastList = todayEvents.filter(e => e.status === 'completed');
 
+                  // Extract upcoming events if today is calm or to provide upcoming preview
+                  let upcomingList = calendar.upcomingEvents || [];
+                  if (upcomingList.length === 0 && calendar.weekSchedule) {
+                    const futureKeys = Object.keys(calendar.weekSchedule)
+                      .filter(k => k > (calendar.todayDate || ''))
+                      .sort();
+                    for (const fk of futureKeys) {
+                      for (const e of calendar.weekSchedule[fk] || []) {
+                        upcomingList.push(e);
+                      }
+                    }
+                  }
+
                   return (
                     <>
                       <div className={`flex items-center justify-between text-xs ${theme.textSecondary} px-1`}>
@@ -1582,14 +1638,109 @@ export default function App() {
                       </div>
 
                       {activeList.length === 0 ? (
-                        <div className={`p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5 my-1`}>
-                          <CheckCircle2 className={`w-6 h-6 mx-auto ${theme.accentText}`} />
-                          <div className="font-editorial text-lg font-medium">
-                            A calm, open day ahead
+                        <div className="space-y-4 my-1">
+                          <div className={`p-5 sm:p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5`}>
+                            <CheckCircle2 className={`w-6 h-6 mx-auto ${theme.accentText}`} />
+                            <div className="font-editorial text-lg sm:text-xl font-medium">
+                              A calm, open day ahead
+                            </div>
+                            <p className={`text-xs ${theme.textSecondary}`}>
+                              No appointments scheduled for today. Here is what is coming up next on Mackie&apos;s schedule:
+                            </p>
                           </div>
-                          <p className={`text-xs ${theme.textSecondary}`}>
-                            No remaining appointments scheduled for today.
-                          </p>
+
+                          {/* Next Upcoming Appointments (7-14 Day Forecast Preview) */}
+                          {upcomingList.length > 0 && (
+                            <div className="space-y-2.5">
+                              <div className={`flex items-center justify-between text-xs font-semibold ${theme.textSecondary} px-1`}>
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5 text-[#9E5A43]" />
+                                  <span>Next Upcoming Appointments ({upcomingList.length})</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCalendarView('week');
+                                    setCalendarWeekOffset(0);
+                                  }}
+                                  className={`text-[11px] ${theme.accentText} hover:underline font-semibold flex items-center gap-1`}
+                                >
+                                  <span>View Weekly Grid</span>
+                                  <ChevronRight className="w-3 h-3" />
+                                </button>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                {upcomingList.slice(0, 8).map(evt => {
+                                  let formattedDate = evt.date;
+                                  try {
+                                    const dObj = new Date(evt.date + 'T12:00:00');
+                                    formattedDate = dObj.toLocaleDateString('en-US', {
+                                      weekday: 'short',
+                                      month: 'short',
+                                      day: 'numeric'
+                                    });
+                                  } catch {}
+
+                                  return (
+                                    <div
+                                      key={evt.id}
+                                      className={`p-3.5 rounded-xl border ${theme.cardSubtle} ${theme.border} flex flex-col gap-1.5 transition group hover:border-[#CBBBA8]`}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <span className={`text-xs font-semibold flex items-center gap-1.5 ${theme.accentText}`}>
+                                          <Calendar className="w-3.5 h-3.5" />
+                                          {formattedDate}
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                          {evt.category && (
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${theme.badgeNeutral}`}>
+                                              {evt.category}
+                                            </span>
+                                          )}
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteCalendarEvent(evt.id)}
+                                            className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 p-0.5 transition"
+                                            title="Remove event"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      <div className="font-semibold text-sm leading-snug">{evt.title}</div>
+
+                                      <div className="flex items-center gap-2 text-xs text-stone-500">
+                                        <span className="flex items-center gap-1 font-mono text-[11px]">
+                                          <Clock className="w-3 h-3" />
+                                          {evt.time}
+                                          {evt.endTime ? ` – ${evt.endTime}` : ''}
+                                        </span>
+                                        {evt.recurring && (
+                                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                                            Recurring
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {evt.location && (
+                                        <div className={`text-xs ${theme.textSecondary} flex items-center gap-1 mt-0.5`}>
+                                          <MapPin className="w-3 h-3 shrink-0" />
+                                          <span className="truncate">{evt.location}</span>
+                                        </div>
+                                      )}
+                                      {evt.notes && (
+                                        <p className={`text-xs ${theme.textSecondary} mt-0.5 line-clamp-2 leading-relaxed`}>
+                                          {evt.notes}
+                                        </p>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

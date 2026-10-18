@@ -126,20 +126,183 @@ async function getAccessToken() {
   }
 }
 
+function parseIcsDate(str) {
+  if (!str) return null;
+  const clean = str.replace(/[^0-9TZ]/g, '');
+  if (clean.length === 8) {
+    const y = parseInt(clean.slice(0, 4), 10);
+    const m = parseInt(clean.slice(4, 6), 10) - 1;
+    const d = parseInt(clean.slice(6, 8), 10);
+    return new Date(y, m, d, 0, 0, 0);
+  }
+  if (clean.endsWith('Z')) {
+    const y = parseInt(clean.slice(0, 4), 10);
+    const m = parseInt(clean.slice(4, 6), 10) - 1;
+    const d = parseInt(clean.slice(6, 8), 10);
+    const h = parseInt(clean.slice(9, 11), 10);
+    const min = parseInt(clean.slice(11, 13), 10);
+    const s = parseInt(clean.slice(13, 15), 10) || 0;
+    return new Date(Date.UTC(y, m, d, h, min, s));
+  } else {
+    const y = parseInt(clean.slice(0, 4), 10);
+    const m = parseInt(clean.slice(4, 6), 10) - 1;
+    const d = parseInt(clean.slice(6, 8), 10);
+    const h = parseInt(clean.slice(9, 11), 10);
+    const min = parseInt(clean.slice(11, 13), 10);
+    return new Date(y, m, d, h, min, 0);
+  }
+}
+
+function formatDateEst(d) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(d);
+}
+
+function formatTimeEst(d) {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(d);
+}
+
 function getNext7DaysKeys() {
+  return getUpcomingDaysKeys(7);
+}
+
+function getUpcomingDaysKeys(days = 60) {
   const now = new Date();
   const keys = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < days; i++) {
     const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-    const dateStr = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(d);
-    keys.push(dateStr);
+    keys.push(formatDateEst(d));
   }
   return keys;
+}
+
+function expandRrule(raw, windowStart, windowEnd) {
+  if (!raw.rrule) return [];
+  const parts = {};
+  for (const part of raw.rrule.split(';')) {
+    const [k, v] = part.split('=');
+    if (k && v) parts[k.toUpperCase()] = v.toUpperCase();
+  }
+
+  const freq = parts.FREQ;
+  const interval = parseInt(parts.INTERVAL, 10) || 1;
+  const until = parts.UNTIL ? parseIcsDate(parts.UNTIL) : null;
+  const count = parts.COUNT ? parseInt(parts.COUNT, 10) : null;
+  const byDay = parts.BYDAY ? parts.BYDAY.split(',') : null;
+  const byMonthDay = parts.BYMONTHDAY ? parseInt(parts.BYMONTHDAY, 10) : null;
+
+  const dtStart = parseIcsDate(raw.dtstart);
+  if (!dtStart || isNaN(dtStart.getTime())) return [];
+
+  const results = [];
+  const maxIterations = 2000;
+  let iter = 0;
+  let totalCount = 0;
+
+  let current = new Date(dtStart.getTime());
+
+  if (freq === 'DAILY') {
+    // Fast-forward towards windowStart
+    const daysDiff = Math.floor((windowStart.getTime() - dtStart.getTime()) / (24 * 60 * 60 * 1000));
+    if (daysDiff > 0 && !count) {
+      const steps = Math.floor(daysDiff / interval);
+      current.setDate(current.getDate() + steps * interval);
+    }
+
+    while (current <= windowEnd && iter++ < maxIterations) {
+      if (until && current > until) break;
+      if (count && totalCount >= count) break;
+      if (current >= windowStart) {
+        results.push(new Date(current.getTime()));
+      }
+      totalCount++;
+      current.setDate(current.getDate() + interval);
+    }
+  } else if (freq === 'WEEKLY') {
+    const dayMap = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
+    const targetDays = byDay
+      ? byDay.map(d => dayMap[d.slice(-2)]).filter(x => x !== undefined)
+      : [dtStart.getDay()];
+
+    let weekStart = new Date(dtStart.getTime());
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+    // Fast-forward towards windowStart
+    const weeksDiff = Math.floor((windowStart.getTime() - dtStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    if (weeksDiff > 0 && !count) {
+      const steps = Math.floor(weeksDiff / interval);
+      weekStart.setDate(weekStart.getDate() + steps * 7 * interval);
+    }
+
+    while (weekStart <= windowEnd && iter++ < maxIterations) {
+      for (const dayOfWeek of targetDays) {
+        const candidate = new Date(weekStart.getTime());
+        candidate.setDate(candidate.getDate() + dayOfWeek);
+        candidate.setHours(dtStart.getHours(), dtStart.getMinutes(), dtStart.getSeconds(), 0);
+
+        if (candidate < dtStart) continue;
+        if (until && candidate > until) continue;
+        if (candidate > windowEnd) continue;
+
+        if (candidate >= windowStart && candidate <= windowEnd) {
+          results.push(candidate);
+        }
+        totalCount++;
+        if (count && totalCount >= count) break;
+      }
+      if (count && totalCount >= count) break;
+      if (until && weekStart > until) break;
+      weekStart.setDate(weekStart.getDate() + (7 * interval));
+    }
+  } else if (freq === 'MONTHLY') {
+    let targetDay = byMonthDay || dtStart.getDate();
+    let monthCursor = new Date(dtStart.getFullYear(), dtStart.getMonth(), targetDay, dtStart.getHours(), dtStart.getMinutes(), 0);
+
+    // Fast-forward towards windowStart
+    const monthsDiff = (windowStart.getFullYear() - dtStart.getFullYear()) * 12 + (windowStart.getMonth() - dtStart.getMonth());
+    if (monthsDiff > 0 && !count) {
+      const steps = Math.floor(monthsDiff / interval);
+      monthCursor = new Date(dtStart.getFullYear(), dtStart.getMonth() + steps * interval, targetDay, dtStart.getHours(), dtStart.getMinutes(), 0);
+    }
+
+    while (monthCursor <= windowEnd && iter++ < maxIterations) {
+      if (until && monthCursor > until) break;
+      if (count && totalCount >= count) break;
+      if (monthCursor >= windowStart && monthCursor >= dtStart) {
+        results.push(new Date(monthCursor.getTime()));
+      }
+      totalCount++;
+      monthCursor = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + interval, targetDay, dtStart.getHours(), dtStart.getMinutes(), 0);
+    }
+  } else if (freq === 'YEARLY') {
+    let yearCursor = new Date(dtStart.getTime());
+    const yearsDiff = windowStart.getFullYear() - dtStart.getFullYear();
+    if (yearsDiff > 0 && !count) {
+      const steps = Math.floor(yearsDiff / interval);
+      yearCursor.setFullYear(dtStart.getFullYear() + steps * interval);
+    }
+
+    while (yearCursor <= windowEnd && iter++ < maxIterations) {
+      if (until && yearCursor > until) break;
+      if (count && totalCount >= count) break;
+      if (yearCursor >= windowStart) {
+        results.push(new Date(yearCursor.getTime()));
+      }
+      totalCount++;
+      yearCursor.setFullYear(yearCursor.getFullYear() + interval);
+    }
+  }
+
+  return results;
 }
 
 function parseIcsEvents(icsContent) {
@@ -176,99 +339,97 @@ function parseIcsEvents(icsContent) {
     if (key === 'UID') cur.uid = val;
     if (key === 'DTSTART') cur.dtstart = val;
     if (key === 'DTEND') cur.dtend = val;
+    if (key === 'RRULE') cur.rrule = val;
+    if (key === 'EXDATE') {
+      cur.exdates = cur.exdates || [];
+      cur.exdates.push(val);
+    }
   }
 
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const windowEnd = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+
   const parsedEvents = [];
+
   for (const raw of rawEvents) {
-    let dateStr = '';
-    let timeStr = '09:00';
-    let endTimeStr = '10:00';
-
-    if (raw.dtstart.length === 8) {
-      dateStr = `${raw.dtstart.slice(0, 4)}-${raw.dtstart.slice(4, 6)}-${raw.dtstart.slice(6, 8)}`;
-      timeStr = 'ALL DAY';
-      endTimeStr = '';
-    } else {
-      const cleanStart = raw.dtstart.replace(/[^0-9TZ]/g, '');
-      let sDate = null;
-      if (cleanStart.endsWith('Z')) {
-        const y = parseInt(cleanStart.slice(0, 4));
-        const m = parseInt(cleanStart.slice(4, 6)) - 1;
-        const d = parseInt(cleanStart.slice(6, 8));
-        const h = parseInt(cleanStart.slice(9, 11));
-        const min = parseInt(cleanStart.slice(11, 13));
-        const s = parseInt(cleanStart.slice(13, 15)) || 0;
-        sDate = new Date(Date.UTC(y, m, d, h, min, s));
-      } else {
-        const y = parseInt(cleanStart.slice(0, 4));
-        const m = parseInt(cleanStart.slice(4, 6)) - 1;
-        const d = parseInt(cleanStart.slice(6, 8));
-        const h = parseInt(cleanStart.slice(9, 11));
-        const min = parseInt(cleanStart.slice(11, 13));
-        sDate = new Date(y, m, d, h, min);
-      }
-
-      if (sDate && !isNaN(sDate.getTime())) {
-        dateStr = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'America/New_York',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }).format(sDate);
-        timeStr = new Intl.DateTimeFormat('en-US', {
-          timeZone: 'America/New_York',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit'
-        }).format(sDate);
-      }
-
-      if (raw.dtend) {
-        const cleanEnd = raw.dtend.replace(/[^0-9TZ]/g, '');
-        let eDate = null;
-        if (cleanEnd.endsWith('Z')) {
-          const y = parseInt(cleanEnd.slice(0, 4));
-          const m = parseInt(cleanEnd.slice(4, 6)) - 1;
-          const d = parseInt(cleanEnd.slice(6, 8));
-          const h = parseInt(cleanEnd.slice(9, 11));
-          const min = parseInt(cleanEnd.slice(11, 13));
-          const s = parseInt(cleanEnd.slice(13, 15)) || 0;
-          eDate = new Date(Date.UTC(y, m, d, h, min, s));
-        } else {
-          const y = parseInt(cleanEnd.slice(0, 4));
-          const m = parseInt(cleanEnd.slice(4, 6)) - 1;
-          const d = parseInt(cleanEnd.slice(6, 8));
-          const h = parseInt(cleanEnd.slice(9, 11));
-          const min = parseInt(cleanEnd.slice(11, 13));
-          eDate = new Date(y, m, d, h, min);
-        }
-        if (eDate && !isNaN(eDate.getTime())) {
-          endTimeStr = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'America/New_York',
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit'
-          }).format(eDate);
-        }
-      }
-    }
-
     const summary = raw.summary || 'Calendar Event';
     let category = 'personal';
     if (/dr|doctor|ob|pediatric|appointment|clinic|hospital|dentist/i.test(summary)) category = 'Appointment';
     else if (/work|shift|meeting|retina|clinic/i.test(summary)) category = 'Work';
     else if (/dinner|lunch|breakfast|brunch|party|family|date/i.test(summary)) category = 'Family';
 
-    parsedEvents.push({
-      id: raw.uid || `ical-${parsedEvents.length + 1}`,
-      date: dateStr,
-      time: timeStr,
-      endTime: endTimeStr,
-      title: summary,
-      location: raw.location || '',
-      category,
-      notes: raw.description ? raw.description.slice(0, 180) : ''
-    });
+    const isAllDay = (raw.dtstart || '').length === 8;
+    const startDateObj = parseIcsDate(raw.dtstart);
+    const endDateObj = raw.dtend ? parseIcsDate(raw.dtend) : null;
+    const durationMs = (startDateObj && endDateObj && !isNaN(startDateObj.getTime()) && !isNaN(endDateObj.getTime()))
+      ? Math.max(0, endDateObj.getTime() - startDateObj.getTime())
+      : 60 * 60 * 1000;
+
+    // Handle recurring events via RRULE expansion
+    if (raw.rrule) {
+      const occurrenceDates = expandRrule(raw, windowStart, windowEnd);
+      const exdateSet = new Set((raw.exdates || []).map(x => x.replace(/[^0-9]/g, '').slice(0, 8)));
+
+      for (const occ of occurrenceDates) {
+        const dateStr = formatDateEst(occ);
+        const compactDate = dateStr.replace(/-/g, '');
+        if (exdateSet.has(compactDate)) continue;
+
+        let timeStr = 'ALL DAY';
+        let endTimeStr = '';
+        if (!isAllDay) {
+          timeStr = formatTimeEst(occ);
+          const endOcc = new Date(occ.getTime() + durationMs);
+          endTimeStr = formatTimeEst(endOcc);
+        }
+
+        parsedEvents.push({
+          id: `${raw.uid || 'ical'}_${dateStr}`,
+          date: dateStr,
+          time: timeStr,
+          endTime: endTimeStr,
+          title: summary,
+          location: raw.location || '',
+          category,
+          notes: raw.description ? raw.description.slice(0, 180) : '',
+          recurring: true
+        });
+      }
+      continue;
+    }
+
+    // Single (non-recurring) event
+    let dateStr = '';
+    let timeStr = '09:00';
+    let endTimeStr = '10:00';
+
+    if (isAllDay) {
+      dateStr = `${raw.dtstart.slice(0, 4)}-${raw.dtstart.slice(4, 6)}-${raw.dtstart.slice(6, 8)}`;
+      timeStr = 'ALL DAY';
+      endTimeStr = '';
+    } else if (startDateObj && !isNaN(startDateObj.getTime())) {
+      dateStr = formatDateEst(startDateObj);
+      timeStr = formatTimeEst(startDateObj);
+      if (endDateObj && !isNaN(endDateObj.getTime())) {
+        endTimeStr = formatTimeEst(endDateObj);
+      } else {
+        endTimeStr = '';
+      }
+    }
+
+    if (dateStr) {
+      parsedEvents.push({
+        id: raw.uid || `ical-${parsedEvents.length + 1}`,
+        date: dateStr,
+        time: timeStr,
+        endTime: endTimeStr,
+        title: summary,
+        location: raw.location || '',
+        category,
+        notes: raw.description ? raw.description.slice(0, 180) : ''
+      });
+    }
   }
 
   return parsedEvents;
@@ -291,9 +452,10 @@ async function syncIcalFeed(icalUrl) {
     const customEvents = (existing.customEvents || []);
     const allEvents = [...events, ...customEvents];
 
-    const weekKeys = getNext7DaysKeys();
+    // Build schedule for the next 60 days to support up to 8 weeks ahead
+    const rangeKeys = getUpcomingDaysKeys(60);
     const weekSchedule = {};
-    for (const k of weekKeys) {
+    for (const k of rangeKeys) {
       weekSchedule[k] = [];
     }
 
@@ -302,14 +464,14 @@ async function syncIcalFeed(icalUrl) {
         if (!weekSchedule[evt.date]) {
           weekSchedule[evt.date] = [];
         }
-        if (!weekSchedule[evt.date].some(e => e.id === evt.id || (e.title === evt.title && e.time === evt.time))) {
+        if (!weekSchedule[evt.date].some(e => e.id === evt.id || (e.title === evt.title && e.time === evt.time && e.date === evt.date))) {
           weekSchedule[evt.date].push(evt);
           weekSchedule[evt.date].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
         }
       }
     }
 
-    const todayStr = weekKeys[0];
+    const todayStr = rangeKeys[0];
     const todayEvents = weekSchedule[todayStr] || [];
 
     const scheduleData = {
@@ -583,5 +745,6 @@ module.exports = {
   handleTokenExchange,
   addCalendarEvent,
   deleteCalendarEvent,
-  getNext7DaysKeys
+  getNext7DaysKeys,
+  getUpcomingDaysKeys
 };
