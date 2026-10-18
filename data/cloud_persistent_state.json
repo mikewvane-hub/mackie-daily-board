@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792336306722,
+  "updatedAt": 1792336307635,
   "mealPlanUpdatedAt": 1792336306712,
-  "groceryUpdatedAt": 1792336234217,
+  "groceryUpdatedAt": 1792336306721,
   "suggestionsUpdatedAt": 1792336263645,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -72,7 +72,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.188Z"
@@ -84,7 +85,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.189Z"
@@ -96,7 +98,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.189Z"
@@ -108,7 +111,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.189Z"
@@ -120,7 +124,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.189Z"
@@ -132,7 +137,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.189Z"
@@ -144,7 +150,8 @@
       "sourceRecipeTitle": "Mackie's Magic Grilled Cheese",
       "sourceDay": "Thursday",
       "sourceInstanceIds": [
-        "meal-1792336234185-3kir"
+        "meal-1792336234185-3kir",
+        "meal-1792336306712-cd71"
       ],
       "isManual": false,
       "createdAt": "2026-10-18T15:10:34.217Z"
