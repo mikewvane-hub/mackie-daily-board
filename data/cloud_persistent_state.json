@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792414085201,
+  "updatedAt": 1792414087338,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -3598,10 +3598,10 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-08-18": [
+      "2021-03-04": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-08-18",
+          "date": "2021-03-04",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
@@ -5850,10 +5850,10 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-11-01": [
+      "2020-10-11": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-11-01",
+          "date": "2020-10-11",
           "time": "18:30",
           "endTime": "21:30",
           "title": "Family Zoom",
@@ -20578,14 +20578,14 @@
     "deletedEventIds": [
       "evt-1792379062143"
     ],
-    "lastSynced": "2026-10-19T12:48:02.340Z",
-    "updatedAt": "2026-10-19T12:48:02.340Z",
-    "updatedAtTs": 1792414082340,
+    "lastSynced": "2026-10-19T12:48:07.271Z",
+    "updatedAt": "2026-10-19T12:48:07.271Z",
+    "updatedAtTs": 1792414087271,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1792414082340,
+  "scheduleUpdatedAt": 1792414087271,
   "tasks": {
     "customTasks": [],
     "completedTaskIds": [],
