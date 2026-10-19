@@ -50,7 +50,7 @@
     "Sunday": []
   },
   "deliveryDate": "2026-11-03",
-  "selectedPhaseId": null,
+  "selectedPhaseId": "weeks-3-4",
   "cycleLogs": [],
   "averageCycleLength": 28,
   "periodDurationDays": 5,
@@ -298,6 +298,6 @@
       "source": "Oura Ring (Demo)"
     }
   ],
-  "updatedAt": "2026-10-19T12:37:55.290Z",
-  "updatedAtTs": 1792413475290
+  "updatedAt": "2026-10-19T13:07:02.766Z",
+  "updatedAtTs": 1792415222766
 }

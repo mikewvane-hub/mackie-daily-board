@@ -268,22 +268,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "7kukuqrfedlm2f9t4lcr3mvddnthueiuk53ci6q1buqsodekgr3nl5itvov273s6iskg",
+        "id": "7kukuqrfedlm2f9tuve5hitq203lmvfa9jrpceftj2llubcl12qsm8ab5li386krtuag",
         "date": "2022-04-27",
         "time": "14:45",
         "endTime": "15:30",
-        "title": "MINI HYBRID FILL",
+        "title": "TOUCH UP VOLUME FILL",
         "location": "Salon Ish, 107 W Stewart Suite B, Puyallup, WA, US, 98371",
         "category": "personal",
         "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar",
         "source": "Google Calendar"
       },
       {
-        "id": "7kukuqrfedlm2f9tuve5hitq203lmvfa9jrpceftj2llubcl12qsm8ab5li386krtuag",
+        "id": "7kukuqrfedlm2f9t4lcr3mvddnthueiuk53ci6q1buqsodekgr3nl5itvov273s6iskg",
         "date": "2022-04-27",
         "time": "14:45",
         "endTime": "15:30",
-        "title": "TOUCH UP VOLUME FILL",
+        "title": "MINI HYBRID FILL",
         "location": "Salon Ish, 107 W Stewart Suite B, Puyallup, WA, US, 98371",
         "category": "personal",
         "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar",
@@ -1203,6 +1203,17 @@
         "source": "Google Calendar"
       },
       {
+        "id": "0knbnova2vk18dtddns9394ovc@google.com",
+        "date": "2024-09-04",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Tractor supply",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
         "id": "dbri7qdffdjhervdv3k458l264@google.com",
         "date": "2024-09-04",
         "time": "ALL DAY",
@@ -1219,17 +1230,6 @@
         "time": "ALL DAY",
         "endTime": "",
         "title": "Panowicz",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
-        "id": "0knbnova2vk18dtddns9394ovc@google.com",
-        "date": "2024-09-04",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Tractor supply",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -1264,7 +1264,7 @@
     ],
     "2023-11-03": [
       {
-        "id": "7kukuqrfedlm2f9t98sm4n56ksfc9d7i3dnle8auuen7fh9uqin0c55e90b1imdbt730",
+        "id": "7kukuqrfedlm2f9tqav6qnpmt1thqsada1qda8vns1863gk6s07gu9m93udvcvl9bsgg",
         "date": "2023-11-03",
         "time": "ALL DAY",
         "endTime": "",
@@ -1521,22 +1521,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "m7nqca1g85o6k54k0bu8h9flq0@google.com",
+        "id": "ai6gvhsf013j3tsogtavd6mgt8@google.com",
         "date": "2025-09-27",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Nashville brew festival",
+        "title": "Honeysuckle hill farm fall fest starts",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "ai6gvhsf013j3tsogtavd6mgt8@google.com",
+        "id": "m7nqca1g85o6k54k0bu8h9flq0@google.com",
         "date": "2025-09-27",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Honeysuckle hill farm fall fest starts",
+        "title": "Nashville brew festival",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -1580,22 +1580,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "v6r59o3lf8rfcuvl3fvglfdsoc@google.com",
+        "id": "i452g4gc6oa24kh8usefj55qfg@google.com",
         "date": "2022-09-02",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Mike off",
+        "title": "Rainier skyline",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "i452g4gc6oa24kh8usefj55qfg@google.com",
+        "id": "v6r59o3lf8rfcuvl3fvglfdsoc@google.com",
         "date": "2022-09-02",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Rainier skyline",
+        "title": "Mike off",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -1617,17 +1617,6 @@
     ],
     "2025-03-29": [
       {
-        "id": "75oqst20td62g65fqr6vqb9pjs@google.com",
-        "date": "2025-03-29",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Stay at Hotel Indigo Nashville - the Countrypolitan, an IHG Hotel",
-        "location": "Hotel Indigo Nashville - the Countrypolitan, an IHG Hotel, Nashville",
-        "category": "personal",
-        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-        "source": "Google Calendar"
-      },
-      {
         "id": "j7niaods8g1gstvmehs9sve3kc@google.com",
         "date": "2025-03-29",
         "time": "ALL DAY",
@@ -1636,6 +1625,17 @@
         "location": "",
         "category": "personal",
         "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "75oqst20td62g65fqr6vqb9pjs@google.com",
+        "date": "2025-03-29",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Stay at Hotel Indigo Nashville - the Countrypolitan, an IHG Hotel",
+        "location": "Hotel Indigo Nashville - the Countrypolitan, an IHG Hotel, Nashville",
+        "category": "personal",
+        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
         "source": "Google Calendar"
       },
       {
@@ -1665,17 +1665,6 @@
     ],
     "2024-03-15": [
       {
-        "id": "el4oh0pnjuo4pl2ti8dmh3834c@google.com",
-        "date": "2024-03-15",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Miranda/devin night out",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "h0ee2654t329jb74snk3tvrkd0@google.com",
         "date": "2024-03-15",
         "time": "ALL DAY",
@@ -1696,20 +1685,20 @@
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
+      },
+      {
+        "id": "el4oh0pnjuo4pl2ti8dmh3834c@google.com",
+        "date": "2024-03-15",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Miranda/devin night out",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
       }
     ],
     "2025-02-10": [
-      {
-        "id": "2ob2g98aql05jkrj761uu5mono@google.com",
-        "date": "2025-02-10",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Work",
-        "location": "",
-        "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
       {
         "id": "m8l6t927vu4bohgirkch20c2m8@google.com",
         "date": "2025-02-10",
@@ -1718,6 +1707,17 @@
         "title": "Free starbs",
         "location": "",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "2ob2g98aql05jkrj761uu5mono@google.com",
+        "date": "2025-02-10",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Work",
+        "location": "",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -1955,22 +1955,22 @@
     ],
     "2024-04-13": [
       {
-        "id": "0lpbdog6bptrqd5g3l2oi69m5g@google.com",
+        "id": "d5b2oqqc6ffsmbf79k6lj18k9o@google.com",
         "date": "2024-04-13",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Alex baby shower",
+        "title": "Car Loan payment due",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "d5b2oqqc6ffsmbf79k6lj18k9o@google.com",
+        "id": "0lpbdog6bptrqd5g3l2oi69m5g@google.com",
         "date": "2024-04-13",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Car Loan payment due",
+        "title": "Alex baby shower",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -2976,22 +2976,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "vnu9f4c9sv8f1h049j6f1ohio0@google.com",
+        "id": "5usapimscrdcbf5gtls06tjk6s@google.com",
         "date": "2023-08-26",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Dirks Bentley WRA",
+        "title": "Ed Sheeran Seattle",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "5usapimscrdcbf5gtls06tjk6s@google.com",
+        "id": "vnu9f4c9sv8f1h049j6f1ohio0@google.com",
         "date": "2023-08-26",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Ed Sheeran Seattle",
+        "title": "Dirks Bentley WRA",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -3560,17 +3560,6 @@
         "source": "Google Calendar"
       },
       {
-        "id": "7kukuqrfedlm2f9ttore3ts8u4g87148o4ik3b5n8hshp9h0hk40p07e14h0coaf82g0",
-        "date": "2024-02-20",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Stay at Hampton Inn & Suites Boise-Meridian",
-        "location": "Hampton Inn & Suites Boise-Meridian, Meridian",
-        "category": "personal",
-        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-        "source": "Google Calendar"
-      },
-      {
         "id": "7niguu7rf78oj7m26julbnsc8o@google.com",
         "date": "2024-02-20",
         "time": "ALL DAY",
@@ -3579,6 +3568,17 @@
         "location": "",
         "category": "personal",
         "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "7kukuqrfedlm2f9ttore3ts8u4g87148o4ik3b5n8hshp9h0hk40p07e14h0coaf82g0",
+        "date": "2024-02-20",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Stay at Hampton Inn & Suites Boise-Meridian",
+        "location": "Hampton Inn & Suites Boise-Meridian, Meridian",
+        "category": "personal",
+        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
         "source": "Google Calendar"
       }
     ],
@@ -4104,22 +4104,22 @@
     ],
     "2025-05-22": [
       {
-        "id": "2gvuvq6s1g7a3d8uor7h5fffvs@google.com",
+        "id": "p9toivdub07dln2qdk21dlhmjs@google.com",
         "date": "2025-05-22",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Guys golf trip",
+        "title": "River float",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "p9toivdub07dln2qdk21dlhmjs@google.com",
+        "id": "2gvuvq6s1g7a3d8uor7h5fffvs@google.com",
         "date": "2025-05-22",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "River float",
+        "title": "Guys golf trip",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -4378,22 +4378,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "d3jtdivdg46trnqjjbu3g3q5b0@google.com",
+        "id": "cudorvgp4gqodpr86jn3pmrc50@google.com",
         "date": "2024-05-06",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "McAllister a free tea",
+        "title": "Free Duncan",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "cudorvgp4gqodpr86jn3pmrc50@google.com",
+        "id": "d3jtdivdg46trnqjjbu3g3q5b0@google.com",
         "date": "2024-05-06",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Free Duncan",
+        "title": "McAllister a free tea",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -4463,22 +4463,22 @@
         "source": "Google Calendar"
       },
       {
-        "id": "9grll54i1l3rg2kqakucg4a9e0@google.com",
+        "id": "8rtptgl133neom3ufqrrgsl8kk@google.com",
         "date": "2025-04-11",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Kane brown",
+        "title": "Girl trip",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "8rtptgl133neom3ufqrrgsl8kk@google.com",
+        "id": "9grll54i1l3rg2kqakucg4a9e0@google.com",
         "date": "2025-04-11",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Girl trip",
+        "title": "Kane brown",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -4568,13 +4568,13 @@
         "source": "Google Calendar"
       },
       {
-        "id": "4riukf448nfhupe370uftg4prc@google.com",
+        "id": "66vjn5foad3ih3rpa0i2eu0r9k@google.com",
         "date": "2024-01-11",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Call out Work",
+        "title": "Chase bank",
         "location": "",
-        "category": "Work",
+        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
@@ -4590,13 +4590,13 @@
         "source": "Google Calendar"
       },
       {
-        "id": "66vjn5foad3ih3rpa0i2eu0r9k@google.com",
+        "id": "4riukf448nfhupe370uftg4prc@google.com",
         "date": "2024-01-11",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Chase bank",
+        "title": "Call out Work",
         "location": "",
-        "category": "personal",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -4673,17 +4673,6 @@
     ],
     "2024-01-10": [
       {
-        "id": "1q5tsdr23mtg4kd7dmeb9c4opo@google.com",
-        "date": "2024-01-10",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Drop dogs off",
-        "location": "",
-        "category": "Appointment",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "ls382u6lq8hinhcg91frsm1a7g@google.com",
         "date": "2024-01-10",
         "time": "ALL DAY",
@@ -4691,6 +4680,17 @@
         "title": "Clean out car",
         "location": "",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "1q5tsdr23mtg4kd7dmeb9c4opo@google.com",
+        "date": "2024-01-10",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Drop dogs off",
+        "location": "",
+        "category": "Appointment",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -5508,6 +5508,17 @@
     ],
     "2024-09-11": [
       {
+        "id": "iiqticvd1opk2b50ap1cmg73ek@google.com",
+        "date": "2024-09-11",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "3:30 massage",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
         "id": "9u96iarf0b4mah5bcngcn2pfsk@google.com",
         "date": "2024-09-11",
         "time": "ALL DAY",
@@ -5524,17 +5535,6 @@
         "time": "ALL DAY",
         "endTime": "",
         "title": "9-11 Delora",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
-        "id": "iiqticvd1opk2b50ap1cmg73ek@google.com",
-        "date": "2024-09-11",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "3:30 massage",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -5821,17 +5821,6 @@
     ],
     "2024-04-26": [
       {
-        "id": "72nq39vlikp783mkkf6jg1o4ug@google.com",
-        "date": "2024-04-26",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Work",
-        "location": "",
-        "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "r3of317il7kpeu7k85k1odu2bg@google.com",
         "date": "2024-04-26",
         "time": "ALL DAY",
@@ -5839,6 +5828,17 @@
         "title": "Mom to KY",
         "location": "",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "72nq39vlikp783mkkf6jg1o4ug@google.com",
+        "date": "2024-04-26",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Work",
+        "location": "",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -5978,17 +5978,6 @@
     ],
     "2024-02-05": [
       {
-        "id": "po5s36f33r60ekqjvc0t4qrch0@google.com",
-        "date": "2024-02-05",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Mulch",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "f56qolo3ijl1a1iek91ognnc88@google.com",
         "date": "2024-02-05",
         "time": "ALL DAY",
@@ -6005,6 +5994,17 @@
         "time": "ALL DAY",
         "endTime": "",
         "title": "Navy federal",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "po5s36f33r60ekqjvc0t4qrch0@google.com",
+        "date": "2024-02-05",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Mulch",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -7640,6 +7640,17 @@
         "source": "Google Calendar"
       },
       {
+        "id": "7kukuqrfedlm2f9t2hq9hvamal54i30v6a973ffn9ci2hriq6nekba0hd5ieacrk9ehg",
+        "date": "2022-12-23",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Wines and finds for a perfect Christmas Dinner 🍷 🎄",
+        "location": "",
+        "category": "Family",
+        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
+        "source": "Google Calendar"
+      },
+      {
         "id": "7kukuqrfedlm2f9tuvkbtrihjhfrn8v67hflnqfiimlar5ura0vlqs4uecioo0pifljg",
         "date": "2022-12-23",
         "time": "ALL DAY",
@@ -7658,17 +7669,6 @@
         "title": "Rise & Shine!",
         "location": "",
         "category": "personal",
-        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-        "source": "Google Calendar"
-      },
-      {
-        "id": "7kukuqrfedlm2f9t2hq9hvamal54i30v6a973ffn9ci2hriq6nekba0hd5ieacrk9ehg",
-        "date": "2022-12-23",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Wines and finds for a perfect Christmas Dinner 🍷 🎄",
-        "location": "",
-        "category": "Family",
         "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
         "source": "Google Calendar"
       }
@@ -8383,22 +8383,22 @@
     ],
     "2024-08-08": [
       {
-        "id": "r21losbo12mqlb0hp9kbhhvdmg@google.com",
+        "id": "44b9ueqci73if6lcoovscnqe0g@google.com",
         "date": "2024-08-08",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "To MO with truck",
+        "title": "Mike to pats Bach",
         "location": "",
         "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       },
       {
-        "id": "44b9ueqci73if6lcoovscnqe0g@google.com",
+        "id": "r21losbo12mqlb0hp9kbhhvdmg@google.com",
         "date": "2024-08-08",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Mike to pats Bach",
+        "title": "To MO with truck",
         "location": "",
         "category": "personal",
         "notes": "",
@@ -9231,17 +9231,6 @@
     ],
     "2024-02-21": [
       {
-        "id": "7kukuqrfedlm2f9tnhe9mjgo0ff9v1hibin8hdq99077jk6djjt89vne315tfentsisg",
-        "date": "2024-02-21",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Stay at Comfort Inn & Suites Woods Cross - Salt Lake City North",
-        "location": "Comfort Inn & Suites Woods Cross - Salt Lake City North, Woods Cross",
-        "category": "personal",
-        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-        "source": "Google Calendar"
-      },
-      {
         "id": "g30if2hsp8vhhsfi9ka6vvh3e0@google.com",
         "date": "2024-02-21",
         "time": "ALL DAY",
@@ -9250,6 +9239,17 @@
         "location": "",
         "category": "personal",
         "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "7kukuqrfedlm2f9tnhe9mjgo0ff9v1hibin8hdq99077jk6djjt89vne315tfentsisg",
+        "date": "2024-02-21",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Stay at Comfort Inn & Suites Woods Cross - Salt Lake City North",
+        "location": "Comfort Inn & Suites Woods Cross - Salt Lake City North, Woods Cross",
+        "category": "personal",
+        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
         "source": "Google Calendar"
       }
     ],
@@ -11332,7 +11332,7 @@
     ],
     "2010-11-30": [
       {
-        "id": "9ua5hp5kc0nqur9hjthua51e98@google.com",
+        "id": "rkor23tps51rt4011rinbp7rvg@google.com",
         "date": "2010-11-30",
         "time": "14:00",
         "endTime": "15:00",
@@ -11704,17 +11704,6 @@
         "source": "Google Calendar"
       },
       {
-        "id": "j79r654b83ut0rl68620eva7lg@google.com",
-        "date": "2022-04-14",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Taylor’s bday",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "qn3r7mkvmcjbrshjjblqf34788@google.com",
         "date": "2022-04-14",
         "time": "ALL DAY",
@@ -11722,6 +11711,17 @@
         "title": "Work",
         "location": "",
         "category": "Work",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "j79r654b83ut0rl68620eva7lg@google.com",
+        "date": "2022-04-14",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Taylor’s bday",
+        "location": "",
+        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -13581,6 +13581,17 @@
     ],
     "2022-08-19": [
       {
+        "id": "e6af6cf770tbag6alopr6khv0o@google.com",
+        "date": "2022-08-19",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Mike off",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
         "id": "phuq9ft2nd1p8u3bttii4eu2us@google.com",
         "date": "2022-08-19",
         "time": "ALL DAY",
@@ -13599,17 +13610,6 @@
         "title": "Work",
         "location": "",
         "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
-        "id": "e6af6cf770tbag6alopr6khv0o@google.com",
-        "date": "2022-08-19",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Mike off",
-        "location": "",
-        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -14289,17 +14289,6 @@
     ],
     "2022-08-02": [
       {
-        "id": "rt3jr4u066rm0lieumrmih5v20@google.com",
-        "date": "2022-08-02",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Train",
-        "location": "Climate Pledge Arena, 334 1st Ave N, Seattle, WA 98109, USA",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "j8ghafvl53h9v8bd4ckndnig0c@google.com",
         "date": "2022-08-02",
         "time": "ALL DAY",
@@ -14307,6 +14296,17 @@
         "title": "Work",
         "location": "",
         "category": "Work",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "rt3jr4u066rm0lieumrmih5v20@google.com",
+        "date": "2022-08-02",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Train",
+        "location": "Climate Pledge Arena, 334 1st Ave N, Seattle, WA 98109, USA",
+        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -15283,17 +15283,6 @@
     ],
     "2022-09-11": [
       {
-        "id": "3qa0623bojlhl6jch6g0vpkgl8@google.com",
-        "date": "2022-09-11",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Work",
-        "location": "",
-        "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "78fcv8vvp7h29pst7dbk9f0p0k@google.com",
         "date": "2022-09-11",
         "time": "ALL DAY",
@@ -15301,6 +15290,17 @@
         "title": "Emerald downs first responder day",
         "location": "",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "3qa0623bojlhl6jch6g0vpkgl8@google.com",
+        "date": "2022-09-11",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Work",
+        "location": "",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -15461,12 +15461,12 @@
     ],
     "2026-09-30": [
       {
-        "id": "9c0e4ppikkqbd92ml95m48dpf4@google.com",
+        "id": "i8t8ge1otva82mim2hoia5asgg@google.com",
         "date": "2026-09-30",
         "time": "13:30",
         "endTime": "14:30",
         "title": "Pumping 101",
-        "location": "https://afhc.us/87ab7ded",
+        "location": "https://afhc.us/a0ae834a",
         "category": "personal",
         "notes": "Pumping doesn’t have to be overwhelming! Let’s break down when to start pumping, how to assemble and clean your pump, how to pump effectively, and how to store milk safely. Learn v",
         "source": "Google Calendar"
@@ -15561,13 +15561,13 @@
     ],
     "2022-09-24": [
       {
-        "id": "v36itnvnmhuhnllrbel8m7u29c@google.com",
+        "id": "ik085e948rhu4lr9an5kqu5ol0@google.com",
         "date": "2022-09-24",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Work",
+        "title": "Mcmenamins Oktoberfest",
         "location": "",
-        "category": "Work",
+        "category": "Appointment",
         "notes": "",
         "source": "Google Calendar"
       },
@@ -15583,13 +15583,13 @@
         "source": "Google Calendar"
       },
       {
-        "id": "ik085e948rhu4lr9an5kqu5ol0@google.com",
+        "id": "v36itnvnmhuhnllrbel8m7u29c@google.com",
         "date": "2022-09-24",
         "time": "ALL DAY",
         "endTime": "",
-        "title": "Mcmenamins Oktoberfest",
+        "title": "Work",
         "location": "",
-        "category": "Appointment",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -15954,17 +15954,6 @@
     ],
     "2022-05-23": [
       {
-        "id": "tad0knb7313s29b2vdjk3jbkeg@google.com",
-        "date": "2022-05-23",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Mike camper camping",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "h4ndjefdharr1sh056e1hlmpfk@google.com",
         "date": "2022-05-23",
         "time": "ALL DAY",
@@ -15972,6 +15961,17 @@
         "title": "Work",
         "location": "",
         "category": "Work",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "tad0knb7313s29b2vdjk3jbkeg@google.com",
+        "date": "2022-05-23",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Mike camper camping",
+        "location": "",
+        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -16598,17 +16598,6 @@
     ],
     "2022-08-31": [
       {
-        "id": "m3uh7riocu7fqqvv5d8aru5dj0@google.com",
-        "date": "2022-08-31",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Work",
-        "location": "",
-        "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "g1vh853riqg132qhi1nqr0p0j4@google.com",
         "date": "2022-08-31",
         "time": "ALL DAY",
@@ -16616,6 +16605,17 @@
         "title": "Stadium tour def leopard, poison, Motley Crue…",
         "location": "T-Mobile Park, 1250 1st Ave S, Seattle, WA 98134, USA",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "m3uh7riocu7fqqvv5d8aru5dj0@google.com",
+        "date": "2022-08-31",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Work",
+        "location": "",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -17125,6 +17125,17 @@
     ],
     "2022-09-10": [
       {
+        "id": "sfe32g4fjd43d14mdg3cm6sac0@google.com",
+        "date": "2022-09-10",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Mike triathlon",
+        "location": "",
+        "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
         "id": "jtdhgq0t4jtle4tv56u207uqkc@google.com",
         "date": "2022-09-10",
         "time": "ALL DAY",
@@ -17143,17 +17154,6 @@
         "title": "Work",
         "location": "",
         "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
-        "id": "sfe32g4fjd43d14mdg3cm6sac0@google.com",
-        "date": "2022-09-10",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Mike triathlon",
-        "location": "",
-        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -18045,17 +18045,6 @@
     ],
     "2022-11-05": [
       {
-        "id": "44odqme3ufoa9ni2o34cbe3te4@google.com",
-        "date": "2022-11-05",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Seattle chocolate fest",
-        "location": "",
-        "category": "personal",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "bu1defhkn6muvfbfdnvpdbtebs@google.com",
         "date": "2022-11-05",
         "time": "ALL DAY",
@@ -18063,6 +18052,17 @@
         "title": "Work",
         "location": "",
         "category": "Work",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "44odqme3ufoa9ni2o34cbe3te4@google.com",
+        "date": "2022-11-05",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Seattle chocolate fest",
+        "location": "",
+        "category": "personal",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -18403,17 +18403,6 @@
     ],
     "2022-06-13": [
       {
-        "id": "e8qljhhvvlouk218bsqr24cj1s@google.com",
-        "date": "2022-06-13",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Work",
-        "location": "",
-        "category": "Work",
-        "notes": "",
-        "source": "Google Calendar"
-      },
-      {
         "id": "jc1l4q3sqdtin6d5v7bk6m220o@google.com",
         "date": "2022-06-13",
         "time": "ALL DAY",
@@ -18421,6 +18410,17 @@
         "title": "Slipknot",
         "location": "Climate Pledge Arena, 334 1st Ave N, Seattle, WA 98109, USA",
         "category": "personal",
+        "notes": "",
+        "source": "Google Calendar"
+      },
+      {
+        "id": "e8qljhhvvlouk218bsqr24cj1s@google.com",
+        "date": "2022-06-13",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Work",
+        "location": "",
+        "category": "Work",
         "notes": "",
         "source": "Google Calendar"
       }
@@ -19837,16 +19837,29 @@
         "notes": "",
         "source": "Google Calendar"
       }
+    ],
+    "2021-06-24": [
+      {
+        "id": "3guq382m3b5rkcepd229vjm668@google.com",
+        "date": "2021-06-24",
+        "time": "19:00",
+        "endTime": "21:00",
+        "title": "Blair Family Zoom",
+        "location": "https://projekt202.zoom.us/j/9029622241",
+        "category": "Family",
+        "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.<br><br>Join Zoom Meeting<br><a href=\"https://projekt202.zoom.us/j/9029622241\">https://projekt202.zoom.us/j/9029622241</a><",
+        "source": "Google Calendar"
+      }
     ]
   },
   "customEvents": [],
-  "lastSynced": "2026-10-19T13:02:32.499Z",
-  "updatedAt": "2026-10-19T13:02:39.083Z",
-  "updatedAtTs": 1792414970195,
-  "source": "Google Calendar (Live iCal Sync)",
-  "account": "amblair92@gmail.com",
-  "authorized": true,
   "deletedEventIds": [
     "evt-1792414955699"
-  ]
+  ],
+  "lastSynced": "2026-10-19T13:11:39.332Z",
+  "updatedAt": "2026-10-19T13:11:39.332Z",
+  "updatedAtTs": 1792415504310,
+  "source": "Google Calendar (Live iCal Sync)",
+  "account": "amblair92@gmail.com",
+  "authorized": true
 }

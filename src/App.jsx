@@ -1356,7 +1356,7 @@ export default function App() {
       category: 'Personal',
       notes: ''
     });
-    showToast('Added event to Mackie’s schedule');
+    showToast("Added event to Mackie's Master Calendar");
 
     // 2. Persist to server, cloud storage & Google Calendar
     try {
@@ -2173,7 +2173,7 @@ export default function App() {
           <nav aria-label="Dashboard sections" className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-minimal">
             {[
               { id: 'all', label: 'All-in-One View', icon: Sparkles },
-              { id: 'calendar', label: 'Calendar (Daily / Weekly)', icon: Calendar },
+              { id: 'calendar', label: "Mackie's Master Calendar", icon: Calendar },
               { id: 'meals', label: `Cookbook & Weekly Meals (${totalPlannedMeals})`, icon: BookOpen },
               { id: 'grocery', label: `Grocery List (${uncheckedGroceryCount})`, icon: ShoppingBag },
               { id: 'fitness', label: 'Personal Health & Fitness', icon: HeartPulse },
@@ -2231,7 +2231,7 @@ export default function App() {
             {/* 1. LEFT COLUMN (8 COLS): 1 UNIFIED MASTER CALENDAR             */}
             {/* ============================================================== */}
             <section
-              aria-label="Unified Master Calendar"
+              aria-label="Mackie's Master Calendar"
               className={`lg:col-span-8 w-full ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-4`}
             >
               {/* Calendar Header */}
@@ -2243,7 +2243,7 @@ export default function App() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="font-editorial text-xl sm:text-2xl font-semibold leading-tight">
-                        Mackie&apos;s Unified Calendar
+                        Mackie&apos;s Master Calendar
                       </h2>
                       <CutesyBadgeDoodle season={activeSeasonKey} variant={2} />
                     </div>
@@ -4135,7 +4135,7 @@ export default function App() {
             className={`${theme.cardBg} ${theme.textPrimary} border ${theme.border} rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs sm:text-sm`}
           >
             <div className="flex items-center justify-between border-b pb-3 border-[#E2D9CC]">
-              <h3 className="font-editorial text-2xl font-bold">Add Event to Schedule</h3>
+              <h3 className="font-editorial text-2xl font-bold">Add Event to Mackie&apos;s Master Calendar</h3>
               <button
                 type="button"
                 onClick={() => setShowAddEventModal(false)}
