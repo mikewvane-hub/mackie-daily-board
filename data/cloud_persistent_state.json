@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792379070246,
+  "updatedAt": 1792379078525,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -813,19 +813,6 @@
           "category": "personal",
           "notes": "Starts at Mount Vernon Avenue and E. Bellefonte Avenue, Alexandria, VA and ends at Mount Vernon Recreation Center field (Mount Vernon and Commonwealth Avenues)",
           "source": "Google Calendar"
-        },
-        {
-          "id": "evt-1792379062143",
-          "date": "2026-10-25",
-          "time": "All Day",
-          "endTime": "",
-          "isAllDay": true,
-          "title": "Test Babymoon Day",
-          "location": "",
-          "category": "Personal",
-          "notes": "",
-          "googleSynced": false,
-          "isCustom": true
         },
         {
           "id": "jmc5a7nn8mh4cn0itt93at3224@google.com",
@@ -20587,29 +20574,18 @@
         }
       ]
     },
-    "customEvents": [
-      {
-        "id": "evt-1792379062143",
-        "date": "2026-10-25",
-        "time": "All Day",
-        "endTime": "",
-        "isAllDay": true,
-        "title": "Test Babymoon Day",
-        "location": "",
-        "category": "Personal",
-        "notes": "",
-        "googleSynced": false
-      }
-    ],
-    "deletedEventIds": [],
+    "customEvents": [],
     "lastSynced": "2026-10-19T03:04:30.178Z",
-    "updatedAt": "2026-10-19T03:04:30.178Z",
-    "updatedAtTs": 1792379070178,
+    "updatedAt": "2026-10-19T03:04:38.502Z",
+    "updatedAtTs": 1792379078502,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
-    "authorized": true
+    "authorized": true,
+    "deletedEventIds": [
+      "evt-1792379062143"
+    ]
   },
-  "scheduleUpdatedAt": 1792379070178,
+  "scheduleUpdatedAt": 1792379078497,
   "tasks": {
     "customTasks": [],
     "completedTaskIds": [],
