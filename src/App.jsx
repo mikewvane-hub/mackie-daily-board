@@ -40,6 +40,7 @@ import {
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
 import { POSTPARTUM_TIMELINE_PHASES } from './data/postpartumFitnessData.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
+import MasterCalendarCareBanner from './components/MasterCalendarCareBanner.jsx';
 import PostpartumBabyHub from './components/PostpartumBabyHub.jsx';
 import PersonalHealthFitnessHub from './components/PersonalHealthFitnessHub.jsx';
 import AussieDogAgent from './components/AussieDogAgent.jsx';
@@ -1285,28 +1286,33 @@ export default function App() {
     }
   };
 
-  const handleAddEventSubmit = async (e) => {
-    e.preventDefault();
-    if (!newEvent.title.trim()) return;
+  const handleAddEventSubmit = async (e, directPayload) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    const isDirectCall = Boolean(directPayload || (e && e.title && typeof e.preventDefault !== 'function'));
+    const evtData = directPayload || (isDirectCall ? e : newEvent);
+    if (!evtData?.title?.trim()) return;
 
     const nowTs = Date.now();
-    const eventId = `custom-${nowTs}-${Math.random().toString(36).slice(2, 6)}`;
-    const isAllDay = Boolean(newEvent.isAllDay || newEvent.time === 'All Day' || /all\s*day/i.test(newEvent.time || ''));
-    const timeVal = isAllDay ? 'All Day' : (newEvent.time || '09:00');
-    const endTimeVal = isAllDay ? null : (newEvent.endTime || '10:00');
+    const eventId = evtData.id || `custom-${nowTs}-${Math.random().toString(36).slice(2, 6)}`;
+    const isAllDay = Boolean(evtData.isAllDay || evtData.time === 'All Day' || /all\s*day/i.test(evtData.time || ''));
+    const timeVal = isAllDay ? 'All Day' : (evtData.time || '09:00');
+    const endTimeVal = isAllDay ? null : (evtData.endTime || '10:00');
+    const targetDate = evtData.date || newEvent.date || new Date().toISOString().split('T')[0];
 
     const createdEvent = {
       id: eventId,
-      title: newEvent.title.trim(),
-      date: newEvent.date,
+      title: evtData.title.trim(),
+      date: targetDate,
       time: timeVal,
       endTime: endTimeVal,
       isAllDay,
-      location: (newEvent.location || '').trim(),
-      category: newEvent.category || 'Personal',
-      notes: (newEvent.notes || '').trim(),
-      source: 'custom',
-      createdAt: new Date().toISOString()
+      location: (evtData.location || '').trim(),
+      category: evtData.category || 'Personal',
+      notes: (evtData.notes || '').trim(),
+      source: evtData.source || 'custom',
+      createdAt: evtData.createdAt || new Date().toISOString()
     };
 
     // 1. Optimistic Local Update immediately (persists across iPhone and Laptop)
@@ -2419,6 +2425,25 @@ export default function App() {
                   </button>
                 </div>
               )}
+
+              {/* Master Calendar Weekly Care Protocols & Milestone Banner */}
+              <MasterCalendarCareBanner
+                theme={theme}
+                activeSeason={activeSeasonKey}
+                calendarWeekOffset={calendarWeekOffset}
+                calendarTodayDate={calendar.todayDate}
+                healthFitness={boardData?.healthFitness}
+                onUpdateHealthFitness={nextHf => {
+                  const nowTs = Date.now();
+                  setBoardData(prev => {
+                    const next = { ...prev, healthFitness: nextHf };
+                    persistBoardToLocalStorage(next, undefined, undefined, nextHf?.updatedAtTs || nowTs);
+                    return next;
+                  });
+                }}
+                onAddEventToCalendar={handleAddEventSubmit}
+                showToast={showToast}
+              />
 
               {/* DAILY VIEW vs WEEKLY VIEW */}
               <div className="flex flex-col gap-3">

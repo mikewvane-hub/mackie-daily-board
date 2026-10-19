@@ -1421,7 +1421,9 @@ export default function PersonalHealthFitnessHub({
       {/* =================================================================== */}
       {/* PART 2: POSTPARTUM RECOVERY & ACTIVITY TIMELINE TRACKER             */}
       {/*         (Walking Frequency/Duration, Recommended Stretches & Ex.)   */}
+      {/*         (Now accessible directly in Mackie's Master Calendar)       */}
       {/* =================================================================== */}
+      {false && (
       <div className={`${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs space-y-4`}>
         <div className="flex items-center justify-between gap-3 flex-wrap border-b pb-3.5 border-[#E2D9CC]">
           <div className="flex items-center gap-2.5">
@@ -1646,13 +1648,15 @@ export default function PersonalHealthFitnessHub({
           );
         })()}
       </div>
+      )}
 
       {/* =================================================================== */}
       {/* PART 3: 12+ WEEKS POSTPARTUM CYCLE TRACKER + OURA RING SLEEP &      */}
       {/*         ACTIVITY HUB (Manual 1-Tap OR Oura Ring Cloud Sync)         */}
       {/* =================================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT 6 COLS: POSTPARTUM CYCLE TRACKER (12+ WEEKS & MANUAL / OURA) */}
+        {/* LEFT 6 COLS: POSTPARTUM CYCLE TRACKER (Moved to Master Calendar Care Banner) */}
+        {false && (
         <div
           className={`lg:col-span-6 ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs space-y-4`}
         >
@@ -1902,10 +1906,11 @@ export default function PersonalHealthFitnessHub({
             </div>
           )}
         </div>
+        )}
 
-        {/* RIGHT 6 COLS: OURA RING SLEEP, READINESS & DAILY ACTIVITY TRACKER */}
+        {/* OURA RING SLEEP, READINESS & DAILY ACTIVITY TRACKER */}
         <div
-          className={`lg:col-span-6 ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs space-y-4`}
+          className={`lg:col-span-12 w-full ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs space-y-4`}
         >
           <div className="flex items-start justify-between gap-2 flex-wrap border-b pb-3.5 border-[#E2D9CC]">
             <div className="flex items-center gap-2.5">

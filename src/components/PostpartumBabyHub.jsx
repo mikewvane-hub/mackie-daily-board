@@ -845,7 +845,9 @@ export default function PostpartumBabyHub({
       {/* =================================================================== */}
       {/* PART 2: AMERICAN ACADEMY OF PEDIATRICS (AAP) WEEKLY CONCERNS,       */}
       {/*         MILESTONES, VACCINES & NEWBORN CARE PROTOCOL                */}
+      {/*         (Now accessible directly in Mackie's Master Calendar)       */}
       {/* =================================================================== */}
+      {false && (
       <section
         aria-label="American Academy of Pediatrics Weekly Newborn Milestones and Care Guide"
         className={`${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col gap-5`}
@@ -1072,6 +1074,7 @@ export default function PostpartumBabyHub({
           </div>
         </div>
       </section>
+      )}
     </div>
   );
 }
