@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792418715341,
+  "updatedAt": 1792418722140,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20680,12 +20680,13 @@
     "completedTaskIds": [],
     "deletedTaskIds": [
       "task-1792376514119-l4gi",
-      "task-1792414969970-tdxy"
+      "task-1792414969970-tdxy",
+      "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-19T13:02:50.173Z",
-    "updatedAtTs": 1792414970173
+    "updatedAt": "2026-10-19T14:05:22.139Z",
+    "updatedAtTs": 1792418722139
   },
-  "tasksUpdatedAt": 1792414970173,
+  "tasksUpdatedAt": 1792418722139,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
