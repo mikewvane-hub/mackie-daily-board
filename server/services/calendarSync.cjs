@@ -659,32 +659,75 @@ async function syncCalendar() {
         if (fs.existsSync(SCHEDULE_FILE)) {
           try { existing = JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) {}
         }
-        const customEvents = existing.customEvents || [];
-        const allEvents = [...parsedEvents, ...customEvents];
+        const deletedSet = new Set(existing.deletedEventIds || []);
+        const customEvents = (existing.customEvents || []).filter(e => !deletedSet.has(e.id));
 
-        const weekKeys = getNext7DaysKeys();
+        // Build an index of all existing known events to ensure nothing is ever dropped
+        const eventMap = new Map();
+        const makeKey = (e) => {
+          if (!e) return null;
+          if (e.id) return String(e.id);
+          return `${e.date || ''}_${e.time || 'all'}_${(e.title || '').trim().toLowerCase()}`;
+        };
+
+        // Load existing weekSchedule
+        if (existing.weekSchedule && typeof existing.weekSchedule === 'object') {
+          for (const dayList of Object.values(existing.weekSchedule)) {
+            if (Array.isArray(dayList)) {
+              for (const ev of dayList) {
+                const k = makeKey(ev);
+                if (k && !deletedSet.has(ev.id)) eventMap.set(k, { ...ev, source: ev.source || 'Google Calendar' });
+              }
+            }
+          }
+        }
+
+        // Overlay custom events
+        for (const ce of customEvents) {
+          const k = makeKey(ce);
+          if (k) eventMap.set(k, { ...ce, isCustom: true });
+        }
+
+        // Overlay freshly fetched events from Google Calendar
+        for (const fe of parsedEvents) {
+          if (deletedSet.has(fe.id)) continue;
+          const k = makeKey(fe);
+          if (k) {
+            const prev = eventMap.get(k) || {};
+            eventMap.set(k, { ...prev, ...fe, source: `Google Calendar (${TARGET_ACCOUNT})` });
+          }
+        }
+
+        const allEvents = Array.from(eventMap.values());
+        const rangeKeys = getUpcomingDaysKeys(60);
         const weekSchedule = {};
-        for (const k of weekKeys) weekSchedule[k] = [];
+        for (const k of rangeKeys) weekSchedule[k] = [];
+
         for (const evt of allEvents) {
           if (evt.date) {
-            weekSchedule[evt.date] = weekSchedule[evt.date] || [];
-            if (!weekSchedule[evt.date].some(e => e.id === evt.id)) {
+            if (!weekSchedule[evt.date]) weekSchedule[evt.date] = [];
+            if (!weekSchedule[evt.date].some(e => e.id === evt.id || (e.title === evt.title && e.time === evt.time && e.date === evt.date))) {
               weekSchedule[evt.date].push(evt);
               weekSchedule[evt.date].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
             }
           }
         }
 
+        const nowTs = Date.now();
         const scheduleData = {
-          events: weekSchedule[weekKeys[0]] || [],
+          events: weekSchedule[rangeKeys[0]] || [],
           weekSchedule,
           customEvents,
-          lastSynced: new Date().toISOString(),
+          deletedEventIds: Array.from(deletedSet),
+          lastSynced: new Date(nowTs).toISOString(),
+          updatedAt: new Date(nowTs).toISOString(),
+          updatedAtTs: nowTs,
           source: `Google Calendar (${TARGET_ACCOUNT})`,
           account: TARGET_ACCOUNT,
           authorized: true
         };
         fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(scheduleData, null, 2), 'utf8');
+        pushCloudState({ schedule: scheduleData, scheduleUpdatedAt: nowTs }).catch(() => {});
         return scheduleData;
       }
     } catch (err) {
@@ -696,7 +739,7 @@ async function syncCalendar() {
 }
 
 function ensureDefaultSchedule() {
-  const weekKeys = getNext7DaysKeys();
+  const rangeKeys = getUpcomingDaysKeys(60);
   let existing = null;
   if (fs.existsSync(SCHEDULE_FILE)) {
     try { existing = JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) {}
@@ -704,7 +747,7 @@ function ensureDefaultSchedule() {
 
   const customEvents = existing?.customEvents || [];
   const weekSchedule = { ...(existing?.weekSchedule || {}) };
-  for (const k of weekKeys) {
+  for (const k of rangeKeys) {
     weekSchedule[k] = Array.isArray(weekSchedule[k]) ? weekSchedule[k] : [];
   }
 
@@ -718,43 +761,47 @@ function ensureDefaultSchedule() {
     }
   }
 
+  const nowTs = Date.now();
   const scheduleData = {
-    events: weekSchedule[weekKeys[0]] || [],
+    events: weekSchedule[rangeKeys[0]] || [],
     weekSchedule,
     customEvents,
     lastSynced: existing?.lastSynced || null,
+    updatedAt: new Date(nowTs).toISOString(),
+    updatedAtTs: nowTs,
     source: existing?.authorized ? existing.source : 'Local Schedule + Ready for Google Calendar Sync',
     account: TARGET_ACCOUNT,
     authorized: Boolean(existing?.authorized)
   };
 
   fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(scheduleData, null, 2), 'utf8');
+  pushCloudState({ schedule: scheduleData, scheduleUpdatedAt: nowTs }).catch(() => {});
   return scheduleData;
 }
 
 async function addCalendarEvent(eventData) {
   const token = await getAccessToken();
-  const dateStr = eventData.date || getNext7DaysKeys()[0];
-  const startTime = eventData.time || '09:00';
-  const endTime = eventData.endTime || '10:00';
+  const rangeKeys = getUpcomingDaysKeys(60);
+  const dateStr = eventData.date || rangeKeys[0];
+  const isAllDay = eventData.isAllDay || eventData.time === 'All Day' || eventData.time === 'ALL DAY' || /all\s*day/i.test(eventData.time || '');
+  const startTime = isAllDay ? 'All Day' : (eventData.time || '09:00');
+  const endTime = isAllDay ? '' : (eventData.endTime || '10:00');
 
   let googleId = null;
   let googleSynced = false;
 
-  if (token && startTime !== 'ALL DAY') {
+  if (token) {
     try {
       const payload = {
         summary: eventData.title || 'New Event',
         location: eventData.location || '',
         description: eventData.notes || '',
-        start: {
-          dateTime: `${dateStr}T${startTime}:00-04:00`,
-          timeZone: 'America/New_York'
-        },
-        end: {
-          dateTime: `${dateStr}T${endTime}:00-04:00`,
-          timeZone: 'America/New_York'
-        }
+        start: isAllDay
+          ? { date: dateStr }
+          : { dateTime: `${dateStr}T${startTime}:00-04:00`, timeZone: 'America/New_York' },
+        end: isAllDay
+          ? { date: dateStr }
+          : { dateTime: `${dateStr}T${endTime}:00-04:00`, timeZone: 'America/New_York' }
       };
 
       const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
@@ -780,7 +827,8 @@ async function addCalendarEvent(eventData) {
     id: googleId || `evt-${Date.now()}`,
     date: dateStr,
     time: startTime,
-    endTime: startTime === 'ALL DAY' ? '' : endTime,
+    endTime: endTime,
+    isAllDay: Boolean(isAllDay),
     title: eventData.title || 'New Event',
     location: eventData.location || '',
     category: eventData.category || 'Personal',
@@ -790,19 +838,22 @@ async function addCalendarEvent(eventData) {
 
   let sched = ensureDefaultSchedule();
   sched.customEvents = sched.customEvents || [];
+  sched.customEvents = sched.customEvents.filter(e => e.id !== newEvent.id);
   sched.customEvents.push(newEvent);
+
   sched.weekSchedule = sched.weekSchedule || {};
   sched.weekSchedule[dateStr] = sched.weekSchedule[dateStr] || [];
+  sched.weekSchedule[dateStr] = sched.weekSchedule[dateStr].filter(e => e.id !== newEvent.id);
   sched.weekSchedule[dateStr].push(newEvent);
   sched.weekSchedule[dateStr].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-  const todayKey = getNext7DaysKeys()[0];
+  const todayKey = rangeKeys[0];
   sched.events = sched.weekSchedule[todayKey] || [];
   sched.updatedAt = new Date().toISOString();
   sched.updatedAtTs = Date.now();
 
   fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(sched, null, 2), 'utf8');
-  pushCloudState({ schedule: sched, scheduleUpdatedAt: sched.updatedAtTs }).catch(() => {});
+  await pushCloudState({ schedule: sched, scheduleUpdatedAt: sched.updatedAtTs }).catch(() => {});
   return { success: true, event: newEvent, googleSynced };
 }
 

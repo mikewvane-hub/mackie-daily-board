@@ -201,6 +201,7 @@ export default function App() {
     date: new Date().toISOString().split('T')[0],
     time: '09:00',
     endTime: '10:00',
+    isAllDay: false,
     location: '',
     category: 'Personal',
     notes: ''
@@ -423,10 +424,13 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs, hfTs, tasksTs) => {
+  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs, hfTs, tasksTs, schedTs) => {
     try {
       if (nextBoard) {
         localStorage.setItem('mackie_saved_board_data', JSON.stringify(nextBoard));
+        if (nextBoard.calendar?.customEvents) {
+          localStorage.setItem('mackie_custom_events_v1', JSON.stringify(nextBoard.calendar.customEvents));
+        }
       }
       if (mpTs !== undefined && mpTs !== null) {
         localStorage.setItem('mackie_meal_plan_updated_at', String(mpTs));
@@ -439,6 +443,9 @@ export default function App() {
       }
       if (tasksTs !== undefined && tasksTs !== null) {
         localStorage.setItem('mackie_tasks_updated_at', String(tasksTs));
+      }
+      if (schedTs !== undefined && schedTs !== null) {
+        localStorage.setItem('mackie_schedule_updated_at', String(schedTs));
       }
     } catch {}
   };
@@ -465,6 +472,7 @@ export default function App() {
         const serverGrTs = Number(serverJson.meta?.groceryUpdatedAt) || 0;
         const serverHfTs = Number(serverJson.meta?.healthFitnessUpdatedAt) || 0;
         const serverTasksTs = Number(serverJson.meta?.tasksUpdatedAt) || Number(serverJson.tasks?.updatedAtTs) || 0;
+        const serverSchedTs = Number(serverJson.meta?.scheduleUpdatedAt) || Number(serverJson.calendar?.updatedAtTs) || 0;
 
         let localBoard = null;
         let localMpTs = 0;
@@ -472,6 +480,8 @@ export default function App() {
         let localHfTs = 0;
         let localTasks = null;
         let localTasksTs = 0;
+        let localCustomEvents = [];
+        let localSchedTs = 0;
         try {
           const rawB = localStorage.getItem('mackie_saved_board_data');
           if (rawB) localBoard = JSON.parse(rawB);
@@ -481,6 +491,14 @@ export default function App() {
           const rawT = localStorage.getItem('mackie_tasks_state_v1');
           if (rawT) localTasks = JSON.parse(rawT);
           localTasksTs = Number(localStorage.getItem('mackie_tasks_updated_at')) || Number(localTasks?.updatedAtTs) || 0;
+
+          const rawCE = localStorage.getItem('mackie_custom_events_v1');
+          if (rawCE) {
+            localCustomEvents = JSON.parse(rawCE);
+          } else if (localBoard?.calendar?.customEvents) {
+            localCustomEvents = localBoard.calendar.customEvents;
+          }
+          localSchedTs = Number(localStorage.getItem('mackie_schedule_updated_at')) || 0;
         } catch {}
 
         const localHasNewerMeals =
@@ -498,6 +516,40 @@ export default function App() {
 
         const localHasNewerTasks =
           localTasks && localTasksTs > serverTasksTs;
+
+        // Reconcile custom calendar events between local device and server non-destructively
+        const serverCustomEvents = serverJson.calendar?.customEvents || [];
+        const customEventMap = new Map();
+        for (const ce of serverCustomEvents) {
+          if (ce && ce.id) customEventMap.set(ce.id, ce);
+        }
+        let localHasUnsyncedCustomEvents = false;
+        for (const ce of (Array.isArray(localCustomEvents) ? localCustomEvents : [])) {
+          if (ce && ce.id && !customEventMap.has(ce.id)) {
+            customEventMap.set(ce.id, ce);
+            localHasUnsyncedCustomEvents = true;
+          }
+        }
+        const finalCustomEvents = Array.from(customEventMap.values());
+        const finalSchedTs = localHasUnsyncedCustomEvents ? Math.max(localSchedTs, Date.now()) : serverSchedTs;
+
+        // Ensure weekSchedule includes all reconciled custom events
+        const mergedWeekSchedule = { ...(serverJson.calendar?.weekSchedule || {}) };
+        for (const ce of finalCustomEvents) {
+          if (ce.date) {
+            mergedWeekSchedule[ce.date] = mergedWeekSchedule[ce.date] || [];
+            if (!mergedWeekSchedule[ce.date].some(e => e.id === ce.id)) {
+              mergedWeekSchedule[ce.date] = [...mergedWeekSchedule[ce.date], ce];
+              mergedWeekSchedule[ce.date].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            }
+          }
+        }
+
+        const finalCalendar = {
+          ...(serverJson.calendar || {}),
+          customEvents: finalCustomEvents,
+          weekSchedule: mergedWeekSchedule
+        };
 
         const finalMealPlan = localHasNewerMeals ? localBoard.mealPlan : serverJson.mealPlan;
         const finalMpTs = localHasNewerMeals ? (localMpTs || Date.now()) : serverMpTs;
@@ -519,10 +571,13 @@ export default function App() {
         try {
           localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(finalTasks));
           localStorage.setItem('mackie_tasks_updated_at', String(finalTasksTs));
+          localStorage.setItem('mackie_custom_events_v1', JSON.stringify(finalCustomEvents));
+          localStorage.setItem('mackie_schedule_updated_at', String(finalSchedTs));
         } catch {}
 
         const mergedBoard = {
           ...serverJson,
+          calendar: finalCalendar,
           mealPlan: finalMealPlan,
           groceryList: finalGroceryList,
           healthFitness: finalHealthFitness,
@@ -530,9 +585,9 @@ export default function App() {
         };
 
         setBoardData(mergedBoard);
-        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs, finalHfTs, finalTasksTs);
+        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs, finalHfTs, finalTasksTs, finalSchedTs);
 
-        if (localHasNewerMeals || localHasNewerGrocery || localHasNewerHf || localHasNewerTasks) {
+        if (localHasNewerMeals || localHasNewerGrocery || localHasNewerHf || localHasNewerTasks || localHasUnsyncedCustomEvents) {
           fetch(`${API_BASE}/board/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -544,7 +599,9 @@ export default function App() {
               healthFitness: finalHealthFitness,
               healthFitnessUpdatedAt: finalHfTs,
               tasks: finalTasks,
-              tasksUpdatedAt: finalTasksTs
+              tasksUpdatedAt: finalTasksTs,
+              customEvents: finalCustomEvents,
+              scheduleUpdatedAt: finalSchedTs
             })
           }).catch(() => {});
         }
@@ -1214,50 +1271,146 @@ export default function App() {
   const handleAddEventSubmit = async (e) => {
     e.preventDefault();
     if (!newEvent.title.trim()) return;
+
+    const nowTs = Date.now();
+    const eventId = `custom-${nowTs}-${Math.random().toString(36).slice(2, 6)}`;
+    const isAllDay = Boolean(newEvent.isAllDay || newEvent.time === 'All Day' || /all\s*day/i.test(newEvent.time || ''));
+    const timeVal = isAllDay ? 'All Day' : (newEvent.time || '09:00');
+    const endTimeVal = isAllDay ? null : (newEvent.endTime || '10:00');
+
+    const createdEvent = {
+      id: eventId,
+      title: newEvent.title.trim(),
+      date: newEvent.date,
+      time: timeVal,
+      endTime: endTimeVal,
+      isAllDay,
+      location: (newEvent.location || '').trim(),
+      category: newEvent.category || 'Personal',
+      notes: (newEvent.notes || '').trim(),
+      source: 'custom',
+      createdAt: new Date().toISOString()
+    };
+
+    // 1. Optimistic Local Update immediately (persists across iPhone and Laptop)
+    let localCustomEvents = [];
+    try {
+      const saved = localStorage.getItem('mackie_custom_events_v1');
+      if (saved) localCustomEvents = JSON.parse(saved);
+    } catch {}
+    if (!Array.isArray(localCustomEvents)) localCustomEvents = [];
+    localCustomEvents = localCustomEvents.filter(ev => ev.id !== createdEvent.id);
+    localCustomEvents.push(createdEvent);
+
+    try {
+      localStorage.setItem('mackie_custom_events_v1', JSON.stringify(localCustomEvents));
+      localStorage.setItem('mackie_schedule_updated_at', String(nowTs));
+    } catch {}
+
+    setBoardData(prev => {
+      const prevSched = prev?.calendar?.weekSchedule || {};
+      const dayEvts = Array.isArray(prevSched[createdEvent.date]) ? prevSched[createdEvent.date] : [];
+      const updatedDayEvts = [...dayEvts.filter(e => e.id !== createdEvent.id), createdEvent];
+      const nextBoard = {
+        ...prev,
+        calendar: {
+          ...(prev?.calendar || {}),
+          customEvents: localCustomEvents,
+          weekSchedule: {
+            ...prevSched,
+            [createdEvent.date]: updatedDayEvts
+          }
+        }
+      };
+      persistBoardToLocalStorage(nextBoard, undefined, undefined, undefined, undefined, nowTs);
+      return nextBoard;
+    });
+
+    setShowAddEventModal(false);
+    setNewEvent({
+      title: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '09:00',
+      endTime: '10:00',
+      isAllDay: false,
+      location: '',
+      category: 'Personal',
+      notes: ''
+    });
+    showToast('Added event to Mackie’s schedule');
+
+    // 2. Persist to server, cloud storage & Google Calendar
     try {
       const res = await fetch(`${API_BASE}/calendar/event`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEvent)
+        body: JSON.stringify(createdEvent)
       });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => {
-          const next = { ...prev, calendar: json.calendar };
-          persistBoardToLocalStorage(next);
-          return next;
-        });
-        setShowAddEventModal(false);
-        setNewEvent({
-          title: '',
-          date: new Date().toISOString().split('T')[0],
-          time: '09:00',
-          endTime: '10:00',
-          location: '',
-          category: 'Personal',
-          notes: ''
-        });
-        showToast('Added event to Mackie’s schedule');
+        if (json.calendar) {
+          setBoardData(prev => {
+            const next = { ...prev, calendar: json.calendar };
+            persistBoardToLocalStorage(next, undefined, undefined, undefined, undefined, nowTs);
+            return next;
+          });
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Background calendar add sync warning:', err.message);
     }
   };
 
   const handleDeleteCalendarEvent = async (id) => {
+    const nowTs = Date.now();
+    let localCustomEvents = [];
     try {
-      const res = await fetch(`${API_BASE}/calendar/event/${id}`, { method: 'DELETE' });
+      const saved = localStorage.getItem('mackie_custom_events_v1');
+      if (saved) localCustomEvents = JSON.parse(saved);
+    } catch {}
+    if (Array.isArray(localCustomEvents)) {
+      localCustomEvents = localCustomEvents.filter(e => e.id !== id);
+      try {
+        localStorage.setItem('mackie_custom_events_v1', JSON.stringify(localCustomEvents));
+        localStorage.setItem('mackie_schedule_updated_at', String(nowTs));
+      } catch {}
+    }
+
+    setBoardData(prev => {
+      const prevSched = prev?.calendar?.weekSchedule || {};
+      const updatedWeekSchedule = {};
+      for (const [k, evts] of Object.entries(prevSched)) {
+        updatedWeekSchedule[k] = (Array.isArray(evts) ? evts : []).filter(e => e.id !== id);
+      }
+      const nextBoard = {
+        ...prev,
+        calendar: {
+          ...(prev?.calendar || {}),
+          events: (prev?.calendar?.events || []).filter(e => e.id !== id),
+          todayEvents: (prev?.calendar?.todayEvents || []).filter(e => e.id !== id),
+          customEvents: localCustomEvents,
+          weekSchedule: updatedWeekSchedule
+        }
+      };
+      persistBoardToLocalStorage(nextBoard, undefined, undefined, undefined, undefined, nowTs);
+      return nextBoard;
+    });
+    showToast('Removed event from schedule');
+
+    try {
+      const res = await fetch(`${API_BASE}/calendar/event/${encodeURIComponent(id)}`, { method: 'DELETE' });
       if (res.ok) {
         const json = await res.json();
-        setBoardData(prev => {
-          const next = { ...prev, calendar: json.calendar };
-          persistBoardToLocalStorage(next);
-          return next;
-        });
-        showToast('Removed event from schedule');
+        if (json.calendar) {
+          setBoardData(prev => {
+            const next = { ...prev, calendar: json.calendar };
+            persistBoardToLocalStorage(next, undefined, undefined, undefined, undefined, nowTs);
+            return next;
+          });
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.warn('Background calendar delete sync warning:', err.message);
     }
   };
 
@@ -1443,14 +1596,22 @@ export default function App() {
   // --------------------------------------------------------------------------
   // Unified Master Calendar Generator (Google Cal + Meals + Movement + Postpartum)
   // --------------------------------------------------------------------------
+  const isAllDayItem = (item) => {
+    if (!item) return false;
+    if (item.isAllDay) return true;
+    const t = String(item.time || '').trim().toLowerCase();
+    return !t || t === 'all day' || t === 'allday' || t === 'all-day' || t.includes('all day');
+  };
+
   const parseTimeToMinutes = (tStr) => {
-    if (!tStr || tStr === 'All Day') return -1;
-    const clean = String(tStr).trim().toUpperCase();
+    if (!tStr) return -99999;
+    const clean = String(tStr).trim();
+    if (/all[\s-]*day/i.test(clean)) return -99999;
     const match12 = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
     if (match12) {
       let hours = parseInt(match12[1], 10);
       const minutes = parseInt(match12[2], 10);
-      const mer = match12[3];
+      const mer = (match12[3] || '').toUpperCase();
       if (mer === 'PM' && hours < 12) hours += 12;
       if (mer === 'AM' && hours === 12) hours = 0;
       return hours * 60 + minutes;
@@ -1465,25 +1626,28 @@ export default function App() {
   const getUnifiedDayItems = (dateKey, weekdayName, isToday = false) => {
     const items = [];
 
-    // 1. Google Calendar events
+    // 1. Google Calendar & Custom Schedule events
     const gEvents = (calendar.weekSchedule && calendar.weekSchedule[dateKey]) ||
       (isToday ? (calendar.todayEvents || []) : []);
     for (const evt of gEvents) {
+      const isAllDay = Boolean(evt.isAllDay || !evt.time || /all[\s-]*day/i.test(String(evt.time)));
+      const isCustom = evt.source === 'custom' || String(evt.id || '').startsWith('custom-') || String(evt.id || '').startsWith('evt-');
       items.push({
         id: `gcal-${evt.id}`,
         rawId: evt.id,
-        source: 'google',
-        sourceLabel: 'Google Cal',
-        shortLabel: 'Cal',
+        source: isCustom ? 'custom' : 'google',
+        sourceLabel: isCustom ? 'Mackie' : 'Google Cal',
+        shortLabel: isCustom ? 'Sched' : 'Cal',
         title: evt.title,
-        time: evt.time || 'All Day',
-        endTime: evt.endTime || null,
+        time: isAllDay ? 'All Day' : evt.time,
+        isAllDay,
+        endTime: isAllDay ? null : (evt.endTime || null),
         location: evt.location || null,
         notes: evt.notes || null,
-        badgeTheme: 'bg-sky-50 text-sky-800 border-sky-200/80',
-        borderAccent: 'border-l-sky-500',
-        bgAccent: 'bg-sky-50/30 hover:bg-sky-50/60',
-        dotColor: 'bg-sky-500',
+        badgeTheme: isCustom ? 'bg-amber-50 text-amber-800 border-amber-200/80' : 'bg-sky-50 text-sky-800 border-sky-200/80',
+        borderAccent: isCustom ? 'border-l-amber-600' : 'border-l-sky-500',
+        bgAccent: isCustom ? 'bg-amber-50/30 hover:bg-amber-50/60' : 'bg-sky-50/30 hover:bg-sky-50/60',
+        dotColor: isCustom ? 'bg-amber-600' : 'bg-sky-500',
         canDelete: true,
         isCompleted: evt.status === 'completed'
       });
@@ -1503,6 +1667,7 @@ export default function App() {
         shortLabel: 'Meal',
         title: `${icon} ${meal.title}`,
         time: timeStr,
+        isAllDay: false,
         endTime: null,
         location: null,
         notes: meal.category ? `Cookbook: ${meal.category}` : 'Planned meal',
@@ -1526,6 +1691,7 @@ export default function App() {
         shortLabel: 'Move',
         title: `💪 ${w.title}`,
         time: '09:30',
+        isAllDay: false,
         endTime: null,
         location: null,
         notes: `${w.durationMinutes || w.duration || '30'} mins • ${w.category || 'Movement'}`,
@@ -1537,7 +1703,7 @@ export default function App() {
       });
     });
 
-    // 4. Postpartum activity timeline recommendations (only after 03NOV due date)
+    // 4. Postpartum activity timeline recommendations (strictly only after 03NOV due date)
     const deliveryDateStr = boardData?.healthFitness?.deliveryDate || '2026-11-03';
     if (dateKey > deliveryDateStr) {
       const dayObj = new Date(dateKey + 'T12:00:00');
@@ -1560,6 +1726,7 @@ export default function App() {
           shortLabel: 'Care',
           title: `🚶‍♀️ Gentle Walk (${walkDur})`,
           time: '11:00',
+          isAllDay: false,
           endTime: null,
           location: 'Neighborhood / Stroller',
           notes: phaseForDay.walkingRec?.details || 'Daily activity timeline recommendation',
@@ -1577,6 +1744,7 @@ export default function App() {
           shortLabel: 'Care',
           title: `🧘 ${stretchName}`,
           time: '15:00',
+          isAllDay: false,
           endTime: null,
           location: null,
           notes: 'Relieves nursing posture tightness and supports core recovery',
@@ -1589,11 +1757,69 @@ export default function App() {
       }
     }
 
-    // Sort chronologically by time
+    // 5. JBAB Commissary Grocery Run (populated on Today's calendar when grocery items exist)
+    if (isToday && uncheckedGroceryCount > 0) {
+      const delSet = new Set(tasksState.deletedTaskIds || []);
+      const compSet = new Set(tasksState.completedTaskIds || []);
+      const cid = 'auto-jbab-commissary-grocery-run';
+      if (!delSet.has(cid)) {
+        items.push({
+          id: `grocery-run-${dateKey}`,
+          rawId: cid,
+          source: 'grocery',
+          sourceLabel: 'Grocery Run',
+          shortLabel: 'Store',
+          title: `🛒 JBAB Commissary Grocery Run (${uncheckedGroceryCount} item${uncheckedGroceryCount > 1 ? 's' : ''})`,
+          time: 'All Day',
+          isAllDay: true,
+          endTime: null,
+          location: 'JBAB Commissary',
+          notes: `${uncheckedGroceryCount} item${uncheckedGroceryCount > 1 ? 's' : ''} on grocery list`,
+          badgeTheme: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+          borderAccent: 'border-l-emerald-600',
+          bgAccent: 'bg-emerald-50/40 hover:bg-emerald-50/70',
+          dotColor: 'bg-emerald-600',
+          canDelete: false,
+          isCompleted: compSet.has(cid)
+        });
+      }
+    }
+
+    // 6. Action Items / Tasks scheduled for this date or today
+    const customTasks = tasksState.customTasks || [];
+    for (const t of customTasks) {
+      if (!t.completed && (t.dueDate === dateKey || (isToday && (t.dueDate === 'Today' || t.dueDate === 'Today / This Week')))) {
+        items.push({
+          id: `task-cal-${t.id}`,
+          rawId: t.id,
+          source: 'task',
+          sourceLabel: 'Action Item',
+          shortLabel: 'Task',
+          title: `☑️ ${t.text}`,
+          time: 'All Day',
+          isAllDay: true,
+          endTime: null,
+          location: null,
+          notes: `${t.priority || 'Normal'} priority • ${t.category || 'General'}`,
+          badgeTheme: 'bg-indigo-50 text-indigo-800 border-indigo-200/80',
+          borderAccent: 'border-l-indigo-500',
+          bgAccent: 'bg-indigo-50/30 hover:bg-indigo-50/60',
+          dotColor: 'bg-indigo-500',
+          canDelete: false
+        });
+      }
+    }
+
+    // Sort chronologically by time, with ALL-DAY items strictly at the top of each day
     items.sort((a, b) => {
+      const aAll = isAllDayItem(a);
+      const bAll = isAllDayItem(b);
+      if (aAll && !bAll) return -1;
+      if (!aAll && bAll) return 1;
       const mA = parseTimeToMinutes(a.time);
       const mB = parseTimeToMinutes(b.time);
-      return mA - mB;
+      if (mA !== mB) return mA - mB;
+      return (a.title || '').localeCompare(b.title || '');
     });
 
     return items;
@@ -2179,7 +2405,7 @@ export default function App() {
                                   <span className={`font-mono ${
                                     calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[11px]'
                                   } font-semibold ${theme.textSecondary}`}>
-                                    {item.time} {item.endTime ? `– ${item.endTime}` : ''}
+                                    {isAllDayItem(item) ? 'All Day' : `${item.time}${item.endTime ? ` – ${item.endTime}` : ''}`}
                                   </span>
                                 </div>
 
@@ -2360,7 +2586,7 @@ export default function App() {
                                           calendarFontSize === 'compact' ? 'p-1.5 rounded-md' : 'p-2 rounded-lg'
                                         } border-t border-r border-b ${theme.border} flex flex-col gap-0.5 transition shadow-2xs group relative ${
                                           item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
-                                        }`}
+                                        } ${isAllDayItem(item) ? 'ring-1 ring-amber-400/30' : ''}`}
                                       >
                                         <div className="flex items-center justify-between gap-1 leading-none">
                                           <span className={`${
@@ -2371,7 +2597,7 @@ export default function App() {
                                           <span className={`font-mono ${
                                             calendarFontSize === 'compact' ? 'text-[8.5px]' : 'text-[10px]'
                                           } font-bold text-stone-600 truncate text-right`}>
-                                            {item.time}
+                                            {isAllDayItem(item) ? 'All Day' : item.time}
                                           </span>
                                         </div>
 
@@ -3872,34 +4098,57 @@ export default function App() {
                   className={`w-full px-3 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} outline-none`}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-xs font-medium mb-1">Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={newEvent.date}
-                    onChange={e => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
-                  />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="block text-xs font-medium">Date &amp; Time</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-stone-700 hover:text-[#9E5A43]">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(newEvent.isAllDay)}
+                      onChange={e => setNewEvent({
+                        ...newEvent,
+                        isAllDay: e.target.checked,
+                        time: e.target.checked ? 'All Day' : '09:00',
+                        endTime: e.target.checked ? '' : '10:00'
+                      })}
+                      className="rounded accent-[#9E5A43] w-3.5 h-3.5"
+                    />
+                    <span>All Day Event</span>
+                  </label>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">Start</label>
-                  <input
-                    type="time"
-                    value={newEvent.time}
-                    onChange={e => setNewEvent({ ...newEvent, time: e.target.value })}
-                    className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">End</label>
-                  <input
-                    type="time"
-                    value={newEvent.endTime}
-                    onChange={e => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                    className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
-                  />
+                <div className={`grid ${newEvent.isAllDay ? 'grid-cols-1' : 'grid-cols-3'} gap-2`}>
+                  <div>
+                    <label className="block text-[10.5px] font-medium text-stone-500 mb-0.5">Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={newEvent.date}
+                      onChange={e => setNewEvent({ ...newEvent, date: e.target.value })}
+                      className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
+                    />
+                  </div>
+                  {!newEvent.isAllDay && (
+                    <>
+                      <div>
+                        <label className="block text-[10.5px] font-medium text-stone-500 mb-0.5">Start</label>
+                        <input
+                          type="time"
+                          value={newEvent.time}
+                          onChange={e => setNewEvent({ ...newEvent, time: e.target.value })}
+                          className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10.5px] font-medium text-stone-500 mb-0.5">End</label>
+                        <input
+                          type="time"
+                          value={newEvent.endTime}
+                          onChange={e => setNewEvent({ ...newEvent, endTime: e.target.value })}
+                          className={`w-full px-2.5 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">

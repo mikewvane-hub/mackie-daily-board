@@ -1,20 +1,12 @@
 {
-  "items": [
-    {
-      "id": "sug-1792361848243-cs4p",
-      "text": "I’d like the dashboard to pull things I add to the weekly meal plan and work out plan and add those to the “Mackie’s calendar”",
-      "category": "General",
-      "author": "Mackie",
-      "createdAt": "2026-10-18T22:17:28.242Z",
-      "formattedDate": "Oct 18, 2026 at 6:17 PM EST"
-    }
-  ],
+  "items": [],
   "deletedIds": [
     "sug-test-sync",
     "sug-1791158808969-dboh",
     "sug-e2e-test-1791172504270",
     "sug-1791243388182-w6l3",
-    "sug-1791330297776-rler"
+    "sug-1791330297776-rler",
+    "sug-1792361848243-cs4p"
   ],
-  "updatedAt": "2026-10-19T02:37:50.501Z"
+  "updatedAt": "2026-10-19T03:04:59.592Z"
 }

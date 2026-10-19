@@ -226,6 +226,7 @@ function enrichScheduleEvents(scheduleData) {
     activeTodayCount,
     weekUpcomingCount,
     weekSchedule,
+    customEvents: scheduleData.customEvents || [],
     authorized: Boolean(scheduleData.authorized),
     lastSynced: scheduleData.lastSynced || null,
     account: TARGET_ACCOUNT,
@@ -425,10 +426,30 @@ async function hydrateBoardFromCloud(force = false) {
     const localSchedTs = Number(localSched?.updatedAtTs) || 0;
     const cloudSchedTs = Number(cloud.scheduleUpdatedAt) || 0;
     if (cloud.schedule && (cloudSchedTs > localSchedTs || (localSchedTs === 0 && (cloud.schedule.customEvents || []).length > 0))) {
+      const customMap = new Map();
+      for (const ev of (localSched.customEvents || [])) {
+        if (ev && ev.id) customMap.set(ev.id, ev);
+      }
+      for (const ev of (cloud.schedule.customEvents || [])) {
+        if (ev && ev.id) customMap.set(ev.id, ev);
+      }
+      const mergedCustom = Array.from(customMap.values());
+      const mergedWeek = { ...(localSched.weekSchedule || {}), ...(cloud.schedule.weekSchedule || {}) };
+      for (const ev of mergedCustom) {
+        if (ev.date) {
+          mergedWeek[ev.date] = mergedWeek[ev.date] || [];
+          if (!mergedWeek[ev.date].some(e => e.id === ev.id)) {
+            mergedWeek[ev.date].push(ev);
+            mergedWeek[ev.date].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+          }
+        }
+      }
       writeJson(SCHEDULE_FILE, {
         ...localSched,
         ...cloud.schedule,
-        updatedAtTs: cloudSchedTs || Date.now()
+        customEvents: mergedCustom,
+        weekSchedule: mergedWeek,
+        updatedAtTs: Math.max(cloudSchedTs, localSchedTs, Date.now())
       });
     }
 
@@ -550,7 +571,9 @@ app.post('/api/board/sync', async (req, res) => {
     babyTracker: incomingBabyTracker,
     babyTrackerUpdatedAt: incomingBtTs,
     tasks: incomingTasks,
-    tasksUpdatedAt: incomingTasksTs
+    tasksUpdatedAt: incomingTasksTs,
+    customEvents: incomingCustomEvents,
+    scheduleUpdatedAt: incomingSchedTs
   } = req.body || {};
 
   let mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
@@ -645,6 +668,44 @@ app.post('/api/board/sync', async (req, res) => {
     }).catch(() => {});
   }
 
+  let scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], updatedAtTs: 0 });
+  const curSchedTs = Number(scheduleData.updatedAtTs) || 0;
+  const incSchedTs = Number(incomingSchedTs) || 0;
+  if (Array.isArray(incomingCustomEvents) && incomingCustomEvents.length > 0) {
+    const existingCustom = scheduleData.customEvents || [];
+    const customMap = new Map();
+    for (const ev of existingCustom) {
+      if (ev && ev.id) customMap.set(ev.id, ev);
+    }
+    let hasNewEvents = false;
+    for (const ev of incomingCustomEvents) {
+      if (ev && ev.id && !customMap.has(ev.id)) {
+        customMap.set(ev.id, ev);
+        hasNewEvents = true;
+      }
+    }
+    if (hasNewEvents || incSchedTs > curSchedTs) {
+      scheduleData.customEvents = Array.from(customMap.values());
+      scheduleData.weekSchedule = scheduleData.weekSchedule || {};
+      for (const ev of scheduleData.customEvents) {
+        if (ev.date) {
+          scheduleData.weekSchedule[ev.date] = scheduleData.weekSchedule[ev.date] || [];
+          if (!scheduleData.weekSchedule[ev.date].some(e => e.id === ev.id)) {
+            scheduleData.weekSchedule[ev.date].push(ev);
+            scheduleData.weekSchedule[ev.date].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+          }
+        }
+      }
+      scheduleData.updatedAtTs = Math.max(incSchedTs, Date.now());
+      scheduleData.updatedAt = new Date(scheduleData.updatedAtTs).toISOString();
+      writeJson(SCHEDULE_FILE, scheduleData);
+      pushCloudState({
+        schedule: scheduleData,
+        scheduleUpdatedAt: scheduleData.updatedAtTs
+      }).catch(() => {});
+    }
+  }
+
   res.json({
     success: true,
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
@@ -656,7 +717,9 @@ app.post('/api/board/sync', async (req, res) => {
     babyTracker: babyTrackerData,
     babyTrackerUpdatedAt: Number(babyTrackerData?.updatedAtTs) || 0,
     tasks: tasksData,
-    tasksUpdatedAt: Number(tasksData.updatedAtTs) || 0
+    tasksUpdatedAt: Number(tasksData.updatedAtTs) || 0,
+    calendar: enrichScheduleEvents(scheduleData),
+    scheduleUpdatedAt: Number(scheduleData.updatedAtTs) || 0
   });
 });
 
