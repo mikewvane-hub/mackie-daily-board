@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792418722140,
+  "updatedAt": 1792418724336,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20677,16 +20677,18 @@
   "scheduleUpdatedAt": 1792418705834,
   "tasks": {
     "customTasks": [],
-    "completedTaskIds": [],
+    "completedTaskIds": [
+      "auto-jbab-commissary-grocery-run"
+    ],
     "deletedTaskIds": [
       "task-1792376514119-l4gi",
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-19T14:05:22.139Z",
-    "updatedAtTs": 1792418722139
+    "updatedAt": "2026-10-19T14:05:24.244Z",
+    "updatedAtTs": 1792418724244
   },
-  "tasksUpdatedAt": 1792418722139,
+  "tasksUpdatedAt": 1792418724244,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
