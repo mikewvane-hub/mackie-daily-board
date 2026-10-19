@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792414952506,
+  "updatedAt": 1792414955719,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -734,9 +734,35 @@
     "updatedAtTs": 1791172501842
   },
   "schedule": {
-    "events": [],
+    "events": [
+      {
+        "id": "evt-1792414955699",
+        "date": "2026-10-19",
+        "time": "All Day",
+        "endTime": "",
+        "isAllDay": true,
+        "title": "Pediatrician Checkup Test",
+        "location": "Inova Alexandria",
+        "category": "Personal",
+        "notes": "Test Event",
+        "googleSynced": false
+      }
+    ],
     "weekSchedule": {
-      "2026-10-19": [],
+      "2026-10-19": [
+        {
+          "id": "evt-1792414955699",
+          "date": "2026-10-19",
+          "time": "All Day",
+          "endTime": "",
+          "isAllDay": true,
+          "title": "Pediatrician Checkup Test",
+          "location": "Inova Alexandria",
+          "category": "Personal",
+          "notes": "Test Event",
+          "googleSynced": false
+        }
+      ],
       "2026-10-20": [
         {
           "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
@@ -20574,16 +20600,29 @@
         }
       ]
     },
-    "customEvents": [],
-    "deletedEventIds": [],
+    "customEvents": [
+      {
+        "id": "evt-1792414955699",
+        "date": "2026-10-19",
+        "time": "All Day",
+        "endTime": "",
+        "isAllDay": true,
+        "title": "Pediatrician Checkup Test",
+        "location": "Inova Alexandria",
+        "category": "Personal",
+        "notes": "Test Event",
+        "googleSynced": false
+      }
+    ],
     "lastSynced": "2026-10-19T13:02:32.499Z",
-    "updatedAt": "2026-10-19T13:02:32.499Z",
-    "updatedAtTs": 1792414952499,
+    "updatedAt": "2026-10-19T13:02:35.714Z",
+    "updatedAtTs": 1792414955714,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
-    "authorized": true
+    "authorized": true,
+    "deletedEventIds": []
   },
-  "scheduleUpdatedAt": 1792414952499,
+  "scheduleUpdatedAt": 1792414955710,
   "tasks": {
     "customTasks": [],
     "completedTaskIds": [],
