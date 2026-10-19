@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792379062170,
+  "updatedAt": 1792379063492,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20607,7 +20607,7 @@
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1792379062156,
+  "scheduleUpdatedAt": 1792379062164,
   "tasks": {
     "customTasks": [],
     "completedTaskIds": [],
