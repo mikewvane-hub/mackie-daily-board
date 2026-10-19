@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792376514121,
+  "updatedAt": 1792376518889,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792361848920,
@@ -20600,14 +20600,16 @@
         "priority": "High",
         "category": "General",
         "dueDate": null,
-        "completed": false,
+        "completed": true,
         "createdAt": "2026-10-19T02:21:54.119Z"
       }
     ],
-    "completedTaskIds": [],
+    "completedTaskIds": [
+      "task-1792376514119-l4gi"
+    ],
     "deletedTaskIds": [],
-    "updatedAt": "2026-10-19T02:21:54.120Z",
-    "updatedAtTs": 1792376514120
+    "updatedAt": "2026-10-19T02:21:58.888Z",
+    "updatedAtTs": 1792376518888
   },
-  "tasksUpdatedAt": 1792376514120
+  "tasksUpdatedAt": 1792376518888
 }
