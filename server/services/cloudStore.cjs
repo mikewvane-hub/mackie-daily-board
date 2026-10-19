@@ -97,10 +97,20 @@ async function writeToGitHubWithRetry(updateFn, retries = 2) {
         groceryUpdatedAt: 0,
         suggestionsUpdatedAt: 0,
         babyTrackerUpdatedAt: 0,
+        scheduleUpdatedAt: 0,
+        calConfigUpdatedAt: 0,
+        healthFitnessUpdatedAt: 0,
+        ouraConfigUpdatedAt: 0,
+        tasksUpdatedAt: 0,
         mealPlan: null,
         groceryList: null,
         suggestions: { items: [], deletedIds: [] },
-        babyTracker: null
+        babyTracker: null,
+        schedule: null,
+        calConfig: null,
+        healthFitness: null,
+        ouraConfig: null,
+        tasks: []
       };
 
       const nextState = updateFn(baseState);
@@ -179,6 +189,26 @@ function pushCloudState(partial) {
         if (partial.babyTracker !== undefined) {
           next.babyTracker = partial.babyTracker;
           next.babyTrackerUpdatedAt = partial.babyTrackerUpdatedAt || now;
+        }
+        if (partial.schedule !== undefined) {
+          next.schedule = partial.schedule;
+          next.scheduleUpdatedAt = partial.scheduleUpdatedAt || now;
+        }
+        if (partial.calConfig !== undefined) {
+          next.calConfig = partial.calConfig;
+          next.calConfigUpdatedAt = partial.calConfigUpdatedAt || now;
+        }
+        if (partial.healthFitness !== undefined) {
+          next.healthFitness = partial.healthFitness;
+          next.healthFitnessUpdatedAt = partial.healthFitnessUpdatedAt || now;
+        }
+        if (partial.ouraConfig !== undefined) {
+          next.ouraConfig = partial.ouraConfig;
+          next.ouraConfigUpdatedAt = partial.ouraConfigUpdatedAt || now;
+        }
+        if (partial.tasks !== undefined) {
+          next.tasks = partial.tasks;
+          next.tasksUpdatedAt = partial.tasksUpdatedAt || now;
         }
 
         return next;

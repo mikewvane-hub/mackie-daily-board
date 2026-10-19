@@ -32,9 +32,13 @@ import {
   MessageSquarePlus,
   Pencil,
   HeartPulse,
-  ShoppingCart
+  ShoppingCart,
+  CheckSquare,
+  ListTodo,
+  AlertCircle
 } from 'lucide-react';
 import { COOKBOOK_META, COOKBOOK_CATEGORIES, COOKBOOK_RECIPES } from './data/cookbookRecipes.js';
+import { POSTPARTUM_TIMELINE_PHASES } from './data/postpartumFitnessData.js';
 import BabyCountdownBanner from './components/BabyCountdownBanner.jsx';
 import PostpartumBabyHub from './components/PostpartumBabyHub.jsx';
 import PersonalHealthFitnessHub from './components/PersonalHealthFitnessHub.jsx';
@@ -267,6 +271,23 @@ export default function App() {
   const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false);
   const [isSyncingSuggestions, setIsSyncingSuggestions] = useState(false);
 
+  // Action Items & Tasks states (Mackie's To-Do list, auto-populated from groceries, meal plan, workouts & postpartum timeline)
+  const [tasksState, setTasksState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mackie_tasks_state_v1');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      customTasks: [],
+      completedTaskIds: [],
+      deletedTaskIds: [],
+      updatedAtTs: 0
+    };
+  });
+  const [newTaskInput, setNewTaskInput] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState('Normal');
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+
   const CLOUD_MACKIE_SUGGESTIONS_BASE = 'https://daily-executive-dashboard.onrender.com/mackie/api';
 
   const getLocalSuggestionsState = () => {
@@ -395,7 +416,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs, hfTs) => {
+  const persistBoardToLocalStorage = (nextBoard, mpTs, grTs, hfTs, tasksTs) => {
     try {
       if (nextBoard) {
         localStorage.setItem('mackie_saved_board_data', JSON.stringify(nextBoard));
@@ -408,6 +429,9 @@ export default function App() {
       }
       if (hfTs !== undefined && hfTs !== null) {
         localStorage.setItem('mackie_health_fitness_updated_at', String(hfTs));
+      }
+      if (tasksTs !== undefined && tasksTs !== null) {
+        localStorage.setItem('mackie_tasks_updated_at', String(tasksTs));
       }
     } catch {}
   };
@@ -433,17 +457,23 @@ export default function App() {
         const serverMpTs = Number(serverJson.meta?.mealPlanUpdatedAt) || 0;
         const serverGrTs = Number(serverJson.meta?.groceryUpdatedAt) || 0;
         const serverHfTs = Number(serverJson.meta?.healthFitnessUpdatedAt) || 0;
+        const serverTasksTs = Number(serverJson.meta?.tasksUpdatedAt) || Number(serverJson.tasks?.updatedAtTs) || 0;
 
         let localBoard = null;
         let localMpTs = 0;
         let localGrTs = 0;
         let localHfTs = 0;
+        let localTasks = null;
+        let localTasksTs = 0;
         try {
           const rawB = localStorage.getItem('mackie_saved_board_data');
           if (rawB) localBoard = JSON.parse(rawB);
           localMpTs = Number(localStorage.getItem('mackie_meal_plan_updated_at')) || 0;
           localGrTs = Number(localStorage.getItem('mackie_grocery_updated_at')) || 0;
           localHfTs = Number(localStorage.getItem('mackie_health_fitness_updated_at')) || 0;
+          const rawT = localStorage.getItem('mackie_tasks_state_v1');
+          if (rawT) localTasks = JSON.parse(rawT);
+          localTasksTs = Number(localStorage.getItem('mackie_tasks_updated_at')) || Number(localTasks?.updatedAtTs) || 0;
         } catch {}
 
         const localHasNewerMeals =
@@ -459,6 +489,9 @@ export default function App() {
         const localHasNewerHf =
           localBoard?.healthFitness && localHfTs > serverHfTs;
 
+        const localHasNewerTasks =
+          localTasks && localTasksTs > serverTasksTs;
+
         const finalMealPlan = localHasNewerMeals ? localBoard.mealPlan : serverJson.mealPlan;
         const finalMpTs = localHasNewerMeals ? (localMpTs || Date.now()) : serverMpTs;
 
@@ -470,17 +503,29 @@ export default function App() {
           : serverJson.healthFitness;
         const finalHfTs = localHasNewerHf ? (localHfTs || Date.now()) : serverHfTs;
 
+        const finalTasks = localHasNewerTasks
+          ? localTasks
+          : (serverJson.tasks || { customTasks: [], completedTaskIds: [], deletedTaskIds: [], updatedAtTs: 0 });
+        const finalTasksTs = localHasNewerTasks ? (localTasksTs || Date.now()) : serverTasksTs;
+
+        setTasksState(finalTasks);
+        try {
+          localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(finalTasks));
+          localStorage.setItem('mackie_tasks_updated_at', String(finalTasksTs));
+        } catch {}
+
         const mergedBoard = {
           ...serverJson,
           mealPlan: finalMealPlan,
           groceryList: finalGroceryList,
-          healthFitness: finalHealthFitness
+          healthFitness: finalHealthFitness,
+          tasks: finalTasks
         };
 
         setBoardData(mergedBoard);
-        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs, finalHfTs);
+        persistBoardToLocalStorage(mergedBoard, finalMpTs, finalGrTs, finalHfTs, finalTasksTs);
 
-        if (localHasNewerMeals || localHasNewerGrocery || localHasNewerHf) {
+        if (localHasNewerMeals || localHasNewerGrocery || localHasNewerHf || localHasNewerTasks) {
           fetch(`${API_BASE}/board/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -490,7 +535,9 @@ export default function App() {
               groceryList: finalGroceryList,
               groceryUpdatedAt: finalGrTs,
               healthFitness: finalHealthFitness,
-              healthFitnessUpdatedAt: finalHfTs
+              healthFitnessUpdatedAt: finalHfTs,
+              tasks: finalTasks,
+              tasksUpdatedAt: finalTasksTs
             })
           }).catch(() => {});
         }
@@ -1260,6 +1307,390 @@ export default function App() {
     0
   );
 
+  // --------------------------------------------------------------------------
+  // Action Items & Tasks Handlers (Mackie's To-Do List)
+  // --------------------------------------------------------------------------
+  const handleAddTask = async (e) => {
+    if (e) e.preventDefault();
+    const text = newTaskInput.trim();
+    if (!text) return;
+    const nowTs = Date.now();
+    const newTask = {
+      id: `task-${nowTs}-${Math.random().toString(36).slice(2, 6)}`,
+      text,
+      priority: newTaskPriority,
+      category: 'General',
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    const nextTasks = {
+      ...tasksState,
+      customTasks: [newTask, ...(tasksState.customTasks || [])],
+      deletedTaskIds: (tasksState.deletedTaskIds || []).filter(id => id !== newTask.id),
+      updatedAtTs: nowTs
+    };
+    setTasksState(nextTasks);
+    setNewTaskInput('');
+    try {
+      localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(nextTasks));
+      localStorage.setItem('mackie_tasks_updated_at', String(nowTs));
+    } catch {}
+    showToast(`Added task: "${text}"`);
+    try {
+      await fetch(`${API_BASE}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask)
+      });
+    } catch (err) {
+      console.warn('[Tasks] Add error:', err.message);
+    }
+  };
+
+  const handleToggleTask = async (taskId) => {
+    const nowTs = Date.now();
+    const isCompleted = (tasksState.completedTaskIds || []).includes(taskId);
+    const nextCompletedIds = isCompleted
+      ? (tasksState.completedTaskIds || []).filter(id => id !== taskId)
+      : [...(tasksState.completedTaskIds || []), taskId];
+
+    const nextCustomTasks = (tasksState.customTasks || []).map(t => {
+      if (t.id === taskId) return { ...t, completed: !isCompleted };
+      return t;
+    });
+
+    const nextTasks = {
+      ...tasksState,
+      completedTaskIds: nextCompletedIds,
+      customTasks: nextCustomTasks,
+      updatedAtTs: nowTs
+    };
+    setTasksState(nextTasks);
+    try {
+      localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(nextTasks));
+      localStorage.setItem('mackie_tasks_updated_at', String(nowTs));
+    } catch {}
+
+    try {
+      await fetch(`${API_BASE}/tasks/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: taskId, completed: !isCompleted })
+      });
+    } catch (err) {
+      console.warn('[Tasks] Toggle error:', err.message);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    const nowTs = Date.now();
+    const nextCustomTasks = (tasksState.customTasks || []).filter(t => t.id !== taskId);
+    const nextCompletedIds = (tasksState.completedTaskIds || []).filter(id => id !== taskId);
+    const nextDeletedIds = (tasksState.deletedTaskIds || []).includes(taskId)
+      ? tasksState.deletedTaskIds
+      : [...(tasksState.deletedTaskIds || []), taskId];
+
+    const nextTasks = {
+      ...tasksState,
+      customTasks: nextCustomTasks,
+      completedTaskIds: nextCompletedIds,
+      deletedTaskIds: nextDeletedIds,
+      updatedAtTs: nowTs
+    };
+    setTasksState(nextTasks);
+    try {
+      localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(nextTasks));
+      localStorage.setItem('mackie_tasks_updated_at', String(nowTs));
+    } catch {}
+
+    try {
+      await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn('[Tasks] Delete error:', err.message);
+    }
+  };
+
+  // --------------------------------------------------------------------------
+  // Active Postpartum Timeline Recommendations
+  // --------------------------------------------------------------------------
+  const activePostpartumPhase = useMemo(() => {
+    const delivery = new Date((boardData?.healthFitness?.deliveryDate || '2026-11-03') + 'T12:00:00');
+    const now = currentTime || new Date();
+    const diffDays = Math.floor((now.getTime() - delivery.getTime()) / (1000 * 60 * 60 * 24));
+    const diffWeeks = Math.floor(diffDays / 7);
+
+    if (diffWeeks < 1) {
+      return (
+        POSTPARTUM_TIMELINE_PHASES.find(p => p.id === 'weeks-1-2') ||
+        POSTPARTUM_TIMELINE_PHASES[0]
+      );
+    }
+    const match = POSTPARTUM_TIMELINE_PHASES.find(
+      p => diffWeeks >= p.minWeek && diffWeeks <= p.maxWeek
+    );
+    return match || POSTPARTUM_TIMELINE_PHASES[POSTPARTUM_TIMELINE_PHASES.length - 1];
+  }, [boardData?.healthFitness?.deliveryDate, currentTime]);
+
+  // --------------------------------------------------------------------------
+  // Unified Master Calendar Generator (Google Cal + Meals + Movement + Postpartum)
+  // --------------------------------------------------------------------------
+  const parseTimeToMinutes = (tStr) => {
+    if (!tStr || tStr === 'All Day') return -1;
+    const clean = String(tStr).trim().toUpperCase();
+    const match12 = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (match12) {
+      let hours = parseInt(match12[1], 10);
+      const minutes = parseInt(match12[2], 10);
+      const mer = match12[3];
+      if (mer === 'PM' && hours < 12) hours += 12;
+      if (mer === 'AM' && hours === 12) hours = 0;
+      return hours * 60 + minutes;
+    }
+    const match24 = clean.match(/^(\d{1,2}):(\d{2})$/);
+    if (match24) {
+      return parseInt(match24[1], 10) * 60 + parseInt(match24[2], 10);
+    }
+    return 9999;
+  };
+
+  const getUnifiedDayItems = (dateKey, weekdayName, isToday = false) => {
+    const items = [];
+
+    // 1. Google Calendar events
+    const gEvents = (calendar.weekSchedule && calendar.weekSchedule[dateKey]) ||
+      (isToday ? (calendar.todayEvents || []) : []);
+    for (const evt of gEvents) {
+      items.push({
+        id: `gcal-${evt.id}`,
+        rawId: evt.id,
+        source: 'google',
+        sourceLabel: 'Google Cal',
+        title: evt.title,
+        time: evt.time || 'All Day',
+        endTime: evt.endTime || null,
+        location: evt.location || null,
+        notes: evt.notes || null,
+        badgeTheme: 'bg-sky-50 text-sky-800 border-sky-200/80',
+        dotColor: 'bg-sky-500',
+        canDelete: true,
+        isCompleted: evt.status === 'completed'
+      });
+    }
+
+    // 2. Meal Plan items for this weekday
+    const dayMeals = mealPlan[weekdayName] || [];
+    dayMeals.forEach((meal, idx) => {
+      const isBreakfast = /pancake|waffle|egg|omelet|toast|oat|bacon|sausage|breakfast|smoothie/i.test(meal.title || '');
+      const timeStr = isBreakfast ? '08:30' : '18:00';
+      const icon = isBreakfast ? '🍳' : '🍲';
+      items.push({
+        id: `meal-${dateKey}-${meal.instanceId || idx}`,
+        rawId: meal.instanceId,
+        source: 'meals',
+        sourceLabel: 'Meal Plan',
+        title: `${icon} ${meal.title}`,
+        time: timeStr,
+        endTime: null,
+        location: null,
+        notes: meal.category ? `Cookbook: ${meal.category}` : 'Planned meal',
+        badgeTheme: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+        dotColor: 'bg-emerald-500',
+        canDelete: false,
+        recipeId: meal.recipeId || null
+      });
+    });
+
+    // 3. Movement / Workout routines scheduled for this weekday
+    const dayWorkouts = (boardData?.healthFitness?.weeklyWorkouts?.[weekdayName]) || [];
+    dayWorkouts.forEach((w, idx) => {
+      items.push({
+        id: `wkout-${dateKey}-${w.instanceId || idx}`,
+        rawId: w.instanceId,
+        source: 'movement',
+        sourceLabel: 'Movement',
+        title: `💪 ${w.title}`,
+        time: '09:30',
+        endTime: null,
+        location: null,
+        notes: `${w.durationMinutes || w.duration || '30'} mins • ${w.category || 'Movement'}`,
+        badgeTheme: 'bg-amber-50 text-amber-800 border-amber-200/80',
+        dotColor: 'bg-amber-500',
+        canDelete: false
+      });
+    });
+
+    // 4. Postpartum activity timeline recommendations
+    if (activePostpartumPhase) {
+      const walkDur = activePostpartumPhase.walkingRec?.duration || '20–30 mins';
+      const stretchName = activePostpartumPhase.stretches?.[0] || 'Core & Pelvic Floor Reconnection';
+
+      items.push({
+        id: `pp-walk-${dateKey}`,
+        source: 'postpartum',
+        sourceLabel: 'Postpartum Care',
+        title: `🚶‍♀️ Gentle Walk (${walkDur})`,
+        time: '11:00',
+        endTime: null,
+        location: 'Neighborhood / Stroller',
+        notes: activePostpartumPhase.walkingRec?.details || 'Daily activity timeline recommendation',
+        badgeTheme: 'bg-rose-50 text-rose-800 border-rose-200/80',
+        dotColor: 'bg-rose-500',
+        canDelete: false
+      });
+
+      items.push({
+        id: `pp-stretch-${dateKey}`,
+        source: 'postpartum',
+        sourceLabel: 'Postpartum Care',
+        title: `🧘 ${stretchName}`,
+        time: '15:00',
+        endTime: null,
+        location: null,
+        notes: 'Relieves nursing posture tightness and supports core recovery',
+        badgeTheme: 'bg-purple-50 text-purple-800 border-purple-200/80',
+        dotColor: 'bg-purple-500',
+        canDelete: false
+      });
+    }
+
+    // Sort chronologically by time
+    items.sort((a, b) => {
+      const mA = parseTimeToMinutes(a.time);
+      const mB = parseTimeToMinutes(b.time);
+      return mA - mB;
+    });
+
+    return items;
+  };
+
+  // --------------------------------------------------------------------------
+  // Action Items & Tasks List Generation (Auto + Custom)
+  // --------------------------------------------------------------------------
+  const allActionItems = useMemo(() => {
+    const list = [];
+    const delSet = new Set(tasksState.deletedTaskIds || []);
+    const compSet = new Set(tasksState.completedTaskIds || []);
+
+    // 1. JBAB Commissary Grocery Run (auto-generated when unchecked items exist)
+    if (uncheckedGroceryCount > 0) {
+      const cid = 'auto-jbab-commissary-grocery-run';
+      if (!delSet.has(cid)) {
+        const topUnchecked = groceryList.filter(i => !i.checked).slice(0, 3).map(i => i.name).join(', ');
+        const extra = uncheckedGroceryCount > 3 ? ` +${uncheckedGroceryCount - 3} more` : '';
+        list.push({
+          id: cid,
+          isAuto: true,
+          title: '🛒 JBAB Commissary Grocery Run',
+          priority: 'High',
+          category: 'Groceries',
+          dueDate: 'Today / This Week',
+          details: `${uncheckedGroceryCount} item${uncheckedGroceryCount > 1 ? 's' : ''} on list: ${topUnchecked}${extra}`,
+          completed: compSet.has(cid),
+          actionLabel: 'View Grocery List',
+          onAction: () => {
+            const el = document.getElementById('grocery-list-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+    }
+
+    // 2. Today's Planned Meals (Dinner & Breakfast)
+    const todayPlanned = mealPlan[todayDayName] || [];
+    todayPlanned.forEach((m, idx) => {
+      const mid = `auto-meal-prep-${todayDayName}-${m.instanceId || idx}`;
+      if (!delSet.has(mid)) {
+        const isBreakfast = /pancake|waffle|egg|omelet|toast|oat|bacon|sausage|breakfast|smoothie/i.test(m.title || '');
+        list.push({
+          id: mid,
+          isAuto: true,
+          title: isBreakfast ? `🍳 Prep Breakfast: ${m.title}` : `🍲 Dinner Prep: ${m.title}`,
+          priority: 'Normal',
+          category: 'Meal Plan',
+          dueDate: isBreakfast ? 'Morning' : 'Tonight 6:00 PM',
+          details: m.category ? `${m.category} • Family Favorites Cookbook` : 'Family Favorites Cookbook',
+          completed: compSet.has(mid),
+          recipeId: m.recipeId
+        });
+      }
+    });
+
+    // 3. Today's Scheduled Workouts
+    const todayWorkouts = (boardData?.healthFitness?.weeklyWorkouts?.[todayDayName]) || [];
+    todayWorkouts.forEach((w, idx) => {
+      const wid = `auto-workout-${todayDayName}-${w.instanceId || idx}`;
+      if (!delSet.has(wid)) {
+        list.push({
+          id: wid,
+          isAuto: true,
+          title: `💪 Movement: ${w.title}`,
+          priority: 'Normal',
+          category: 'Health & Fitness',
+          dueDate: 'Today',
+          details: `${w.durationMinutes || w.duration || '30'} mins • ${w.category || 'Routine'}`,
+          completed: compSet.has(wid)
+        });
+      }
+    });
+
+    // 4. Postpartum Activity Recommendations
+    if (activePostpartumPhase) {
+      const walkId = `auto-pp-walk-${activePostpartumPhase.id}`;
+      if (!delSet.has(walkId)) {
+        const dur = activePostpartumPhase.walkingRec?.duration || '15–20 mins';
+        list.push({
+          id: walkId,
+          isAuto: true,
+          title: `🚶‍♀️ Postpartum Gentle Walk (${dur})`,
+          priority: 'High',
+          category: 'Postpartum Care',
+          dueDate: 'Daily Recommendation',
+          details: activePostpartumPhase.walkingRec?.details || 'Focus on tall posture, neutral pelvis, and gentle 360° breathing.',
+          completed: compSet.has(walkId)
+        });
+      }
+
+      const stretchId = `auto-pp-stretch-${activePostpartumPhase.id}`;
+      if (!delSet.has(stretchId)) {
+        const sName = activePostpartumPhase.stretches?.[0] || 'Core & Pelvic Floor Reconnection';
+        list.push({
+          id: stretchId,
+          isAuto: true,
+          title: `🧘 Recovery Stretches (${sName})`,
+          priority: 'Normal',
+          category: 'Postpartum Care',
+          dueDate: 'Daily Routine',
+          details: 'Relieves nursing/feeding tightness and supports diastasis recti healing.',
+          completed: compSet.has(stretchId)
+        });
+      }
+    }
+
+    // 5. Mackie's Custom Added Tasks
+    const custom = Array.isArray(tasksState.customTasks) ? tasksState.customTasks : [];
+    custom.forEach(ct => {
+      if (!delSet.has(ct.id)) {
+        list.push({
+          id: ct.id,
+          isAuto: false,
+          title: ct.text || ct.title,
+          priority: ct.priority || 'Normal',
+          category: ct.category || 'General',
+          dueDate: ct.dueDate || 'To-Do',
+          details: ct.details || '',
+          completed: compSet.has(ct.id) || Boolean(ct.completed)
+        });
+      }
+    });
+
+    return list;
+  }, [tasksState, uncheckedGroceryCount, groceryList, mealPlan, todayDayName, boardData?.healthFitness, activePostpartumPhase]);
+
+  const activeTasks = useMemo(() => allActionItems.filter(t => !t.completed), [allActionItems]);
+  const completedTasks = useMemo(() => allActionItems.filter(t => t.completed), [allActionItems]);
+
   return (
     <div className={`min-h-screen relative ${theme.bgPage} ${theme.textPrimary} transition-colors duration-500 pb-12`}>
       {/* Cutesy Seasonal Minimalist Squiggly Lines & Background Doodles */}
@@ -1473,511 +1904,621 @@ export default function App() {
         <BabyCountdownBanner theme={theme} activeSeason={activeSeasonKey} />
 
         {/* ================================================================= */}
-        {/* ROW 1: MACKIE'S GOOGLE CALENDAR (SPREAD ACROSS ENTIRE 1ST ROW)    */}
+        {/* ROW 1: UNIFIED MASTER CALENDAR + ACTION ITEMS & TASKS COLUMN      */}
         {/* ================================================================= */}
         {(activeSection === 'all' || activeSection === 'calendar') && (
-          <section
-            aria-label="Google Calendar Schedule"
-            className={`w-full ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-4`}
-          >
-            {/* Calendar Header */}
-            <div className={`flex items-center justify-between border-b ${theme.border} pb-3.5 gap-2 flex-wrap`}>
-              <div className="flex items-center gap-2.5">
-                <div className={`p-2 rounded-xl ${theme.cardSubtle} ${theme.accentText}`}>
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-editorial text-xl sm:text-2xl font-semibold leading-tight">
-                      Mackie&apos;s Calendar
-                    </h2>
-                    <CutesyBadgeDoodle season={activeSeasonKey} variant={2} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+            {/* ============================================================== */}
+            {/* 1. LEFT COLUMN (8 COLS): 1 UNIFIED MASTER CALENDAR             */}
+            {/* ============================================================== */}
+            <section
+              aria-label="Unified Master Calendar"
+              className={`lg:col-span-8 w-full ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-4`}
+            >
+              {/* Calendar Header */}
+              <div className={`flex items-center justify-between border-b ${theme.border} pb-3.5 gap-2 flex-wrap`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-2 rounded-xl ${theme.cardSubtle} ${theme.accentText}`}>
+                    <Calendar className="w-4 h-4" />
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={openCalSettings}
-                      className={`text-[11px] ${theme.textSecondary} hover:${theme.accentText} flex items-center gap-1.5 underline decoration-dotted transition`}
-                      title="Google Calendar feed settings (amblair92@gmail.com)"
-                    >
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                      <span className="font-medium text-stone-700">amblair92@gmail.com</span>
-                      <span>•</span>
-                      <span>{calendar.authorized ? 'Live Synced' : 'Connect Feed'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSyncCalendar}
-                      disabled={isSyncingCal}
-                      className={`p-1 rounded-md text-stone-400 hover:${theme.accentText} hover:bg-black/5 transition disabled:opacity-50`}
-                      title="Force sync Google Calendar now"
-                      aria-label="Force sync Google Calendar now"
-                    >
-                      <RefreshCw className={`w-3 h-3 ${isSyncingCal ? 'animate-spin' : ''}`} />
-                    </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-editorial text-xl sm:text-2xl font-semibold leading-tight">
+                        Mackie&apos;s Unified Calendar
+                      </h2>
+                      <CutesyBadgeDoodle season={activeSeasonKey} variant={2} />
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={openCalSettings}
+                        className={`text-[11px] ${theme.textSecondary} hover:${theme.accentText} flex items-center gap-1.5 underline decoration-dotted transition`}
+                        title="Google Calendar feed settings (amblair92@gmail.com)"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                        <span className="font-medium text-stone-700">amblair92@gmail.com</span>
+                        <span>•</span>
+                        <span>{calendar.authorized ? 'Live Synced' : 'Connect Feed'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSyncCalendar}
+                        disabled={isSyncingCal}
+                        className={`p-1 rounded-md text-stone-400 hover:${theme.accentText} hover:bg-black/5 transition disabled:opacity-50`}
+                        title="Force sync Google Calendar now"
+                        aria-label="Force sync Google Calendar now"
+                      >
+                        <RefreshCw className={`w-3 h-3 ${isSyncingCal ? 'animate-spin' : ''}`} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-1.5">
-                {/* Daily / Weekly Cycle Toggle */}
-                <div className={`flex items-center p-0.5 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCalendarView('today');
-                      setCalendarWeekOffset(0);
-                    }}
-                    className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
-                      calendarView === 'today'
-                        ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
-                        : theme.textSecondary
-                    }`}
-                  >
-                    <span>Daily</span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      calendarView === 'today' ? 'bg-black/5 font-semibold text-stone-800' : 'opacity-60'
-                    }`}>
-                      {calendar.activeTodayCount ?? (calendar.todayEvents || []).filter(e => e.status !== 'completed').length}
+                {/* Right Header Controls: Source Legend, Daily/Weekly Toggle, Add Event */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Distinct Source Badges Legend */}
+                  <div className={`hidden sm:flex items-center gap-1.5 text-[10px] font-mono px-2 py-1 rounded-xl ${theme.cardSubtle} border ${theme.border}`}>
+                    <span className="flex items-center gap-1 text-sky-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-sky-500" />
+                      Google Cal
                     </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (calendarView !== 'week') {
-                        setCalendarView('week');
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      Meal Plan
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center gap-1 text-amber-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      Movement
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center gap-1 text-rose-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      Postpartum
+                    </span>
+                  </div>
+
+                  {/* Daily / Weekly Cycle Toggle */}
+                  <div className={`flex items-center p-0.5 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalendarView('today');
                         setCalendarWeekOffset(0);
-                      } else {
-                        setCalendarWeekOffset(prev => (prev + 1) % 8);
-                      }
-                    }}
-                    title="Select Weekly 7-day forecast (click again to cycle to the following week)"
-                    className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
-                      calendarView === 'week'
-                        ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
-                        : theme.textSecondary
-                    }`}
+                      }}
+                      className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
+                        calendarView === 'today'
+                          ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
+                          : theme.textSecondary
+                      }`}
+                    >
+                      <span>Daily</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        calendarView === 'today' ? 'bg-black/5 font-semibold text-stone-800' : 'opacity-60'
+                      }`}>
+                        {getUnifiedDayItems(calendar.todayDate || new Date().toISOString().split('T')[0], todayDayName, true).length}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (calendarView !== 'week') {
+                          setCalendarView('week');
+                          setCalendarWeekOffset(0);
+                        } else {
+                          setCalendarWeekOffset(prev => (prev + 1) % 8);
+                        }
+                      }}
+                      title="Select Weekly 7-day forecast (click again to cycle to the following week)"
+                      className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
+                        calendarView === 'week'
+                          ? `${theme.cardBg} ${theme.textPrimary} shadow-2xs`
+                          : theme.textSecondary
+                      }`}
+                    >
+                      <span>
+                        {calendarView === 'week' && calendarWeekOffset > 0
+                          ? `Weekly (+${calendarWeekOffset}w)`
+                          : 'Weekly'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Add Event Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddEventModal(true)}
+                    className={`p-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} transition`}
+                    title="Add Calendar Event"
+                    aria-label="Add Calendar Event"
                   >
-                    <span>
-                      {calendarView === 'week' && calendarWeekOffset > 0
-                        ? `Weekly (+${calendarWeekOffset}w)`
-                        : 'Weekly'}
-                    </span>
-                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                      calendarView === 'week' ? 'bg-black/5 font-semibold text-stone-800' : 'opacity-60'
-                    }`}>
-                      {calendar.weekUpcomingCount ?? (
-                        Object.keys(calendar.weekSchedule || {})
-                          .filter(k => k >= (calendar.todayDate || ''))
-                          .reduce((sum, k) => sum + (calendar.weekSchedule[k] || []).length, 0)
-                      )}
-                    </span>
+                    <Plus className="w-4 h-4" />
                   </button>
                 </div>
-
-                {/* Add Event Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowAddEventModal(true)}
-                  className={`p-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} transition`}
-                  title="Add Calendar Event"
-                  aria-label="Add Calendar Event"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
               </div>
-            </div>
 
-            {/* Connection Prompt if iCal/OAuth not yet linked */}
-            {!calendar.authorized && (
-              <div className={`p-3 rounded-xl ${theme.cardSubtle} border ${theme.border} flex items-center justify-between gap-3 text-xs flex-wrap`}>
-                <div className="space-y-0.5">
-                  <div className="font-semibold">Sync with amblair92@gmail.com</div>
-                  <p className={`${theme.textSecondary} text-[11px]`}>
-                    Connect her Google Calendar feed for automatic 24/7 daily &amp; weekly updates (no password required).
-                  </p>
+              {/* Connection Prompt if iCal/OAuth not yet linked */}
+              {!calendar.authorized && (
+                <div className={`p-3 rounded-xl ${theme.cardSubtle} border ${theme.border} flex items-center justify-between gap-3 text-xs flex-wrap`}>
+                  <div className="space-y-0.5">
+                    <div className="font-semibold">Sync with amblair92@gmail.com</div>
+                    <p className={`${theme.textSecondary} text-[11px]`}>
+                      Connect her Google Calendar feed for automatic 24/7 daily &amp; weekly updates (no password required).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openCalSettings}
+                    className={`px-3 py-1.5 rounded-lg ${theme.accentBg} text-white font-medium text-xs shrink-0`}
+                  >
+                    Connect
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={openCalSettings}
-                  className={`px-3 py-1.5 rounded-lg ${theme.accentBg} text-white font-medium text-xs shrink-0`}
-                >
-                  Connect
-                </button>
-              </div>
-            )}
+              )}
 
-            {/* DAILY VIEW vs WEEKLY VIEW (FULL-WIDTH ROW LAYOUT) */}
-            <div className="flex flex-col gap-3">
-              {calendarView === 'today' ? (
-                (() => {
-                  const todayEvents = calendar.todayEvents || [];
-                  const activeList = todayEvents.filter(e => e.status !== 'completed');
-                  const pastList = todayEvents.filter(e => e.status === 'completed');
+              {/* DAILY VIEW vs WEEKLY VIEW */}
+              <div className="flex flex-col gap-3">
+                {calendarView === 'today' ? (
+                  (() => {
+                    const todayDateStr = calendar.todayDate || new Date().toISOString().split('T')[0];
+                    const todayUnifiedItems = getUnifiedDayItems(todayDateStr, todayDayName, true);
 
-                  // Extract upcoming events if today is calm or to provide upcoming preview
-                  let upcomingList = calendar.upcomingEvents || [];
-                  if (upcomingList.length === 0 && calendar.weekSchedule) {
-                    const futureKeys = Object.keys(calendar.weekSchedule)
-                      .filter(k => k > (calendar.todayDate || ''))
-                      .sort();
-                    for (const fk of futureKeys) {
-                      for (const e of calendar.weekSchedule[fk] || []) {
-                        upcomingList.push(e);
-                      }
-                    }
-                  }
+                    return (
+                      <>
+                        <div className={`flex items-center justify-between text-xs ${theme.textSecondary} px-1`}>
+                          <span className="font-semibold text-stone-800">
+                            Today&apos;s Master Schedule ({todayUnifiedItems.length} items unified)
+                          </span>
+                          <span className="font-mono text-[11px] font-medium">{todayDateStr} • {todayDayName}</span>
+                        </div>
 
-                  return (
-                    <>
-                      <div className={`flex items-center justify-between text-xs ${theme.textSecondary} px-1`}>
-                        <span className="font-medium">
-                          Today&apos;s Schedule ({activeList.length} upcoming)
-                        </span>
-                        <span className="font-mono text-[11px]">{calendar.todayDate}</span>
-                      </div>
-
-                      {activeList.length === 0 ? (
-                        <div className="space-y-4 my-1">
-                          <div className={`p-5 sm:p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5`}>
+                        {todayUnifiedItems.length === 0 ? (
+                          <div className={`p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5 my-2`}>
                             <CheckCircle2 className={`w-6 h-6 mx-auto ${theme.accentText}`} />
-                            <div className="font-editorial text-lg sm:text-xl font-medium">
-                              A calm, open day ahead
-                            </div>
+                            <div className="font-editorial text-lg font-medium">A calm, open day ahead</div>
                             <p className={`text-xs ${theme.textSecondary}`}>
-                              No appointments scheduled for today. Here is what is coming up next on Mackie&apos;s schedule:
+                              No events, meal prep, or workouts scheduled for today yet.
                             </p>
                           </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {todayUnifiedItems.map(item => (
+                              <div
+                                key={item.id}
+                                onClick={() => {
+                                  if (item.recipeId) {
+                                    const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
+                                    if (rec) setViewingRecipe(rec);
+                                  }
+                                }}
+                                className={`p-3.5 rounded-xl border ${theme.cardSubtle} ${theme.border} flex flex-col gap-1.5 transition shadow-2xs group relative ${
+                                  item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-1 flex-wrap">
+                                  <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${item.badgeTheme}`}>
+                                    {item.sourceLabel}
+                                  </span>
+                                  <span className={`font-mono text-[11px] font-semibold ${theme.textSecondary}`}>
+                                    {item.time} {item.endTime ? `– ${item.endTime}` : ''}
+                                  </span>
+                                </div>
 
-                          {/* Next Upcoming Appointments (7-14 Day Forecast Preview) */}
-                          {upcomingList.length > 0 && (
-                            <div className="space-y-2.5">
-                              <div className={`flex items-center justify-between text-xs font-semibold ${theme.textSecondary} px-1`}>
-                                <span className="flex items-center gap-1.5">
-                                  <Calendar className="w-3.5 h-3.5 text-[#9E5A43]" />
-                                  <span>Next Upcoming Appointments ({upcomingList.length})</span>
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCalendarView('week');
-                                    setCalendarWeekOffset(0);
-                                  }}
-                                  className={`text-[11px] ${theme.accentText} hover:underline font-semibold flex items-center gap-1`}
-                                >
-                                  <span>View Weekly Grid</span>
-                                  <ChevronRight className="w-3 h-3" />
-                                </button>
-                              </div>
+                                <div className="font-semibold text-sm leading-snug break-words text-stone-800">
+                                  {item.title}
+                                </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                {upcomingList.slice(0, 8).map(evt => {
-                                  let formattedDate = evt.date;
-                                  try {
-                                    const dObj = new Date(evt.date + 'T12:00:00');
-                                    formattedDate = dObj.toLocaleDateString('en-US', {
-                                      weekday: 'short',
-                                      month: 'short',
-                                      day: 'numeric'
-                                    });
-                                  } catch {}
+                                {(item.location || item.notes) && (
+                                  <div className={`text-xs ${theme.textSecondary} flex items-center gap-1`}>
+                                    {item.location && <MapPin className="w-3 h-3 shrink-0" />}
+                                    <span className="truncate">{item.location || item.notes}</span>
+                                  </div>
+                                )}
 
-                                  return (
-                                    <div
-                                      key={evt.id}
-                                      className={`p-3.5 rounded-xl border ${theme.cardSubtle} ${theme.border} flex flex-col gap-1.5 transition group hover:border-[#CBBBA8]`}
-                                    >
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className={`text-xs font-semibold flex items-center gap-1.5 ${theme.accentText}`}>
-                                          <Calendar className="w-3.5 h-3.5" />
-                                          {formattedDate}
-                                        </span>
-                                        <div className="flex items-center gap-1.5">
-                                          {evt.category && (
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${theme.badgeNeutral}`}>
-                                              {evt.category}
-                                            </span>
-                                          )}
-                                          <button
-                                            type="button"
-                                            onClick={() => handleDeleteCalendarEvent(evt.id)}
-                                            className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 p-0.5 transition"
-                                            title="Remove event"
-                                          >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                          </button>
-                                        </div>
-                                      </div>
-
-                                      <div className="font-semibold text-sm leading-snug">{evt.title}</div>
-
-                                      <div className="flex items-center gap-2 text-xs text-stone-500">
-                                        <span className="flex items-center gap-1 font-mono text-[11px]">
-                                          <Clock className="w-3 h-3" />
-                                          {evt.time}
-                                          {evt.endTime ? ` – ${evt.endTime}` : ''}
-                                        </span>
-                                        {evt.recurring && (
-                                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                                            Recurring
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      {evt.location && (
-                                        <div className={`text-xs ${theme.textSecondary} flex items-center gap-1 mt-0.5`}>
-                                          <MapPin className="w-3 h-3 shrink-0" />
-                                          <span className="truncate">{evt.location}</span>
-                                        </div>
-                                      )}
-                                      {evt.notes && (
-                                        <p className={`text-xs ${theme.textSecondary} mt-0.5 line-clamp-2 leading-relaxed`}>
-                                          {evt.notes}
-                                        </p>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                          {activeList.map(evt => (
-                            <div
-                              key={evt.id}
-                              className={`p-3.5 rounded-xl border ${
-                                evt.status === 'in_progress'
-                                  ? `${theme.accentSoft} border-[#9E5A43]/40`
-                                  : `${theme.cardSubtle} ${theme.border}`
-                              } flex flex-col gap-1 transition group`}
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <span className={`text-xs font-semibold flex items-center gap-1.5 ${theme.accentText}`}>
-                                  <Clock className="w-3.5 h-3.5" />
-                                  {evt.time}
-                                  {evt.endTime ? ` – ${evt.endTime}` : ''}
-                                </span>
-                                <div className="flex items-center gap-1.5">
-                                  {evt.category && (
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${theme.badgeNeutral}`}>
-                                      {evt.category}
-                                    </span>
-                                  )}
+                                {item.canDelete && (
                                   <button
                                     type="button"
-                                    onClick={() => handleDeleteCalendarEvent(evt.id)}
-                                    className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 p-0.5 transition"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteCalendarEvent(item.rawId);
+                                    }}
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
                                     title="Remove event"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
-                                </div>
-                              </div>
-                              <div className="font-semibold text-sm">{evt.title}</div>
-                              {evt.location && (
-                                <div className={`text-xs ${theme.textSecondary} flex items-center gap-1`}>
-                                  <MapPin className="w-3 h-3 shrink-0" />
-                                  <span>{evt.location}</span>
-                                </div>
-                              )}
-                              {evt.notes && (
-                                <p className={`text-xs ${theme.textSecondary} mt-1 leading-relaxed`}>
-                                  {evt.notes}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Completed Earlier Today Drawer */}
-                      {pastList.length > 0 && (
-                        <div className={`pt-2 border-t ${theme.border}`}>
-                          <button
-                            type="button"
-                            onClick={() => setShowPastEvents(!showPastEvents)}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl ${theme.cardSubtle} text-xs ${theme.textSecondary}`}
-                          >
-                            <span>{pastList.length} completed earlier today</span>
-                            <span>{showPastEvents ? 'Hide ▲' : 'Show ▼'}</span>
-                          </button>
-                          {showPastEvents && (
-                            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                              {pastList.map(pevt => (
-                                <div
-                                  key={pevt.id}
-                                  className={`p-2.5 rounded-xl border ${theme.border} opacity-60 text-xs flex items-center justify-between`}
-                                >
-                                  <div>
-                                    <div className="line-through font-medium">{pevt.title}</div>
-                                    <div className={theme.textMuted}>
-                                      {pevt.time} {pevt.endTime ? `– ${pevt.endTime}` : ''}
-                                    </div>
-                                  </div>
-                                  <Check className="w-4 h-4" />
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()
-              ) : (
-                /* 7-DAY WEEKLY FORECAST VIEW (CLICK TO CYCLE FORWARD TO FOLLOWING WEEK) */
-                (() => {
-                  const baseDateStr = calendar.todayDate || new Date().toISOString().split('T')[0];
-                  const baseDateObj = new Date(baseDateStr + 'T12:00:00');
-                  const sevenDayKeys = Array.from({ length: 7 }, (_, i) => {
-                    const d = new Date(baseDateObj);
-                    d.setDate(d.getDate() + calendarWeekOffset * 7 + i);
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    return `${yyyy}-${mm}-${dd}`;
-                  });
-
-                  const firstDayObj = new Date(sevenDayKeys[0] + 'T12:00:00');
-                  const lastDayObj = new Date(sevenDayKeys[6] + 'T12:00:00');
-                  const rangeLabel = `${firstDayObj.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                  })} – ${lastDayObj.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}`;
-
-                  return (
-                    <div className="flex flex-col gap-2.5">
-                      {/* Weekly Forecast Navigation Header */}
-                      <div className="flex items-center justify-between gap-2 flex-wrap px-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-xs font-semibold ${theme.textPrimary}`}>
-                            7-Day Forecast: {rangeLabel}
-                          </span>
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full border ${theme.badgeNeutral}`}>
-                            {calendarWeekOffset === 0
-                              ? 'This Week'
-                              : calendarWeekOffset === 1
-                              ? 'Following Week (+1w)'
-                              : `+${calendarWeekOffset} Weeks Ahead`}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          {calendarWeekOffset > 0 && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setCalendarWeekOffset(prev => Math.max(0, prev - 1))}
-                                className={`px-2.5 py-1 rounded-lg border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} text-[11px] font-medium transition`}
-                              >
-                                ← Prev Week
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setCalendarWeekOffset(0)}
-                                className={`px-2.5 py-1 rounded-lg border ${theme.border} ${theme.cardBg} hover:${theme.accentSoft} text-[11px] font-medium transition`}
-                              >
-                                Back to This Week
-                              </button>
-                            </>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => setCalendarWeekOffset(prev => (prev + 1) % 8)}
-                            className={`px-2.5 py-1 rounded-lg ${theme.accentSoft} border text-[11px] font-semibold flex items-center gap-1 transition`}
-                            title="Cycle forward to the following week"
-                          >
-                            <span>Next Week</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* 7-Day Columns — Click forecast to cycle forward to the following week */}
-                      <div
-                        onClick={() => setCalendarWeekOffset(prev => (prev + 1) % 8)}
-                        title="Click anywhere on the 7-day forecast to cycle forward to the following week"
-                        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 cursor-pointer select-none"
-                      >
-                        {sevenDayKeys.map(dateKey => {
-                          const dayEvents = (calendar.weekSchedule && calendar.weekSchedule[dateKey]) || [];
-                          const dObj = new Date(dateKey + 'T12:00:00');
-                          const weekdayShort = dObj.toLocaleDateString('en-US', { weekday: 'short' });
-                          const monthDay = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                          const isToday = dateKey === calendar.todayDate;
-
-                          return (
-                            <div
-                              key={dateKey}
-                              className={`p-3 rounded-xl border ${
-                                isToday ? `${theme.accentSoft}` : `${theme.cardSubtle} ${theme.border}`
-                              } flex flex-col gap-2 min-h-[150px] transition hover:border-[#CBBBA8]`}
-                            >
-                              <div className={`flex items-center justify-between text-xs font-semibold border-b ${theme.border} pb-1.5`}>
-                                <span className="flex items-center gap-1.5">
-                                  {isToday && <span className={`w-2 h-2 rounded-full ${theme.accentBg}`} />}
-                                  <span>{weekdayShort}, {monthDay}</span>
-                                </span>
-                                {isToday && (
-                                  <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5">
-                                    Today
-                                  </span>
                                 )}
                               </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()
+                ) : (
+                  /* 7-DAY WEEKLY UNIFIED FORECAST VIEW */
+                  (() => {
+                    const baseDateStr = calendar.todayDate || new Date().toISOString().split('T')[0];
+                    const baseDateObj = new Date(baseDateStr + 'T12:00:00');
+                    const sevenDayKeys = Array.from({ length: 7 }, (_, i) => {
+                      const d = new Date(baseDateObj);
+                      d.setDate(d.getDate() + calendarWeekOffset * 7 + i);
+                      const yyyy = d.getFullYear();
+                      const mm = String(d.getMonth() + 1).padStart(2, '0');
+                      const dd = String(d.getDate()).padStart(2, '0');
+                      return `${yyyy}-${mm}-${dd}`;
+                    });
 
-                              {/* If nothing scheduled for that day, leave the column below the day header completely blank */}
-                              {dayEvents.length > 0 && (
-                                <div className="space-y-1.5">
-                                  {dayEvents.map(wevt => (
-                                    <div
-                                      key={wevt.id}
-                                      className={`p-2 rounded-lg ${theme.cardBg} border ${theme.border} text-xs flex flex-col gap-0.5`}
-                                    >
-                                      <div className="flex items-center justify-between gap-1">
-                                        <span className={`font-semibold text-[11px] ${theme.accentText} truncate`}>
-                                          {wevt.time}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            handleDeleteCalendarEvent(wevt.id);
-                                          }}
-                                          className="text-stone-400 hover:text-red-500 shrink-0"
-                                          title="Delete event"
-                                        >
-                                          <X className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                      <div className="font-medium text-[#2C2520] leading-snug break-words">
-                                        {wevt.title}
-                                      </div>
-                                      {wevt.location && (
-                                        <div className={`text-[10px] ${theme.textSecondary} flex items-center gap-1 truncate`}>
-                                          <MapPin className="w-2.5 h-2.5 shrink-0" />
-                                          <span className="truncate">{wevt.location}</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
+                    const firstDayObj = new Date(sevenDayKeys[0] + 'T12:00:00');
+                    const lastDayObj = new Date(sevenDayKeys[6] + 'T12:00:00');
+                    const rangeLabel = `${firstDayObj.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric'
+                    })} – ${lastDayObj.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}`;
+
+                    return (
+                      <div className="flex flex-col gap-2.5">
+                        {/* Weekly Forecast Navigation Header */}
+                        <div className="flex items-center justify-between gap-2 flex-wrap px-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-xs font-semibold ${theme.textPrimary}`}>
+                              7-Day Master Schedule: {rangeLabel}
+                            </span>
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full border ${theme.badgeNeutral}`}>
+                              {calendarWeekOffset === 0
+                                ? 'This Week'
+                                : calendarWeekOffset === 1
+                                ? 'Following Week (+1w)'
+                                : `+${calendarWeekOffset} Weeks Ahead`}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {calendarWeekOffset > 0 && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setCalendarWeekOffset(prev => Math.max(0, prev - 1))}
+                                  className={`px-2.5 py-1 rounded-lg border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} text-[11px] font-medium transition`}
+                                >
+                                  ← Prev Week
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCalendarWeekOffset(0)}
+                                  className={`px-2.5 py-1 rounded-lg border ${theme.border} ${theme.cardBg} hover:${theme.accentSoft} text-[11px] font-medium transition`}
+                                >
+                                  This Week
+                                </button>
+                              </>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setCalendarWeekOffset(prev => (prev + 1) % 8)}
+                              className={`px-2.5 py-1 rounded-lg ${theme.accentSoft} border text-[11px] font-semibold flex items-center gap-1 transition`}
+                              title="Cycle forward to the following week"
+                            >
+                              <span>Next Week</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* 7-Day Columns (Vertically Lengthened min-h-[480px] max-h-[540px] Scrollable) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 select-none">
+                          {sevenDayKeys.map(dateKey => {
+                            const dObj = new Date(dateKey + 'T12:00:00');
+                            const weekdayShort = dObj.toLocaleDateString('en-US', { weekday: 'short' });
+                            const weekdayFull = dObj.toLocaleDateString('en-US', { weekday: 'long' });
+                            const monthDay = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            const isToday = dateKey === calendar.todayDate;
+                            const dayUnifiedItems = getUnifiedDayItems(dateKey, weekdayFull, isToday);
+
+                            return (
+                              <div
+                                key={dateKey}
+                                className={`p-2.5 rounded-xl border ${
+                                  isToday ? `${theme.accentSoft}` : `${theme.cardSubtle} ${theme.border}`
+                                } flex flex-col gap-2 min-h-[480px] max-h-[540px] transition hover:border-[#CBBBA8]`}
+                              >
+                                {/* Day Header */}
+                                <div className={`flex items-center justify-between text-xs font-semibold border-b ${theme.border} pb-1.5 shrink-0`}>
+                                  <span className="flex items-center gap-1">
+                                    {isToday && <span className={`w-2 h-2 rounded-full ${theme.accentBg}`} />}
+                                    <span>{weekdayShort}, {monthDay}</span>
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    {dayUnifiedItems.length > 0 && (
+                                      <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${theme.badgeNeutral}`}>
+                                        {dayUnifiedItems.length}
+                                      </span>
+                                    )}
+                                    {isToday && (
+                                      <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 font-semibold">
+                                        Today
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+
+                                {/* Stack of Unified Items */}
+                                <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5 scrollbar-minimal">
+                                  {dayUnifiedItems.length === 0 ? (
+                                    <div className={`h-full flex items-center justify-center text-center text-[10.5px] ${theme.textMuted} py-10 opacity-60`}>
+                                      <span>Open</span>
+                                    </div>
+                                  ) : (
+                                    dayUnifiedItems.map(item => (
+                                      <div
+                                        key={item.id}
+                                        onClick={() => {
+                                          if (item.recipeId) {
+                                            const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
+                                            if (rec) setViewingRecipe(rec);
+                                          }
+                                        }}
+                                        className={`p-2 rounded-lg ${theme.cardBg} border ${theme.border} text-xs flex flex-col gap-1 transition shadow-2xs group relative ${
+                                          item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                                          <span className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${item.badgeTheme}`}>
+                                            {item.sourceLabel}
+                                          </span>
+                                          <span className={`font-mono text-[10px] font-semibold ${theme.textSecondary}`}>
+                                            {item.time}
+                                          </span>
+                                        </div>
+
+                                        <div className="font-semibold text-[11px] leading-snug break-words text-stone-800">
+                                          {item.title}
+                                        </div>
+
+                                        {(item.location || item.notes) && (
+                                          <div className={`text-[9.5px] ${theme.textSecondary} truncate flex items-center gap-1`}>
+                                            {item.location && <MapPin className="w-2.5 h-2.5 shrink-0" />}
+                                            <span className="truncate">{item.location || item.notes}</span>
+                                          </div>
+                                        )}
+
+                                        {item.canDelete && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteCalendarEvent(item.rawId);
+                                            }}
+                                            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
+                                            title="Remove event"
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
+            </section>
+
+            {/* ============================================================== */}
+            {/* 2. RIGHT COLUMN (4 COLS): ACTION ITEMS & TASKS COLUMN          */}
+            {/* ============================================================== */}
+            <aside
+              aria-label="Action Items and Tasks"
+              className={`lg:col-span-4 w-full ${theme.cardBg} border ${theme.border} rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-3 min-h-[580px]`}
+            >
+              {/* Header */}
+              <div className={`flex items-center justify-between border-b ${theme.border} pb-3 shrink-0`}>
+                <div className="flex items-center gap-2">
+                  <div className={`p-2 rounded-xl ${theme.cardSubtle} ${theme.accentText}`}>
+                    <CheckSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-editorial text-lg sm:text-xl font-semibold leading-tight">
+                      Action Items &amp; Tasks
+                    </h3>
+                    <p className={`text-[11px] ${theme.textSecondary}`}>
+                      {activeTasks.length} pending • Synced across phone &amp; web
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Add Custom Task Form */}
+              <form onSubmit={handleAddTask} className="flex flex-col gap-2 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={newTaskInput}
+                    onChange={(e) => setNewTaskInput(e.target.value)}
+                    placeholder="Add a task (e.g. Call pediatrician)..."
+                    className={`flex-1 min-w-0 px-3 py-2 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs outline-none focus:border-[#9E5A43]`}
+                  />
+                  <button
+                    type="submit"
+                    className={`px-3 py-2 rounded-xl ${theme.accentBg} ${theme.accentHover} text-white text-xs font-semibold flex items-center gap-1 shrink-0 transition shadow-2xs`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
+                </div>
+                {/* Priority Selector Pills */}
+                <div className="flex items-center justify-between gap-1 text-[11px]">
+                  <span className={`text-[11px] ${theme.textSecondary}`}>Priority:</span>
+                  <div className="flex items-center gap-1">
+                    {['Normal', 'High', 'Urgent'].map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setNewTaskPriority(p)}
+                        className={`px-2 py-0.5 rounded-lg border text-[10px] font-semibold transition ${
+                          newTaskPriority === p
+                            ? p === 'Urgent'
+                              ? 'bg-red-50 text-red-700 border-red-300 shadow-2xs'
+                              : p === 'High'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-2xs'
+                              : `${theme.accentSoft} shadow-2xs`
+                            : `${theme.cardSubtle} ${theme.textSecondary} ${theme.border}`
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </form>
+
+              {/* Active Tasks Stack */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-minimal max-h-[480px]">
+                {activeTasks.length === 0 ? (
+                  <div className={`p-6 rounded-xl ${theme.cardSubtle} border ${theme.border} text-center space-y-1.5 my-auto py-10`}>
+                    <CheckCircle2 className={`w-6 h-6 mx-auto ${theme.accentText}`} />
+                    <div className="font-editorial text-base font-medium">All tasks completed!</div>
+                    <p className={`text-xs ${theme.textSecondary}`}>
+                      Zero action items pending. New tasks will appear automatically as you update groceries, meals, or workouts.
+                    </p>
+                  </div>
+                ) : (
+                  activeTasks.map(tsk => (
+                    <div
+                      key={tsk.id}
+                      className={`p-3 rounded-xl border text-xs transition flex items-start gap-2.5 ${
+                        tsk.priority === 'Urgent'
+                          ? 'bg-red-50/60 border-red-200 shadow-2xs'
+                          : tsk.priority === 'High'
+                          ? 'bg-amber-50/40 border-amber-200 shadow-2xs'
+                          : `${theme.cardSubtle} ${theme.border}`
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleTask(tsk.id)}
+                        className="mt-0.5 shrink-0 w-4 h-4 rounded-md border border-[#9C9084] bg-white hover:border-[#9E5A43] flex items-center justify-center transition"
+                        title="Mark as completed"
+                      >
+                        <Check className="w-3 h-3 text-[#9E5A43] opacity-0 hover:opacity-100 transition" />
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1 mb-0.5 flex-wrap">
+                          <span className="font-semibold text-stone-800 leading-snug break-words">
+                            {tsk.title}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase border ${
+                              tsk.priority === 'Urgent'
+                                ? 'bg-red-100 text-red-700 border-red-300'
+                                : tsk.priority === 'High'
+                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                : `${theme.badgeNeutral}`
+                            }`}>
+                              {tsk.priority}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTask(tsk.id)}
+                              className="text-stone-400 hover:text-red-600 p-0.5 transition"
+                              title="Remove task"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {tsk.details && (
+                          <p className={`text-[11px] ${theme.textSecondary} leading-relaxed line-clamp-2`}>
+                            {tsk.details}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
+                          <span className={`text-[10px] font-mono ${theme.textMuted}`}>
+                            {tsk.dueDate}
+                          </span>
+                          {tsk.onAction && (
+                            <button
+                              type="button"
+                              onClick={tsk.onAction}
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg border ${theme.accentSoft} transition`}
+                            >
+                              {tsk.actionLabel || 'View'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  );
-                })()
+                  ))
+                )}
+              </div>
+
+              {/* Completed Tasks Accordion */}
+              {completedTasks.length > 0 && (
+                <div className={`mt-auto pt-2 border-t ${theme.border} flex flex-col gap-1.5 shrink-0`}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCompletedTasks(!showCompletedTasks)}
+                    className={`flex items-center justify-between px-3 py-1.5 ${theme.cardSubtle} border ${theme.border} rounded-xl text-xs ${theme.textSecondary} transition`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{completedTasks.length} completed task{completedTasks.length > 1 ? 's' : ''}</span>
+                    </span>
+                    <span className={`text-[11px] font-semibold ${theme.accentText}`}>
+                      {showCompletedTasks ? '▲ Hide' : '▼ Show'}
+                    </span>
+                  </button>
+
+                  {showCompletedTasks && (
+                    <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-0.5 scrollbar-minimal">
+                      {completedTasks.map(ctsk => (
+                        <div
+                          key={ctsk.id}
+                          className={`p-2 rounded-lg border ${theme.border} ${theme.cardSubtle} opacity-70 text-xs flex items-center justify-between gap-2`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleTask(ctsk.id)}
+                              className="w-4 h-4 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0"
+                              title="Mark active again"
+                            >
+                              <Check className="w-3 h-3" />
+                            </button>
+                            <span className="line-through truncate font-medium text-stone-500">
+                              {ctsk.title}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(ctsk.id)}
+                            className="text-stone-400 hover:text-red-600 p-0.5"
+                            title="Delete completed task"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
-          </section>
+            </aside>
+          </div>
         )}
 
         {/* ================================================================= */}
@@ -2690,6 +3231,7 @@ export default function App() {
           {/* =============================================================== */}
           {(activeSection === 'all' || activeSection === 'grocery') && (
             <section
+              id="grocery-list-section"
               aria-label="Running Grocery List"
               className={`${
                 activeSection === 'grocery' ? 'lg:col-span-12 max-w-3xl mx-auto w-full' : 'lg:col-span-4'

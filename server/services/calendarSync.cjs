@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { OAuth2Client } = require('google-auth-library');
+const { pushCloudState } = require('./cloudStore.cjs');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const SCHEDULE_FILE = path.join(DATA_DIR, 'schedule.json');
@@ -126,14 +127,21 @@ async function getAccessToken() {
   }
 }
 
-function parseIcsDate(str) {
+function parseIcsDateInfo(str) {
   if (!str) return null;
   const clean = str.replace(/[^0-9TZ]/g, '');
   if (clean.length === 8) {
-    const y = parseInt(clean.slice(0, 4), 10);
-    const m = parseInt(clean.slice(4, 6), 10) - 1;
-    const d = parseInt(clean.slice(6, 8), 10);
-    return new Date(y, m, d, 0, 0, 0);
+    const y = clean.slice(0, 4);
+    const m = clean.slice(4, 6);
+    const d = clean.slice(6, 8);
+    const dateStr = `${y}-${m}-${d}`;
+    return {
+      dateObj: new Date(Date.UTC(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10), 12, 0, 0)),
+      dateStr,
+      timeStr: 'ALL DAY',
+      endTimeStr: '',
+      isAllDay: true
+    };
   }
   if (clean.endsWith('Z')) {
     const y = parseInt(clean.slice(0, 4), 10);
@@ -142,15 +150,35 @@ function parseIcsDate(str) {
     const h = parseInt(clean.slice(9, 11), 10);
     const min = parseInt(clean.slice(11, 13), 10);
     const s = parseInt(clean.slice(13, 15), 10) || 0;
-    return new Date(Date.UTC(y, m, d, h, min, s));
+    const utcDate = new Date(Date.UTC(y, m, d, h, min, s));
+    return {
+      dateObj: utcDate,
+      dateStr: formatDateEst(utcDate),
+      timeStr: formatTimeEst(utcDate),
+      isAllDay: false
+    };
   } else {
-    const y = parseInt(clean.slice(0, 4), 10);
-    const m = parseInt(clean.slice(4, 6), 10) - 1;
-    const d = parseInt(clean.slice(6, 8), 10);
-    const h = parseInt(clean.slice(9, 11), 10);
-    const min = parseInt(clean.slice(11, 13), 10);
-    return new Date(y, m, d, h, min, 0);
+    // Local timestamp (already in America/New_York)
+    const y = clean.slice(0, 4);
+    const m = clean.slice(4, 6);
+    const d = clean.slice(6, 8);
+    const h = clean.slice(9, 11);
+    const min = clean.slice(11, 13);
+    const dateStr = `${y}-${m}-${d}`;
+    const timeStr = `${h}:${min}`;
+    const dateObj = new Date(Date.UTC(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10), 12, 0, 0));
+    return {
+      dateObj,
+      dateStr,
+      timeStr,
+      isAllDay: false
+    };
   }
+}
+
+function parseIcsDate(str) {
+  const info = parseIcsDateInfo(str);
+  return info ? info.dateObj : null;
 }
 
 function formatDateEst(d) {
@@ -400,23 +428,13 @@ function parseIcsEvents(icsContent) {
     }
 
     // Single (non-recurring) event
-    let dateStr = '';
-    let timeStr = '09:00';
-    let endTimeStr = '10:00';
+    const startInfo = parseIcsDateInfo(raw.dtstart);
+    if (!startInfo) continue;
+    const endInfo = raw.dtend ? parseIcsDateInfo(raw.dtend) : null;
 
-    if (isAllDay) {
-      dateStr = `${raw.dtstart.slice(0, 4)}-${raw.dtstart.slice(4, 6)}-${raw.dtstart.slice(6, 8)}`;
-      timeStr = 'ALL DAY';
-      endTimeStr = '';
-    } else if (startDateObj && !isNaN(startDateObj.getTime())) {
-      dateStr = formatDateEst(startDateObj);
-      timeStr = formatTimeEst(startDateObj);
-      if (endDateObj && !isNaN(endDateObj.getTime())) {
-        endTimeStr = formatTimeEst(endDateObj);
-      } else {
-        endTimeStr = '';
-      }
-    }
+    const dateStr = startInfo.dateStr;
+    const timeStr = startInfo.timeStr;
+    const endTimeStr = (endInfo && !endInfo.isAllDay) ? endInfo.timeStr : '';
 
     if (dateStr) {
       parsedEvents.push({
@@ -427,7 +445,8 @@ function parseIcsEvents(icsContent) {
         title: summary,
         location: raw.location || '',
         category,
-        notes: raw.description ? raw.description.slice(0, 180) : ''
+        notes: raw.description ? raw.description.slice(0, 180) : '',
+        source: 'Google Calendar'
       });
     }
   }
@@ -437,8 +456,14 @@ function parseIcsEvents(icsContent) {
 
 async function syncIcalFeed(icalUrl) {
   try {
-    console.log(`[MackieCalendarSync] Fetching iCal feed for ${TARGET_ACCOUNT}...`);
-    const res = await fetch(icalUrl);
+    console.log(`[MackieCalendarSync] Fetching fresh iCal feed for ${TARGET_ACCOUNT}...`);
+    const cbUrl = icalUrl + (icalUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    const res = await fetch(cbUrl, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     const icsText = await res.text();
     const events = parseIcsEvents(icsText);
@@ -448,9 +473,54 @@ async function syncIcalFeed(icalUrl) {
       try { existing = JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8')); } catch (e) {}
     }
 
-    // Keep any custom events added directly on the dashboard
-    const customEvents = (existing.customEvents || []);
-    const allEvents = [...events, ...customEvents];
+    const deletedSet = new Set(existing.deletedEventIds || []);
+
+    // 1. Build an index of all existing known events to ensure nothing is ever dropped
+    const eventMap = new Map();
+    const makeKey = (e) => {
+      if (!e) return null;
+      if (e.id) return String(e.id);
+      return `${e.date || ''}_${e.time || 'all'}_${(e.title || '').trim().toLowerCase()}`;
+    };
+
+    // Load existing weekSchedule events
+    if (existing.weekSchedule && typeof existing.weekSchedule === 'object') {
+      for (const dayList of Object.values(existing.weekSchedule)) {
+        if (Array.isArray(dayList)) {
+          for (const ev of dayList) {
+            const k = makeKey(ev);
+            if (k && !deletedSet.has(ev.id)) eventMap.set(k, { ...ev, source: ev.source || 'Google Calendar' });
+          }
+        }
+      }
+    }
+
+    // Load existing events array
+    if (Array.isArray(existing.events)) {
+      for (const ev of existing.events) {
+        const k = makeKey(ev);
+        if (k && !deletedSet.has(ev.id)) eventMap.set(k, { ...ev, source: ev.source || 'Google Calendar' });
+      }
+    }
+
+    // Load existing custom events
+    const customEvents = (existing.customEvents || []).filter(e => !deletedSet.has(e.id));
+    for (const ce of customEvents) {
+      const k = makeKey(ce);
+      if (k) eventMap.set(k, { ...ce, isCustom: true });
+    }
+
+    // Overlay freshly fetched events from Google Calendar
+    for (const fe of events) {
+      if (deletedSet.has(fe.id)) continue;
+      const k = makeKey(fe);
+      if (k) {
+        const prev = eventMap.get(k) || {};
+        eventMap.set(k, { ...prev, ...fe, source: 'Google Calendar' });
+      }
+    }
+
+    const allEvents = Array.from(eventMap.values());
 
     // Build schedule for the next 60 days to support up to 8 weeks ahead
     const rangeKeys = getUpcomingDaysKeys(60);
@@ -474,17 +544,26 @@ async function syncIcalFeed(icalUrl) {
     const todayStr = rangeKeys[0];
     const todayEvents = weekSchedule[todayStr] || [];
 
+    const nowTs = Date.now();
     const scheduleData = {
       events: todayEvents,
       weekSchedule,
       customEvents,
-      lastSynced: new Date().toISOString(),
+      deletedEventIds: Array.from(deletedSet),
+      lastSynced: new Date(nowTs).toISOString(),
+      updatedAt: new Date(nowTs).toISOString(),
+      updatedAtTs: nowTs,
       source: 'Google Calendar (Live iCal Sync)',
       account: TARGET_ACCOUNT,
       authorized: true
     };
 
     fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(scheduleData, null, 2), 'utf8');
+    pushCloudState({
+      schedule: scheduleData,
+      scheduleUpdatedAt: nowTs
+    }).catch(() => {});
+
     return scheduleData;
   } catch (err) {
     console.error('[MackieCalendarSync] iCal sync error:', err.message);
@@ -719,13 +798,20 @@ async function addCalendarEvent(eventData) {
 
   const todayKey = getNext7DaysKeys()[0];
   sched.events = sched.weekSchedule[todayKey] || [];
+  sched.updatedAt = new Date().toISOString();
+  sched.updatedAtTs = Date.now();
 
   fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(sched, null, 2), 'utf8');
+  pushCloudState({ schedule: sched, scheduleUpdatedAt: sched.updatedAtTs }).catch(() => {});
   return { success: true, event: newEvent, googleSynced };
 }
 
 function deleteCalendarEvent(eventId) {
   let sched = ensureDefaultSchedule();
+  sched.deletedEventIds = sched.deletedEventIds || [];
+  if (eventId && !sched.deletedEventIds.includes(eventId)) {
+    sched.deletedEventIds.push(eventId);
+  }
   sched.customEvents = (sched.customEvents || []).filter(e => e.id !== eventId);
   if (sched.weekSchedule) {
     for (const k of Object.keys(sched.weekSchedule)) {
@@ -733,7 +819,10 @@ function deleteCalendarEvent(eventId) {
     }
   }
   sched.events = (sched.events || []).filter(e => e.id !== eventId);
+  sched.updatedAt = new Date().toISOString();
+  sched.updatedAtTs = Date.now();
   fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(sched, null, 2), 'utf8');
+  pushCloudState({ schedule: sched, scheduleUpdatedAt: sched.updatedAtTs }).catch(() => {});
   return { success: true };
 }
 

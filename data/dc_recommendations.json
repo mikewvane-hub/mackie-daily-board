@@ -2,7 +2,7 @@
   "city": "Downtown Washington, D.C.",
   "cycleWeekNumber": 41,
   "activeCycleGroup": 2,
-  "updatedAt": "2026-10-18T15:23:54.341Z",
+  "updatedAt": "2026-10-19T02:21:09.759Z",
   "recommendations": [
     {
       "id": "dc-library-of-congress",
@@ -18,7 +18,7 @@
       "url": "https://www.loc.gov/visit/",
       "linkVerified": true,
       "httpStatus": 200,
-      "verifiedAt": "2026-10-18T15:23:49.004Z"
+      "verifiedAt": "2026-10-19T02:21:04.581Z"
     },
     {
       "id": "dc-union-market-district",
@@ -34,7 +34,7 @@
       "url": "https://unionmarketdc.com/events/",
       "linkVerified": true,
       "httpStatus": 200,
-      "verifiedAt": "2026-10-18T15:23:49.223Z"
+      "verifiedAt": "2026-10-19T02:21:04.669Z"
     },
     {
       "id": "dc-hirshhorn-garden",
@@ -50,7 +50,7 @@
       "url": "https://hirshhorn.si.edu/explore/visit/",
       "linkVerified": false,
       "httpStatus": 403,
-      "verifiedAt": "2026-10-18T15:23:49.328Z"
+      "verifiedAt": "2026-10-19T02:21:04.748Z"
     },
     {
       "id": "dc-national-arboretum",
@@ -66,7 +66,7 @@
       "url": "https://www.usna.usda.gov/visit/",
       "linkVerified": false,
       "httpStatus": 200,
-      "verifiedAt": "2026-10-18T15:23:54.341Z"
+      "verifiedAt": "2026-10-19T02:21:09.758Z"
     }
   ]
 }

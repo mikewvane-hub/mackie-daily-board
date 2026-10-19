@@ -50,6 +50,7 @@ const BABY_TRACKER_FILE = path.join(DATA_DIR, 'baby_tracker.json');
 const SUGGESTIONS_FILE = path.join(DATA_DIR, 'suggestions.json');
 const HEALTH_FITNESS_FILE = path.join(DATA_DIR, 'health_fitness.json');
 const OURA_CONFIG_FILE = path.join(DATA_DIR, 'oura_config.json');
+const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
 
 app.use(cors());
 app.use(express.json());
@@ -322,6 +323,39 @@ function saveCalConfigAndSync(configData) {
   return nowTs;
 }
 
+function getDefaultTasksData() {
+  return {
+    customTasks: [],
+    completedTaskIds: [],
+    deletedTaskIds: [],
+    updatedAt: new Date().toISOString(),
+    updatedAtTs: Date.now()
+  };
+}
+
+function getTasksState() {
+  const t = readJson(TASKS_FILE, getDefaultTasksData());
+  return {
+    customTasks: Array.isArray(t.customTasks) ? t.customTasks : [],
+    completedTaskIds: Array.isArray(t.completedTaskIds) ? t.completedTaskIds : [],
+    deletedTaskIds: Array.isArray(t.deletedTaskIds) ? t.deletedTaskIds : [],
+    updatedAt: t.updatedAt || new Date().toISOString(),
+    updatedAtTs: Number(t.updatedAtTs) || 0
+  };
+}
+
+function saveTasksAndSync(tasksData) {
+  const nowTs = Date.now();
+  tasksData.updatedAt = new Date(nowTs).toISOString();
+  tasksData.updatedAtTs = nowTs;
+  writeJson(TASKS_FILE, tasksData);
+  pushCloudState({
+    tasks: tasksData,
+    tasksUpdatedAt: nowTs
+  }).catch(() => {});
+  return nowTs;
+}
+
 async function hydrateBoardFromCloud(force = false) {
   try {
     const cloud = await pullCloudState(force);
@@ -421,6 +455,18 @@ async function hydrateBoardFromCloud(force = false) {
         updatedAtTs: cloudOuraCfgTs
       });
     }
+
+    // 9. Hydrate Tasks if cloud has newer state
+    const localTasks = getTasksState();
+    const localTasksTs = Number(localTasks.updatedAtTs) || 0;
+    const cloudTasksTs = Number(cloud.tasksUpdatedAt) || 0;
+    if (cloud.tasks && (cloudTasksTs > localTasksTs || (localTasksTs === 0 && (cloud.tasks.customTasks || []).length > 0))) {
+      writeJson(TASKS_FILE, {
+        ...localTasks,
+        ...cloud.tasks,
+        updatedAtTs: cloudTasksTs || Date.now()
+      });
+    }
   } catch (err) {
     console.warn('[HydrateCloud] warning:', err.message);
   }
@@ -454,6 +500,7 @@ app.get('/api/board', async (req, res) => {
   const mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAt: null, updatedAtTs: 0 });
   const groceryData = readJson(GROCERY_FILE, { items: [], updatedAt: null, updatedAtTs: 0 });
   const healthFitnessData = readJson(HEALTH_FITNESS_FILE, getDefaultHealthFitnessData());
+  const tasksData = getTasksState();
   const tunnelInfo = readJson(TUNNEL_FILE, { url: null });
   const suggestionsData = typeof loadSuggestionsState === 'function'
     ? loadSuggestionsState()
@@ -477,12 +524,14 @@ app.get('/api/board', async (req, res) => {
       mealPlanUpdatedAt: Number(mealPlanData.updatedAtTs) || 0,
       groceryUpdatedAt: Number(groceryData.updatedAtTs) || 0,
       healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0,
+      tasksUpdatedAt: Number(tasksData.updatedAtTs) || 0,
       scheduleUpdatedAt: Number(scheduleData.updatedAtTs) || 0
     },
     calendar: enrichScheduleEvents(scheduleData),
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
     groceryList: groceryData.items || [],
     healthFitness: healthFitnessData,
+    tasks: tasksData,
     suggestions: suggestionsData.items || []
   });
 });
@@ -499,7 +548,9 @@ app.post('/api/board/sync', async (req, res) => {
     healthFitness: incomingHealthFitness,
     healthFitnessUpdatedAt: incomingHfTs,
     babyTracker: incomingBabyTracker,
-    babyTrackerUpdatedAt: incomingBtTs
+    babyTrackerUpdatedAt: incomingBtTs,
+    tasks: incomingTasks,
+    tasksUpdatedAt: incomingTasksTs
   } = req.body || {};
 
   let mealPlanData = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
@@ -577,6 +628,23 @@ app.post('/api/board/sync', async (req, res) => {
     }).catch(() => {});
   }
 
+  let tasksData = getTasksState();
+  const curTasksTs = Number(tasksData.updatedAtTs) || 0;
+  const incTasksTs = Number(incomingTasksTs) || 0;
+  if (incomingTasks && typeof incomingTasks === 'object' && incTasksTs > curTasksTs) {
+    tasksData = {
+      ...tasksData,
+      ...incomingTasks,
+      updatedAt: new Date(incTasksTs || Date.now()).toISOString(),
+      updatedAtTs: incTasksTs || Date.now()
+    };
+    writeJson(TASKS_FILE, tasksData);
+    pushCloudState({
+      tasks: tasksData,
+      tasksUpdatedAt: tasksData.updatedAtTs
+    }).catch(() => {});
+  }
+
   res.json({
     success: true,
     mealPlan: mealPlanData.days || getEmptyMealPlan(),
@@ -586,7 +654,9 @@ app.post('/api/board/sync', async (req, res) => {
     healthFitness: healthFitnessData,
     healthFitnessUpdatedAt: Number(healthFitnessData.updatedAtTs) || 0,
     babyTracker: babyTrackerData,
-    babyTrackerUpdatedAt: Number(babyTrackerData?.updatedAtTs) || 0
+    babyTrackerUpdatedAt: Number(babyTrackerData?.updatedAtTs) || 0,
+    tasks: tasksData,
+    tasksUpdatedAt: Number(tasksData.updatedAtTs) || 0
   });
 });
 
@@ -2413,6 +2483,143 @@ app.delete('/api/suggestions/:id', async (req, res) => {
     suggestions: state.items,
     deletedIds: state.deletedIds
   });
+});
+
+// ============================================================================
+// Action Items & Tasks Endpoints
+// ============================================================================
+app.get('/api/tasks', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const tasksState = getTasksState();
+  res.json({
+    success: true,
+    tasks: tasksState
+  });
+});
+
+app.post('/api/tasks', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const { text, priority, category, dueDate } = req.body || {};
+  const cleanText = String(text || '').trim();
+  if (!cleanText) {
+    return res.status(400).json({ success: false, error: 'Task text is required' });
+  }
+
+  const validPriorities = ['Urgent', 'High', 'Normal'];
+  const cleanPriority = validPriorities.includes(priority) ? priority : 'Normal';
+
+  const newTask = {
+    id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    text: cleanText,
+    priority: cleanPriority,
+    category: String(category || 'General').trim(),
+    dueDate: dueDate || null,
+    completed: false,
+    createdAt: new Date().toISOString()
+  };
+
+  const tasksData = getTasksState();
+  tasksData.customTasks = Array.isArray(tasksData.customTasks) ? tasksData.customTasks : [];
+  tasksData.completedTaskIds = Array.isArray(tasksData.completedTaskIds) ? tasksData.completedTaskIds : [];
+  tasksData.deletedTaskIds = Array.isArray(tasksData.deletedTaskIds) ? tasksData.deletedTaskIds : [];
+
+  // Remove from deleted list if present
+  tasksData.deletedTaskIds = tasksData.deletedTaskIds.filter(id => id !== newTask.id);
+  tasksData.customTasks.unshift(newTask);
+
+  saveTasksAndSync(tasksData);
+
+  res.json({
+    success: true,
+    task: newTask,
+    tasks: tasksData
+  });
+});
+
+app.post('/api/tasks/toggle', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const { id, completed } = req.body || {};
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'Task ID is required' });
+  }
+
+  const tasksData = getTasksState();
+  tasksData.customTasks = Array.isArray(tasksData.customTasks) ? tasksData.customTasks : [];
+  tasksData.completedTaskIds = Array.isArray(tasksData.completedTaskIds) ? tasksData.completedTaskIds : [];
+
+  const shouldBeCompleted = completed !== undefined ? Boolean(completed) : !tasksData.completedTaskIds.includes(id);
+
+  if (shouldBeCompleted) {
+    if (!tasksData.completedTaskIds.includes(id)) {
+      tasksData.completedTaskIds.push(id);
+    }
+  } else {
+    tasksData.completedTaskIds = tasksData.completedTaskIds.filter(tid => tid !== id);
+  }
+
+  // Also update in customTasks if it is a custom task
+  tasksData.customTasks = tasksData.customTasks.map(task => {
+    if (task.id === id) {
+      return { ...task, completed: shouldBeCompleted };
+    }
+    return task;
+  });
+
+  saveTasksAndSync(tasksData);
+
+  res.json({
+    success: true,
+    tasks: tasksData
+  });
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const targetId = req.params.id;
+  if (!targetId) {
+    return res.status(400).json({ success: false, error: 'Task ID is required' });
+  }
+
+  const tasksData = getTasksState();
+  tasksData.customTasks = Array.isArray(tasksData.customTasks) ? tasksData.customTasks : [];
+  tasksData.completedTaskIds = Array.isArray(tasksData.completedTaskIds) ? tasksData.completedTaskIds : [];
+  tasksData.deletedTaskIds = Array.isArray(tasksData.deletedTaskIds) ? tasksData.deletedTaskIds : [];
+
+  tasksData.customTasks = tasksData.customTasks.filter(t => t.id !== targetId);
+  tasksData.completedTaskIds = tasksData.completedTaskIds.filter(id => id !== targetId);
+  if (!tasksData.deletedTaskIds.includes(targetId)) {
+    tasksData.deletedTaskIds.push(targetId);
+  }
+
+  saveTasksAndSync(tasksData);
+
+  res.json({
+    success: true,
+    tasks: tasksData
+  });
+});
+
+app.post('/api/tasks/sync', async (req, res) => {
+  await hydrateBoardFromCloud(false);
+  const { customTasks, completedTaskIds, deletedTaskIds, updatedAtTs } = req.body || {};
+
+  const current = getTasksState();
+  const incTs = Number(updatedAtTs) || 0;
+  const curTs = Number(current.updatedAtTs) || 0;
+
+  if (incTs >= curTs) {
+    const updated = {
+      customTasks: Array.isArray(customTasks) ? customTasks : current.customTasks,
+      completedTaskIds: Array.isArray(completedTaskIds) ? completedTaskIds : current.completedTaskIds,
+      deletedTaskIds: Array.isArray(deletedTaskIds) ? deletedTaskIds : current.deletedTaskIds,
+      updatedAt: new Date(incTs || Date.now()).toISOString(),
+      updatedAtTs: incTs || Date.now()
+    };
+    saveTasksAndSync(updated);
+    return res.json({ success: true, tasks: updated });
+  }
+
+  res.json({ success: true, tasks: current });
 });
 
 // Hydrate from permanent GitHub Cloud Store immediately on boot (for both Render & Local PC)
