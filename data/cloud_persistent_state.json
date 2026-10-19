@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792423231871,
-  "mealPlanUpdatedAt": 1792336427257,
+  "updatedAt": 1792423269570,
+  "mealPlanUpdatedAt": 1792423269565,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -54,17 +54,7 @@
     ],
     "Friday": [],
     "Saturday": [],
-    "Sunday": [
-      {
-        "instanceId": "meal-1792265079351-zqns",
-        "recipeId": null,
-        "title": "Brats",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-17T19:24:39.351Z"
-      }
-    ]
+    "Sunday": []
   },
   "groceryList": [
     {
