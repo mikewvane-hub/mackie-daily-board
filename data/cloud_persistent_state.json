@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792376465828,
+  "updatedAt": 1792376514121,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792361848920,
@@ -20591,5 +20591,23 @@
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1792376465820
+  "scheduleUpdatedAt": 1792376465820,
+  "tasks": {
+    "customTasks": [
+      {
+        "id": "task-1792376514119-l4gi",
+        "text": "Pack diaper bag for stroller walk",
+        "priority": "High",
+        "category": "General",
+        "dueDate": null,
+        "completed": false,
+        "createdAt": "2026-10-19T02:21:54.119Z"
+      }
+    ],
+    "completedTaskIds": [],
+    "deletedTaskIds": [],
+    "updatedAt": "2026-10-19T02:21:54.120Z",
+    "updatedAtTs": 1792376514120
+  },
+  "tasksUpdatedAt": 1792376514120
 }
