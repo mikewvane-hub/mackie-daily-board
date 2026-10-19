@@ -1423,21 +1423,21 @@ export default function App() {
   // Active Postpartum Timeline Recommendations
   // --------------------------------------------------------------------------
   const activePostpartumPhase = useMemo(() => {
-    const delivery = new Date((boardData?.healthFitness?.deliveryDate || '2026-11-03') + 'T12:00:00');
+    const deliveryDateStr = boardData?.healthFitness?.deliveryDate || '2026-11-03';
+    const delivery = new Date(deliveryDateStr + 'T12:00:00');
     const now = currentTime || new Date();
     const diffDays = Math.floor((now.getTime() - delivery.getTime()) / (1000 * 60 * 60 * 24));
-    const diffWeeks = Math.floor(diffDays / 7);
 
-    if (diffWeeks < 1) {
-      return (
-        POSTPARTUM_TIMELINE_PHASES.find(p => p.id === 'weeks-1-2') ||
-        POSTPARTUM_TIMELINE_PHASES[0]
-      );
+    // Do NOT recommend postpartum items until after 03NOV her due date
+    if (diffDays <= 0) {
+      return null;
     }
+
+    const diffWeeks = Math.floor(diffDays / 7);
     const match = POSTPARTUM_TIMELINE_PHASES.find(
       p => diffWeeks >= p.minWeek && diffWeeks <= p.maxWeek
     );
-    return match || POSTPARTUM_TIMELINE_PHASES[POSTPARTUM_TIMELINE_PHASES.length - 1];
+    return match || POSTPARTUM_TIMELINE_PHASES[0];
   }, [boardData?.healthFitness?.deliveryDate, currentTime]);
 
   // --------------------------------------------------------------------------
@@ -1537,44 +1537,56 @@ export default function App() {
       });
     });
 
-    // 4. Postpartum activity timeline recommendations
-    if (activePostpartumPhase) {
-      const walkDur = activePostpartumPhase.walkingRec?.duration || '20–30 mins';
-      const stretchName = activePostpartumPhase.stretches?.[0] || 'Core & Pelvic Floor Reconnection';
+    // 4. Postpartum activity timeline recommendations (only after 03NOV due date)
+    const deliveryDateStr = boardData?.healthFitness?.deliveryDate || '2026-11-03';
+    if (dateKey > deliveryDateStr) {
+      const dayObj = new Date(dateKey + 'T12:00:00');
+      const delObj = new Date(deliveryDateStr + 'T12:00:00');
+      const diffDays = Math.floor((dayObj.getTime() - delObj.getTime()) / (1000 * 60 * 60 * 24));
+      const diffWeeks = Math.floor(diffDays / 7);
 
-      items.push({
-        id: `pp-walk-${dateKey}`,
-        source: 'postpartum',
-        sourceLabel: 'Postpartum Care',
-        shortLabel: 'Care',
-        title: `🚶‍♀️ Gentle Walk (${walkDur})`,
-        time: '11:00',
-        endTime: null,
-        location: 'Neighborhood / Stroller',
-        notes: activePostpartumPhase.walkingRec?.details || 'Daily activity timeline recommendation',
-        badgeTheme: 'bg-rose-50 text-rose-800 border-rose-200/80',
-        borderAccent: 'border-l-rose-400',
-        bgAccent: 'bg-rose-50/30 hover:bg-rose-50/60',
-        dotColor: 'bg-rose-500',
-        canDelete: false
-      });
+      const phaseForDay = POSTPARTUM_TIMELINE_PHASES.find(
+        p => diffWeeks >= p.minWeek && diffWeeks <= p.maxWeek
+      ) || POSTPARTUM_TIMELINE_PHASES[0];
 
-      items.push({
-        id: `pp-stretch-${dateKey}`,
-        source: 'postpartum',
-        sourceLabel: 'Postpartum Care',
-        shortLabel: 'Care',
-        title: `🧘 ${stretchName}`,
-        time: '15:00',
-        endTime: null,
-        location: null,
-        notes: 'Relieves nursing posture tightness and supports core recovery',
-        badgeTheme: 'bg-purple-50 text-purple-800 border-purple-200/80',
-        borderAccent: 'border-l-purple-400',
-        bgAccent: 'bg-purple-50/30 hover:bg-purple-50/60',
-        dotColor: 'bg-purple-500',
-        canDelete: false
-      });
+      if (phaseForDay) {
+        const walkDur = phaseForDay.walkingRec?.duration || '20–30 mins';
+        const stretchName = phaseForDay.stretches?.[0] || 'Core & Pelvic Floor Reconnection';
+
+        items.push({
+          id: `pp-walk-${dateKey}`,
+          source: 'postpartum',
+          sourceLabel: 'Postpartum Care',
+          shortLabel: 'Care',
+          title: `🚶‍♀️ Gentle Walk (${walkDur})`,
+          time: '11:00',
+          endTime: null,
+          location: 'Neighborhood / Stroller',
+          notes: phaseForDay.walkingRec?.details || 'Daily activity timeline recommendation',
+          badgeTheme: 'bg-rose-50 text-rose-800 border-rose-200/80',
+          borderAccent: 'border-l-rose-400',
+          bgAccent: 'bg-rose-50/30 hover:bg-rose-50/60',
+          dotColor: 'bg-rose-500',
+          canDelete: false
+        });
+
+        items.push({
+          id: `pp-stretch-${dateKey}`,
+          source: 'postpartum',
+          sourceLabel: 'Postpartum Care',
+          shortLabel: 'Care',
+          title: `🧘 ${stretchName}`,
+          time: '15:00',
+          endTime: null,
+          location: null,
+          notes: 'Relieves nursing posture tightness and supports core recovery',
+          badgeTheme: 'bg-purple-50 text-purple-800 border-purple-200/80',
+          borderAccent: 'border-l-purple-400',
+          bgAccent: 'bg-purple-50/30 hover:bg-purple-50/60',
+          dotColor: 'bg-purple-500',
+          canDelete: false
+        });
+      }
     }
 
     // Sort chronologically by time
