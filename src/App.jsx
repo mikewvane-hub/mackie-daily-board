@@ -301,7 +301,15 @@ export default function App() {
   });
   const [newTaskInput, setNewTaskInput] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('Normal');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [addTaskModalDate, setAddTaskModalDate] = useState('');
+  const [addTaskModalText, setAddTaskModalText] = useState('');
+  const [addTaskModalPriority, setAddTaskModalPriority] = useState('Normal');
+  const [addTaskModalCategory, setAddTaskModalCategory] = useState('General');
+  const [addTaskModalTime, setAddTaskModalTime] = useState('09:00');
+  const [addTaskModalIsAllDay, setAddTaskModalIsAllDay] = useState(true);
 
   const CLOUD_MACKIE_SUGGESTIONS_BASE = 'https://daily-executive-dashboard.onrender.com/mackie/api';
 
@@ -1509,17 +1517,26 @@ export default function App() {
   // --------------------------------------------------------------------------
   // Action Items & Tasks Handlers (Mackie's To-Do List)
   // --------------------------------------------------------------------------
-  const handleAddTask = async (e) => {
-    if (e) e.preventDefault();
-    const text = newTaskInput.trim();
-    if (!text) return;
+  const handleCreateTask = async ({
+    text,
+    priority = 'Normal',
+    category = 'General',
+    dueDate,
+    time = 'All Day',
+    isAllDay = true
+  }) => {
+    const cleanText = String(text || '').trim();
+    if (!cleanText) return;
     const nowTs = Date.now();
+    const dateStr = dueDate || calendar.todayDate || new Date().toISOString().split('T')[0];
     const newTask = {
       id: `task-${nowTs}-${Math.random().toString(36).slice(2, 6)}`,
-      text,
-      priority: newTaskPriority,
-      category: 'General',
-      dueDate: 'Today',
+      text: cleanText,
+      priority,
+      category,
+      dueDate: dateStr,
+      time: isAllDay ? 'All Day' : (time || 'All Day'),
+      isAllDay,
       completed: false,
       createdAt: new Date().toISOString()
     };
@@ -1530,12 +1547,18 @@ export default function App() {
       updatedAtTs: nowTs
     };
     setTasksState(nextTasks);
-    setNewTaskInput('');
     try {
       localStorage.setItem('mackie_tasks_state_v1', JSON.stringify(nextTasks));
       localStorage.setItem('mackie_tasks_updated_at', String(nowTs));
     } catch {}
-    showToast(`Added task: "${text}"`);
+
+    const dayFormatted = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+    showToast(`Added action item for ${dayFormatted}: "${cleanText}"`);
+
     try {
       await fetch(`${API_BASE}/tasks`, {
         method: 'POST',
@@ -1545,6 +1568,69 @@ export default function App() {
     } catch (err) {
       console.warn('[Tasks] Add error:', err.message);
     }
+  };
+
+  const handleAddTask = async (e) => {
+    if (e) e.preventDefault();
+    if (!newTaskInput.trim()) return;
+    await handleCreateTask({
+      text: newTaskInput,
+      priority: newTaskPriority,
+      dueDate: newTaskDueDate || calendar.todayDate || new Date().toISOString().split('T')[0]
+    });
+    setNewTaskInput('');
+    setNewTaskDueDate('');
+  };
+
+  const handleAddTaskModalSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!addTaskModalText.trim()) return;
+    await handleCreateTask({
+      text: addTaskModalText,
+      priority: addTaskModalPriority,
+      category: addTaskModalCategory,
+      dueDate: addTaskModalDate || calendar.todayDate || new Date().toISOString().split('T')[0],
+      time: addTaskModalIsAllDay ? 'All Day' : (addTaskModalTime || '09:00'),
+      isAllDay: addTaskModalIsAllDay
+    });
+    setAddTaskModalText('');
+    setAddTaskModalDate('');
+    setShowAddTaskModal(false);
+  };
+
+  const isTaskDueOnDate = (task, dateKey, weekdayName, isToday) => {
+    if (!task) return false;
+    const d = String(task.dueDate || '').trim();
+    if (!d || d === 'Today' || d === 'Today / This Week' || d === 'To-Do') {
+      return isToday;
+    }
+    if (d === dateKey) return true;
+    if (d.toLowerCase() === 'tomorrow') {
+      const todayObj = new Date((calendar.todayDate || new Date().toISOString().split('T')[0]) + 'T12:00:00');
+      todayObj.setDate(todayObj.getDate() + 1);
+      const yyyy = todayObj.getFullYear();
+      const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
+      const dd = String(todayObj.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}` === dateKey;
+    }
+    if (weekdayName && d.toLowerCase() === weekdayName.toLowerCase()) {
+      return true;
+    }
+    return false;
+  };
+
+  const formatTaskDueDateLabel = (dueDateStr) => {
+    if (!dueDateStr) return 'Today';
+    const clean = String(dueDateStr).trim();
+    if (clean === 'Today' || clean === 'Today / This Week' || clean === 'To-Do') return 'Today';
+    if (clean.toLowerCase() === 'tomorrow') return 'Tomorrow';
+    const todayStr = calendar.todayDate || new Date().toISOString().split('T')[0];
+    if (clean === todayStr) return 'Today';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+      const dObj = new Date(clean + 'T12:00:00');
+      return dObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    return clean;
   };
 
   const handleToggleTask = async (taskId) => {
@@ -1859,24 +1945,47 @@ export default function App() {
     // 6. Action Items / Tasks scheduled for this date or today
     const customTasks = tasksState.customTasks || [];
     for (const t of customTasks) {
-      if (!t.completed && (t.dueDate === dateKey || (isToday && (!t.dueDate || t.dueDate === 'Today' || t.dueDate === 'Today / This Week')))) {
+      if (isTaskDueOnDate(t, dateKey, weekdayName, isToday)) {
+        const isCompleted = (tasksState.completedTaskIds || []).includes(t.id) || Boolean(t.completed);
+        const isAllDay = !t.time || t.time === 'All Day' || /all[\s-]*day/i.test(String(t.time));
+        const isUrgent = t.priority === 'Urgent';
+        const isHigh = t.priority === 'High';
+
         items.push({
           id: `task-cal-${t.id}`,
           rawId: t.id,
           source: 'task',
           sourceLabel: 'Action Item',
           shortLabel: 'Task',
-          title: `☑️ ${t.text}`,
-          time: 'All Day',
-          isAllDay: true,
+          title: t.text || t.title,
+          time: isAllDay ? 'All Day' : t.time,
+          isAllDay,
           endTime: null,
           location: null,
           notes: `${t.priority || 'Normal'} priority • ${t.category || 'General'}`,
-          badgeTheme: 'bg-indigo-50 text-indigo-800 border-indigo-200/80',
-          borderAccent: 'border-l-indigo-500',
-          bgAccent: 'bg-indigo-50/30 hover:bg-indigo-50/60',
-          dotColor: 'bg-indigo-500',
-          canDelete: false
+          priority: t.priority || 'Normal',
+          category: t.category || 'General',
+          badgeTheme: isUrgent
+            ? 'bg-red-100 text-red-900 border-red-300 font-extrabold'
+            : isHigh
+            ? 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold'
+            : 'bg-purple-100 text-purple-900 border-purple-300 font-extrabold',
+          borderAccent: isUrgent
+            ? 'border-l-red-500'
+            : isHigh
+            ? 'border-l-amber-500'
+            : 'border-l-purple-600',
+          bgAccent: isCompleted
+            ? 'bg-stone-100/70 border-stone-200 opacity-60'
+            : isUrgent
+            ? 'bg-red-50/85 hover:bg-red-100/70 border-red-200 shadow-2xs'
+            : isHigh
+            ? 'bg-amber-50/85 hover:bg-amber-100/70 border-amber-200 shadow-2xs'
+            : 'bg-purple-50/85 hover:bg-purple-100/75 border-purple-200/90 shadow-2xs',
+          dotColor: isUrgent ? 'bg-red-500' : isHigh ? 'bg-amber-500' : 'bg-purple-600',
+          canDelete: true,
+          isTask: true,
+          isCompleted
         });
       }
     }
@@ -1887,6 +1996,11 @@ export default function App() {
       const bAll = isAllDayItem(b);
       if (aAll && !bAll) return -1;
       if (!aAll && bAll) return 1;
+      // If both are all-day, place action items/tasks at the very top for clear visibility
+      if (aAll && bAll) {
+        if (a.isTask && !b.isTask) return -1;
+        if (!a.isTask && b.isTask) return 1;
+      }
       const mA = parseTimeToMinutes(a.time);
       const mB = parseTimeToMinutes(b.time);
       if (mA !== mB) return mA - mB;
@@ -2294,6 +2408,11 @@ export default function App() {
                       Google Cal
                     </span>
                     <span className="text-stone-300">•</span>
+                    <span className="flex items-center gap-1 text-purple-700 font-semibold">
+                      <span className="w-2 h-2 rounded-full bg-purple-600" />
+                      Action Item
+                    </span>
+                    <span className="text-stone-300">•</span>
                     <span className="flex items-center gap-1 text-emerald-700 font-semibold">
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       Meal Plan
@@ -2394,16 +2513,32 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Add Event Button */}
-                  <button
-                    type="button"
-                    onClick={() => setShowAddEventModal(true)}
-                    className={`p-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} transition`}
-                    title="Add Calendar Event"
-                    aria-label="Add Calendar Event"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
+                  {/* Add Action Item / Task & Add Event Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddTaskModalDate(calendar.todayDate || new Date().toISOString().split('T')[0]);
+                        setShowAddTaskModal(true);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200/90 text-xs font-semibold shadow-2xs transition"
+                      title="Add an Action Item / Task for a set day on the calendar"
+                    >
+                      <CheckSquare className="w-3.5 h-3.5 text-purple-700" />
+                      <span>+ Task</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowAddEventModal(true)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border ${theme.border} ${theme.cardSubtle} hover:${theme.accentSoft} text-xs font-medium transition shadow-2xs`}
+                      title="Add Calendar Event"
+                      aria-label="Add Calendar Event"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Event</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2471,66 +2606,153 @@ export default function App() {
                           </div>
                         ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                            {todayUnifiedItems.map(item => (
-                              <div
-                                key={item.id}
-                                onClick={() => {
-                                  if (item.recipeId) {
-                                    const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
-                                    if (rec) setViewingRecipe(rec);
-                                  }
-                                }}
-                                className={`border-l-[3.5px] ${item.borderAccent || 'border-l-stone-400'} ${
-                                  item.bgAccent || theme.cardSubtle
-                                } ${
-                                  calendarFontSize === 'compact' ? 'p-2.5 rounded-xl' : 'p-3.5 rounded-2xl'
-                                } border-t border-r border-b ${theme.border} flex flex-col gap-1 transition shadow-2xs group relative ${
-                                  item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
-                                }`}
-                              >
-                                <div className="flex items-center justify-between gap-1 flex-wrap">
-                                  <span className={`${
-                                    calendarFontSize === 'compact' ? 'text-[8.5px] px-1.5 py-0.2' : 'text-[9.5px] px-2 py-0.5'
-                                  } font-bold rounded-full border uppercase tracking-wider ${item.badgeTheme}`}>
-                                    {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
-                                  </span>
-                                  <span className={`font-mono ${
-                                    calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[11px]'
-                                  } font-semibold ${theme.textSecondary}`}>
-                                    {isAllDayItem(item) ? 'All Day' : `${item.time}${item.endTime ? ` – ${item.endTime}` : ''}`}
-                                  </span>
-                                </div>
-
-                                <div className={`font-semibold ${
-                                  calendarFontSize === 'compact' ? 'text-xs leading-snug' : 'text-sm leading-snug'
-                                } break-words text-stone-800`}>
-                                  {item.title}
-                                </div>
-
-                                {(item.location || item.notes) && (
-                                  <div className={`${
-                                    calendarFontSize === 'compact' ? 'text-[10px]' : 'text-xs'
-                                  } ${theme.textSecondary} flex items-center gap-1`}>
-                                    {item.location && <MapPin className="w-3 h-3 shrink-0" />}
-                                    <span className="truncate">{item.location || item.notes}</span>
-                                  </div>
-                                )}
-
-                                {item.canDelete && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteCalendarEvent(item.rawId);
-                                    }}
-                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
-                                    title="Remove event"
+                            {todayUnifiedItems.map(item => {
+                              if (item.isTask) {
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`border-l-[4px] ${item.borderAccent} ${item.bgAccent} ${
+                                      calendarFontSize === 'compact' ? 'p-2.5 rounded-xl' : 'p-3 rounded-2xl'
+                                    } border-t border-r border-b ${theme.border} flex flex-col gap-1.5 transition shadow-2xs group relative`}
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+                                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className={`${
+                                          calendarFontSize === 'compact' ? 'text-[8.5px] px-2 py-0.5' : 'text-[9.5px] px-2.5 py-0.5'
+                                        } font-extrabold rounded-full border uppercase tracking-wider ${item.badgeTheme} flex items-center gap-1 shadow-2xs`}>
+                                          <CheckSquare className="w-3 h-3 text-purple-700" />
+                                          <span>{item.sourceLabel}</span>
+                                        </span>
+                                        {item.priority && item.priority !== 'Normal' && (
+                                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase border ${
+                                            item.priority === 'Urgent'
+                                              ? 'bg-red-100 text-red-700 border-red-300'
+                                              : 'bg-amber-100 text-amber-800 border-amber-300'
+                                          }`}>
+                                            {item.priority}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className={`font-mono ${
+                                        calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[11px]'
+                                      } font-bold text-purple-900/80`}>
+                                        {item.time}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-start gap-2">
+                                      {/* Interactive Checkbox */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleToggleTask(item.rawId);
+                                        }}
+                                        className={`mt-0.5 shrink-0 w-4 h-4 rounded border transition flex items-center justify-center ${
+                                          item.isCompleted
+                                            ? 'bg-purple-600 border-purple-600 text-white shadow-2xs'
+                                            : 'bg-white border-purple-400 hover:border-purple-600'
+                                        }`}
+                                        title={item.isCompleted ? 'Mark as incomplete' : 'Mark as completed'}
+                                      >
+                                        {item.isCompleted ? (
+                                          <Check className="w-3 h-3 stroke-[3]" />
+                                        ) : (
+                                          <Check className="w-3 h-3 text-purple-600 opacity-0 hover:opacity-100 transition" />
+                                        )}
+                                      </button>
+
+                                      <div className={`font-semibold ${
+                                        calendarFontSize === 'compact' ? 'text-xs leading-snug' : 'text-sm leading-snug'
+                                      } break-words flex-1 min-w-0 ${item.isCompleted ? 'line-through text-stone-400 opacity-60' : 'text-purple-950 font-bold'}`}>
+                                        {item.title}
+                                      </div>
+                                    </div>
+
+                                    {item.notes && (
+                                      <div className={`${
+                                        calendarFontSize === 'compact' ? 'text-[10px]' : 'text-xs'
+                                      } text-purple-900/70 flex items-center gap-1 pl-6`}>
+                                        <span>{item.notes}</span>
+                                      </div>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteTask(item.rawId);
+                                      }}
+                                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-1"
+                                      title="Remove task"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  onClick={() => {
+                                    if (item.recipeId) {
+                                      const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
+                                      if (rec) setViewingRecipe(rec);
+                                    }
+                                  }}
+                                  className={`border-l-[3.5px] ${item.borderAccent || 'border-l-stone-400'} ${
+                                    item.bgAccent || theme.cardSubtle
+                                  } ${
+                                    calendarFontSize === 'compact' ? 'p-2.5 rounded-xl' : 'p-3.5 rounded-2xl'
+                                  } border-t border-r border-b ${theme.border} flex flex-col gap-1 transition shadow-2xs group relative ${
+                                    item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1 flex-wrap">
+                                    <span className={`${
+                                      calendarFontSize === 'compact' ? 'text-[8.5px] px-1.5 py-0.2' : 'text-[9.5px] px-2 py-0.5'
+                                    } font-bold rounded-full border uppercase tracking-wider ${item.badgeTheme}`}>
+                                      {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
+                                    </span>
+                                    <span className={`font-mono ${
+                                      calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[11px]'
+                                    } font-semibold ${theme.textSecondary}`}>
+                                      {isAllDayItem(item) ? 'All Day' : `${item.time}${item.endTime ? ` – ${item.endTime}` : ''}`}
+                                    </span>
+                                  </div>
+
+                                  <div className={`font-semibold ${
+                                    calendarFontSize === 'compact' ? 'text-xs leading-snug' : 'text-sm leading-snug'
+                                  } break-words text-stone-800`}>
+                                    {item.title}
+                                  </div>
+
+                                  {(item.location || item.notes) && (
+                                    <div className={`${
+                                      calendarFontSize === 'compact' ? 'text-[10px]' : 'text-xs'
+                                    } ${theme.textSecondary} flex items-center gap-1`}>
+                                      {item.location && <MapPin className="w-3 h-3 shrink-0" />}
+                                      <span className="truncate">{item.location || item.notes}</span>
+                                    </div>
+                                  )}
+
+                                  {item.canDelete && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteCalendarEvent(item.rawId);
+                                      }}
+                                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
+                                      title="Remove event"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </>
@@ -2632,11 +2854,23 @@ export default function App() {
                                 <div className={`flex items-center justify-between ${
                                   calendarFontSize === 'compact' ? 'text-[11px]' : 'text-xs'
                                 } font-semibold border-b ${theme.border} pb-1 shrink-0`}>
-                                  <span className="flex items-center gap-1">
-                                    {isToday && <span className={`w-1.5 h-1.5 rounded-full ${theme.accentBg}`} />}
-                                    <span>{weekdayShort}, {monthDay}</span>
+                                  <span className="flex items-center gap-1 min-w-0 truncate">
+                                    {isToday && <span className={`w-1.5 h-1.5 rounded-full ${theme.accentBg} shrink-0`} />}
+                                    <span className="truncate">{weekdayShort}, {monthDay}</span>
                                   </span>
-                                  <div className="flex items-center gap-1">
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setAddTaskModalDate(dateKey);
+                                        setShowAddTaskModal(true);
+                                      }}
+                                      className="p-1 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 hover:text-purple-900 border border-purple-200/80 transition"
+                                      title={`Add action item for ${weekdayFull}, ${monthDay}`}
+                                      aria-label={`Add action item for ${weekdayFull}, ${monthDay}`}
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
                                     {dayUnifiedItems.length > 0 && (
                                       <span className={`${
                                         calendarFontSize === 'compact' ? 'text-[8.5px] px-1' : 'text-[9.5px] px-1.5'
@@ -2663,66 +2897,152 @@ export default function App() {
                                       <span>Open</span>
                                     </div>
                                   ) : (
-                                    dayUnifiedItems.map(item => (
-                                      <div
-                                        key={item.id}
-                                        onClick={() => {
-                                          if (item.recipeId) {
-                                            const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
-                                            if (rec) setViewingRecipe(rec);
-                                          }
-                                        }}
-                                        className={`border-l-[3px] ${item.borderAccent || 'border-l-stone-400'} ${
-                                          item.bgAccent || theme.cardBg
-                                        } ${
-                                          calendarFontSize === 'compact' ? 'p-1.5 rounded-md' : 'p-2 rounded-lg'
-                                        } border-t border-r border-b ${theme.border} flex flex-col gap-0.5 transition shadow-2xs group relative ${
-                                          item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
-                                        } ${isAllDayItem(item) ? 'ring-1 ring-amber-400/30' : ''}`}
-                                      >
-                                        <div className="flex items-center justify-between gap-1 leading-none">
-                                          <span className={`${
-                                            calendarFontSize === 'compact' ? 'text-[7.5px] px-1 py-0.2' : 'text-[8.5px] px-1.5 py-0.2'
-                                          } font-bold rounded border uppercase tracking-wider shrink-0 ${item.badgeTheme}`}>
-                                            {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
-                                          </span>
-                                          <span className={`font-mono ${
-                                            calendarFontSize === 'compact' ? 'text-[8.5px]' : 'text-[10px]'
-                                          } font-bold text-stone-600 truncate text-right`}>
-                                            {isAllDayItem(item) ? 'All Day' : item.time}
-                                          </span>
-                                        </div>
-
-                                        <div className={`font-semibold ${
-                                          calendarFontSize === 'compact' ? 'text-[9.5px] leading-tight' : 'text-[11px] leading-snug'
-                                        } break-words text-stone-800`}>
-                                          {item.title}
-                                        </div>
-
-                                        {(item.location || item.notes) && (
-                                          <div className={`${
-                                            calendarFontSize === 'compact' ? 'text-[8px]' : 'text-[9.5px]'
-                                          } ${theme.textSecondary} truncate flex items-center gap-0.5`}>
-                                            {item.location && <MapPin className={`${calendarFontSize === 'compact' ? 'w-2 h-2' : 'w-2.5 h-2.5'} shrink-0`} />}
-                                            <span className="truncate">{item.location || item.notes}</span>
-                                          </div>
-                                        )}
-
-                                        {item.canDelete && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleDeleteCalendarEvent(item.rawId);
-                                            }}
-                                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
-                                            title="Remove event"
+                                    dayUnifiedItems.map(item => {
+                                      if (item.isTask) {
+                                        return (
+                                          <div
+                                            key={item.id}
+                                            className={`border-l-[3.5px] ${item.borderAccent} ${item.bgAccent} ${
+                                              calendarFontSize === 'compact' ? 'p-1.5 rounded-md' : 'p-2 rounded-lg'
+                                            } border-t border-r border-b ${theme.border} flex flex-col gap-0.5 transition shadow-2xs group relative`}
                                           >
-                                            <Trash2 className="w-3 h-3" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    ))
+                                            <div className="flex items-center justify-between gap-1 leading-none">
+                                              <div className="flex items-center gap-1 truncate">
+                                                <span className={`${
+                                                  calendarFontSize === 'compact' ? 'text-[7.5px] px-1 py-0.2' : 'text-[8.5px] px-1.5 py-0.2'
+                                                } font-extrabold rounded-full border uppercase tracking-wider shrink-0 ${item.badgeTheme} flex items-center gap-0.5`}>
+                                                  <CheckSquare className="w-2 h-2 text-purple-700" />
+                                                  <span>TASK</span>
+                                                </span>
+                                                {item.priority && item.priority !== 'Normal' && (
+                                                  <span className={`text-[7.5px] font-bold px-1 py-0.2 rounded uppercase ${
+                                                    item.priority === 'Urgent' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
+                                                  }`}>
+                                                    {item.priority}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <span className={`font-mono ${
+                                                calendarFontSize === 'compact' ? 'text-[8.5px]' : 'text-[10px]'
+                                              } font-bold text-purple-900/80 truncate text-right`}>
+                                                {item.time}
+                                              </span>
+                                            </div>
+
+                                            <div className="flex items-start gap-1.5 pt-0.5">
+                                              <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleToggleTask(item.rawId);
+                                                }}
+                                                className={`mt-0.5 shrink-0 ${
+                                                  calendarFontSize === 'compact' ? 'w-3 h-3 rounded' : 'w-3.5 h-3.5 rounded'
+                                                } border transition flex items-center justify-center ${
+                                                  item.isCompleted
+                                                    ? 'bg-purple-600 border-purple-600 text-white shadow-2xs'
+                                                    : 'bg-white border-purple-400 hover:border-purple-600'
+                                                }`}
+                                                title={item.isCompleted ? 'Mark as incomplete' : 'Mark task completed'}
+                                              >
+                                                {item.isCompleted ? (
+                                                  <Check className={`${calendarFontSize === 'compact' ? 'w-2 h-2' : 'w-2.5 h-2.5'} stroke-[3]`} />
+                                                ) : (
+                                                  <Check className={`${calendarFontSize === 'compact' ? 'w-2 h-2' : 'w-2.5 h-2.5'} text-purple-600 opacity-0 hover:opacity-100 transition`} />
+                                                )}
+                                              </button>
+
+                                              <div className={`font-semibold ${
+                                                calendarFontSize === 'compact' ? 'text-[9.5px] leading-tight' : 'text-[11px] leading-snug'
+                                              } break-words flex-1 min-w-0 ${item.isCompleted ? 'line-through text-stone-400 opacity-60' : 'text-purple-950 font-bold'}`}>
+                                                {item.title}
+                                              </div>
+                                            </div>
+
+                                            {item.notes && (
+                                              <div className={`${
+                                                calendarFontSize === 'compact' ? 'text-[7.5px]' : 'text-[9px]'
+                                              } text-purple-900/70 truncate pl-4.5`}>
+                                                <span>{item.notes}</span>
+                                              </div>
+                                            )}
+
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteTask(item.rawId);
+                                              }}
+                                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
+                                              title="Remove task"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                        );
+                                      }
+
+                                      return (
+                                        <div
+                                          key={item.id}
+                                          onClick={() => {
+                                            if (item.recipeId) {
+                                              const rec = COOKBOOK_RECIPES.find(r => r.id === item.recipeId);
+                                              if (rec) setViewingRecipe(rec);
+                                            }
+                                          }}
+                                          className={`border-l-[3px] ${item.borderAccent || 'border-l-stone-400'} ${
+                                            item.bgAccent || theme.cardBg
+                                          } ${
+                                            calendarFontSize === 'compact' ? 'p-1.5 rounded-md' : 'p-2 rounded-lg'
+                                          } border-t border-r border-b ${theme.border} flex flex-col gap-0.5 transition shadow-2xs group relative ${
+                                            item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
+                                          } ${isAllDayItem(item) ? 'ring-1 ring-amber-400/30' : ''}`}
+                                        >
+                                          <div className="flex items-center justify-between gap-1 leading-none">
+                                            <span className={`${
+                                              calendarFontSize === 'compact' ? 'text-[7.5px] px-1 py-0.2' : 'text-[8.5px] px-1.5 py-0.2'
+                                            } font-bold rounded border uppercase tracking-wider shrink-0 ${item.badgeTheme}`}>
+                                              {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
+                                            </span>
+                                            <span className={`font-mono ${
+                                              calendarFontSize === 'compact' ? 'text-[8.5px]' : 'text-[10px]'
+                                            } font-bold text-stone-600 truncate text-right`}>
+                                              {isAllDayItem(item) ? 'All Day' : item.time}
+                                            </span>
+                                          </div>
+
+                                          <div className={`font-semibold ${
+                                            calendarFontSize === 'compact' ? 'text-[9.5px] leading-tight' : 'text-[11px] leading-snug'
+                                          } break-words text-stone-800`}>
+                                            {item.title}
+                                          </div>
+
+                                          {(item.location || item.notes) && (
+                                            <div className={`${
+                                              calendarFontSize === 'compact' ? 'text-[8px]' : 'text-[9.5px]'
+                                            } ${theme.textSecondary} truncate flex items-center gap-0.5`}>
+                                              {item.location && <MapPin className={`${calendarFontSize === 'compact' ? 'w-2 h-2' : 'w-2.5 h-2.5'} shrink-0`} />}
+                                              <span className="truncate">{item.location || item.notes}</span>
+                                            </div>
+                                          )}
+
+                                          {item.canDelete && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteCalendarEvent(item.rawId);
+                                              }}
+                                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
+                                              title="Remove event"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      );
+                                    })
                                   )}
                                 </div>
                               </div>
@@ -2778,16 +3098,37 @@ export default function App() {
                     <span>Add</span>
                   </button>
                 </div>
-                {/* Priority Selector Pills */}
-                <div className="flex items-center justify-between gap-1 text-[11px]">
-                  <span className={`text-[11px] ${theme.textSecondary}`}>Priority:</span>
+
+                {/* Set Day / Date Selector & Priority Row */}
+                <div className="flex items-center justify-between gap-1 text-[11px] flex-wrap pt-0.5">
                   <div className="flex items-center gap-1">
+                    <span className={`text-[10px] font-semibold ${theme.textSecondary}`}>Set Day:</span>
+                    <input
+                      type="date"
+                      value={newTaskDueDate}
+                      onChange={e => setNewTaskDueDate(e.target.value)}
+                      className={`px-1.5 py-0.5 rounded-lg border ${theme.border} ${theme.cardBg} text-[10px] font-mono`}
+                      title="Schedule for a specific day on the calendar (defaults to Today)"
+                    />
+                    {newTaskDueDate && (
+                      <button
+                        type="button"
+                        onClick={() => setNewTaskDueDate('')}
+                        className="text-[10px] text-stone-400 hover:text-stone-700 underline"
+                      >
+                        Today
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <span className={`text-[10px] font-semibold ${theme.textSecondary}`}>Priority:</span>
                     {['Normal', 'High', 'Urgent'].map(p => (
                       <button
                         key={p}
                         type="button"
                         onClick={() => setNewTaskPriority(p)}
-                        className={`px-2 py-0.5 rounded-lg border text-[10px] font-semibold transition ${
+                        className={`px-1.5 py-0.5 rounded-lg border text-[10px] font-semibold transition ${
                           newTaskPriority === p
                             ? p === 'Urgent'
                               ? 'bg-red-50 text-red-700 border-red-300 shadow-2xs'
@@ -2869,8 +3210,8 @@ export default function App() {
                         )}
 
                         <div className="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
-                          <span className={`text-[10px] font-mono ${theme.textMuted}`}>
-                            {tsk.dueDate}
+                          <span className={`text-[10px] font-mono font-medium ${theme.textMuted}`}>
+                            {formatTaskDueDateLabel(tsk.dueDate)}
                           </span>
                           {tsk.onAction && (
                             <button
@@ -4151,6 +4492,188 @@ export default function App() {
                 Sign in with Google (amblair92@gmail.com)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* MODAL: ADD ACTION ITEM / TASK TO MASTER CALENDAR                    */}
+      {/* =================================================================== */}
+      {showAddTaskModal && (
+        <div
+          onClick={() => setShowAddTaskModal(false)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-[#F7F4EF] text-stone-900 border border-[#E2D9CC] rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 text-xs sm:text-sm overflow-hidden"
+          >
+            <div className="flex items-center justify-between border-b pb-3 border-[#E2D9CC]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-purple-100 text-purple-800 border border-purple-200">
+                  <CheckSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-editorial text-xl sm:text-2xl font-bold leading-tight">
+                    Add Action Item to Calendar
+                  </h3>
+                  <p className="text-[11px] text-stone-500 mt-0.5">
+                    Feeds directly into Mackie&apos;s Master Calendar &amp; Tasks List
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddTaskModal(false)}
+                className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 transition text-stone-500 hover:text-stone-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTaskModalSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-stone-800 mb-1">Task Title / Action Item</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={addTaskModalText}
+                  onChange={e => setAddTaskModalText(e.target.value)}
+                  placeholder="e.g. Call pediatrician, Pick up curtains, Pack hospital bag..."
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#E2D9CC] text-stone-900 text-xs sm:text-sm outline-none focus:border-purple-500 shadow-2xs"
+                />
+              </div>
+
+              {/* Set Day / Date Selection */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-stone-800">Set Day on Master Calendar</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    required
+                    value={addTaskModalDate}
+                    onChange={e => setAddTaskModalDate(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-[#E2D9CC] text-xs font-mono outline-none focus:border-purple-500 shadow-2xs"
+                  />
+                  {/* Quick date shortcuts */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setAddTaskModalDate(calendar.todayDate || new Date().toISOString().split('T')[0])}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-semibold border transition ${
+                        addTaskModalDate === (calendar.todayDate || new Date().toISOString().split('T')[0])
+                          ? 'bg-purple-100 text-purple-900 border-purple-300 font-bold'
+                          : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                      }`}
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const d = new Date((calendar.todayDate || new Date().toISOString().split('T')[0]) + 'T12:00:00');
+                        d.setDate(d.getDate() + 1);
+                        setAddTaskModalDate(d.toISOString().split('T')[0]);
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[10px] font-semibold bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 transition"
+                    >
+                      Tomorrow
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Priority & Category Grid */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 mb-1">Priority</label>
+                  <div className="grid grid-cols-3 gap-1">
+                    {['Normal', 'High', 'Urgent'].map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setAddTaskModalPriority(p)}
+                        className={`py-1 rounded-lg text-[10px] font-semibold border text-center transition ${
+                          addTaskModalPriority === p
+                            ? p === 'Urgent'
+                              ? 'bg-red-100 text-red-800 border-red-300 font-bold'
+                              : p === 'High'
+                              ? 'bg-amber-100 text-amber-900 border-amber-300 font-bold'
+                              : 'bg-purple-100 text-purple-900 border-purple-300 font-bold'
+                            : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 mb-1">Category</label>
+                  <select
+                    value={addTaskModalCategory}
+                    onChange={e => setAddTaskModalCategory(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-white border border-[#E2D9CC] text-xs outline-none"
+                  >
+                    <option value="General">General To-Do</option>
+                    <option value="Baby Prep">Baby Prep (Aiden)</option>
+                    <option value="Groceries">Groceries / Pantry</option>
+                    <option value="Errand">Errand</option>
+                    <option value="Health">Health &amp; Doctor</option>
+                    <option value="Home">Home &amp; Nursery</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Time Option (Optional: All Day or Scheduled Time) */}
+              <div className="p-2.5 rounded-xl bg-white border border-stone-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-stone-700">Time on Day Schedule</span>
+                  <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={addTaskModalIsAllDay}
+                      onChange={e => setAddTaskModalIsAllDay(e.target.checked)}
+                      className="rounded accent-purple-600 w-3.5 h-3.5"
+                    />
+                    <span className="font-semibold">All Day Task</span>
+                  </label>
+                </div>
+                {!addTaskModalIsAllDay && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[11px] text-stone-500">Scheduled Time:</span>
+                    <input
+                      type="time"
+                      value={addTaskModalTime}
+                      onChange={e => setAddTaskModalTime(e.target.value)}
+                      className="px-2.5 py-1 rounded-lg border border-stone-200 text-xs font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E2D9CC]">
+                <button
+                  type="button"
+                  onClick={() => setShowAddTaskModal(false)}
+                  className="px-3.5 py-2 rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-100 text-xs font-medium transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold shadow-2xs transition flex items-center gap-1.5"
+                >
+                  <CheckSquare className="w-3.5 h-3.5" />
+                  <span>Add Action Item</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
