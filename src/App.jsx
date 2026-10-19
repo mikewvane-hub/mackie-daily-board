@@ -181,7 +181,13 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('all'); // 'all', 'calendar', 'meals', 'grocery', 'baby', 'news'
 
   // Calendar states
-  const [calendarView, setCalendarView] = useState('today'); // 'today' | 'week'
+  const [calendarView, setCalendarView] = useState(() => {
+    try {
+      return localStorage.getItem('mackie_calendar_view') || 'week';
+    } catch {
+      return 'week';
+    }
+  });
   const [calendarWeekOffset, setCalendarWeekOffset] = useState(0); // 0 = current 7-day forecast, 1 = next week, etc.
   const [calendarFontSize, setCalendarFontSize] = useState(() => {
     try {
@@ -2341,6 +2347,7 @@ export default function App() {
                       onClick={() => {
                         setCalendarView('today');
                         setCalendarWeekOffset(0);
+                        try { localStorage.setItem('mackie_calendar_view', 'today'); } catch {}
                       }}
                       className={`px-3 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1.5 ${
                         calendarView === 'today'
@@ -2361,6 +2368,7 @@ export default function App() {
                         if (calendarView !== 'week') {
                           setCalendarView('week');
                           setCalendarWeekOffset(0);
+                          try { localStorage.setItem('mackie_calendar_view', 'week'); } catch {}
                         } else {
                           setCalendarWeekOffset(prev => (prev + 1) % 8);
                         }
