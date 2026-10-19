@@ -35,7 +35,17 @@
         "addedAt": "2026-10-18T22:18:57.752Z"
       }
     ],
-    "Friday": [],
+    "Friday": [
+      {
+        "instanceId": "wplan-1792413473981-xq3i",
+        "routineId": null,
+        "title": "Yoga",
+        "category": "Custom Activity",
+        "duration": "Custom",
+        "completed": false,
+        "addedAt": "2026-10-19T12:37:53.981Z"
+      }
+    ],
     "Saturday": [],
     "Sunday": []
   },
@@ -288,6 +298,6 @@
       "source": "Oura Ring (Demo)"
     }
   ],
-  "updatedAt": "2026-10-18T22:18:58.607Z",
-  "updatedAtTs": 1792361938607
+  "updatedAt": "2026-10-19T12:37:55.290Z",
+  "updatedAtTs": 1792413475290
 }

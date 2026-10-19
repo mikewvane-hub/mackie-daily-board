@@ -227,6 +227,7 @@ function enrichScheduleEvents(scheduleData) {
     weekUpcomingCount,
     weekSchedule,
     customEvents: scheduleData.customEvents || [],
+    deletedEventIds: scheduleData.deletedEventIds || [],
     authorized: Boolean(scheduleData.authorized),
     lastSynced: scheduleData.lastSynced || null,
     account: TARGET_ACCOUNT,
@@ -362,11 +363,13 @@ async function hydrateBoardFromCloud(force = false) {
     const cloud = await pullCloudState(force);
     if (!cloud) return;
 
-    // 1. Hydrate Meal Plan if cloud has newer state (or if local disk was wiped on Render spin-down)
+    // 1. Hydrate Meal Plan if cloud has newer state or if local is empty
     const localMp = readJson(MEAL_PLAN_FILE, { days: getEmptyMealPlan(), updatedAtTs: 0 });
     const localMpTs = Number(localMp.updatedAtTs) || 0;
     const cloudMpTs = Number(cloud.mealPlanUpdatedAt) || 0;
-    if (cloud.mealPlan && (cloudMpTs > localMpTs || (localMpTs === 0 && countMealsInPlan(cloud.mealPlan) > 0))) {
+    const localMealCount = countMealsInPlan(localMp?.days);
+    const cloudMealCount = countMealsInPlan(cloud?.mealPlan);
+    if (cloud.mealPlan && (cloudMpTs > localMpTs || (localMealCount === 0 && cloudMealCount > 0))) {
       writeJson(MEAL_PLAN_FILE, {
         days: cloud.mealPlan,
         updatedAt: new Date(cloudMpTs || Date.now()).toISOString(),
@@ -374,11 +377,13 @@ async function hydrateBoardFromCloud(force = false) {
       });
     }
 
-    // 2. Hydrate Grocery List if cloud has newer state (or if local disk was wiped on Render spin-down)
+    // 2. Hydrate Grocery List if cloud has newer state or if local is empty
     const localGr = readJson(GROCERY_FILE, { items: [], updatedAtTs: 0 });
     const localGrTs = Number(localGr.updatedAtTs) || 0;
     const cloudGrTs = Number(cloud.groceryUpdatedAt) || 0;
-    if (Array.isArray(cloud.groceryList) && (cloudGrTs > localGrTs || (localGrTs === 0 && cloud.groceryList.length > 0))) {
+    const localGrCount = Array.isArray(localGr?.items) ? localGr.items.length : 0;
+    const cloudGrCount = Array.isArray(cloud?.groceryList) ? cloud.groceryList.length : 0;
+    if (Array.isArray(cloud.groceryList) && (cloudGrTs > localGrTs || (localGrCount === 0 && cloudGrCount > 0))) {
       writeJson(GROCERY_FILE, {
         items: cloud.groceryList,
         updatedAt: new Date(cloudGrTs || Date.now()).toISOString(),
@@ -421,19 +426,25 @@ async function hydrateBoardFromCloud(force = false) {
       });
     }
 
-    // 6. Hydrate Schedule & Custom Calendar Events if cloud has newer state
-    const localSched = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], updatedAtTs: 0 });
+    // 6. Hydrate Schedule & Custom Calendar Events from cloud (non-destructively unioning custom events)
+    const localSched = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], deletedEventIds: [], updatedAtTs: 0 });
     const localSchedTs = Number(localSched?.updatedAtTs) || 0;
     const cloudSchedTs = Number(cloud.scheduleUpdatedAt) || 0;
-    if (cloud.schedule && (cloudSchedTs > localSchedTs || (localSchedTs === 0 && (cloud.schedule.customEvents || []).length > 0))) {
+    if (cloud.schedule) {
+      const deletedSet = new Set([
+        ...(localSched.deletedEventIds || []),
+        ...(cloud.schedule.deletedEventIds || [])
+      ]);
       const customMap = new Map();
       for (const ev of (localSched.customEvents || [])) {
-        if (ev && ev.id) customMap.set(ev.id, ev);
+        if (ev && ev.id && !deletedSet.has(ev.id)) customMap.set(ev.id, ev);
       }
       for (const ev of (cloud.schedule.customEvents || [])) {
-        if (ev && ev.id) customMap.set(ev.id, ev);
+        if (ev && ev.id && !deletedSet.has(ev.id)) customMap.set(ev.id, ev);
       }
       const mergedCustom = Array.from(customMap.values());
+      const hasNewerCloudSched = cloudSchedTs >= localSchedTs;
+      const baseSched = hasNewerCloudSched ? cloud.schedule : localSched;
       const mergedWeek = { ...(localSched.weekSchedule || {}), ...(cloud.schedule.weekSchedule || {}) };
       for (const ev of mergedCustom) {
         if (ev.date) {
@@ -445,9 +456,9 @@ async function hydrateBoardFromCloud(force = false) {
         }
       }
       writeJson(SCHEDULE_FILE, {
-        ...localSched,
-        ...cloud.schedule,
+        ...baseSched,
         customEvents: mergedCustom,
+        deletedEventIds: Array.from(deletedSet),
         weekSchedule: mergedWeek,
         updatedAtTs: Math.max(cloudSchedTs, localSchedTs, Date.now())
       });
@@ -477,15 +488,35 @@ async function hydrateBoardFromCloud(force = false) {
       });
     }
 
-    // 9. Hydrate Tasks if cloud has newer state
+    // 9. Hydrate Tasks if cloud has state (non-destructively unioning custom tasks and completion states)
     const localTasks = getTasksState();
     const localTasksTs = Number(localTasks.updatedAtTs) || 0;
     const cloudTasksTs = Number(cloud.tasksUpdatedAt) || 0;
-    if (cloud.tasks && (cloudTasksTs > localTasksTs || (localTasksTs === 0 && (cloud.tasks.customTasks || []).length > 0))) {
+    if (cloud.tasks && typeof cloud.tasks === 'object') {
+      const deletedTaskSet = new Set([
+        ...(localTasks.deletedTaskIds || []),
+        ...(cloud.tasks.deletedTaskIds || [])
+      ]);
+      const taskMap = new Map();
+      for (const t of (localTasks.customTasks || [])) {
+        if (t && t.id && !deletedTaskSet.has(t.id)) taskMap.set(t.id, t);
+      }
+      for (const t of (cloud.tasks.customTasks || [])) {
+        if (t && t.id && !deletedTaskSet.has(t.id)) taskMap.set(t.id, t);
+      }
+      const completedTaskSet = new Set([
+        ...(localTasks.completedTaskIds || []),
+        ...(cloud.tasks.completedTaskIds || [])
+      ]);
+      const mergedCustomTasks = Array.from(taskMap.values()).map(t => ({
+        ...t,
+        completed: completedTaskSet.has(t.id) || Boolean(t.completed)
+      }));
       writeJson(TASKS_FILE, {
-        ...localTasks,
-        ...cloud.tasks,
-        updatedAtTs: cloudTasksTs || Date.now()
+        customTasks: mergedCustomTasks,
+        completedTaskIds: Array.from(completedTaskSet),
+        deletedTaskIds: Array.from(deletedTaskSet),
+        updatedAtTs: Math.max(cloudTasksTs, localTasksTs, Date.now())
       });
     }
   } catch (err) {
@@ -668,18 +699,19 @@ app.post('/api/board/sync', async (req, res) => {
     }).catch(() => {});
   }
 
-  let scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], updatedAtTs: 0 });
+  let scheduleData = readJson(SCHEDULE_FILE, { events: [], weekSchedule: {}, customEvents: [], deletedEventIds: [], updatedAtTs: 0 });
   const curSchedTs = Number(scheduleData.updatedAtTs) || 0;
   const incSchedTs = Number(incomingSchedTs) || 0;
   if (Array.isArray(incomingCustomEvents) && incomingCustomEvents.length > 0) {
     const existingCustom = scheduleData.customEvents || [];
+    const deletedSet = new Set(scheduleData.deletedEventIds || []);
     const customMap = new Map();
     for (const ev of existingCustom) {
-      if (ev && ev.id) customMap.set(ev.id, ev);
+      if (ev && ev.id && !deletedSet.has(ev.id)) customMap.set(ev.id, ev);
     }
     let hasNewEvents = false;
     for (const ev of incomingCustomEvents) {
-      if (ev && ev.id && !customMap.has(ev.id)) {
+      if (ev && ev.id && !deletedSet.has(ev.id) && !customMap.has(ev.id)) {
         customMap.set(ev.id, ev);
         hasNewEvents = true;
       }

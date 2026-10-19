@@ -837,6 +837,7 @@ async function addCalendarEvent(eventData) {
   };
 
   let sched = ensureDefaultSchedule();
+  sched.deletedEventIds = (sched.deletedEventIds || []).filter(id => id !== newEvent.id);
   sched.customEvents = sched.customEvents || [];
   sched.customEvents = sched.customEvents.filter(e => e.id !== newEvent.id);
   sched.customEvents.push(newEvent);

@@ -518,14 +518,24 @@ export default function App() {
           localTasks && localTasksTs > serverTasksTs;
 
         // Reconcile custom calendar events between local device and server non-destructively
+        let localDeletedEventIds = [];
+        try {
+          const rawDel = localStorage.getItem('mackie_deleted_event_ids_v1');
+          if (rawDel) localDeletedEventIds = JSON.parse(rawDel);
+        } catch {}
+        const deletedEventSet = new Set([
+          ...(Array.isArray(serverJson.calendar?.deletedEventIds) ? serverJson.calendar.deletedEventIds : []),
+          ...(Array.isArray(localDeletedEventIds) ? localDeletedEventIds : [])
+        ]);
+
         const serverCustomEvents = serverJson.calendar?.customEvents || [];
         const customEventMap = new Map();
         for (const ce of serverCustomEvents) {
-          if (ce && ce.id) customEventMap.set(ce.id, ce);
+          if (ce && ce.id && !deletedEventSet.has(ce.id)) customEventMap.set(ce.id, ce);
         }
         let localHasUnsyncedCustomEvents = false;
         for (const ce of (Array.isArray(localCustomEvents) ? localCustomEvents : [])) {
-          if (ce && ce.id && !customEventMap.has(ce.id)) {
+          if (ce && ce.id && !deletedEventSet.has(ce.id) && !customEventMap.has(ce.id)) {
             customEventMap.set(ce.id, ce);
             localHasUnsyncedCustomEvents = true;
           }
@@ -573,6 +583,7 @@ export default function App() {
           localStorage.setItem('mackie_tasks_updated_at', String(finalTasksTs));
           localStorage.setItem('mackie_custom_events_v1', JSON.stringify(finalCustomEvents));
           localStorage.setItem('mackie_schedule_updated_at', String(finalSchedTs));
+          localStorage.setItem('mackie_deleted_event_ids_v1', JSON.stringify(Array.from(deletedEventSet)));
         } catch {}
 
         const mergedBoard = {
@@ -1294,16 +1305,24 @@ export default function App() {
 
     // 1. Optimistic Local Update immediately (persists across iPhone and Laptop)
     let localCustomEvents = [];
+    let localDeletedEventIds = [];
     try {
       const saved = localStorage.getItem('mackie_custom_events_v1');
       if (saved) localCustomEvents = JSON.parse(saved);
+      const rawDel = localStorage.getItem('mackie_deleted_event_ids_v1');
+      if (rawDel) localDeletedEventIds = JSON.parse(rawDel);
     } catch {}
     if (!Array.isArray(localCustomEvents)) localCustomEvents = [];
     localCustomEvents = localCustomEvents.filter(ev => ev.id !== createdEvent.id);
     localCustomEvents.push(createdEvent);
 
+    if (Array.isArray(localDeletedEventIds)) {
+      localDeletedEventIds = localDeletedEventIds.filter(id => id !== createdEvent.id);
+    }
+
     try {
       localStorage.setItem('mackie_custom_events_v1', JSON.stringify(localCustomEvents));
+      localStorage.setItem('mackie_deleted_event_ids_v1', JSON.stringify(localDeletedEventIds));
       localStorage.setItem('mackie_schedule_updated_at', String(nowTs));
     } catch {}
 
@@ -1364,17 +1383,25 @@ export default function App() {
   const handleDeleteCalendarEvent = async (id) => {
     const nowTs = Date.now();
     let localCustomEvents = [];
+    let localDeletedEventIds = [];
     try {
       const saved = localStorage.getItem('mackie_custom_events_v1');
       if (saved) localCustomEvents = JSON.parse(saved);
+      const rawDel = localStorage.getItem('mackie_deleted_event_ids_v1');
+      if (rawDel) localDeletedEventIds = JSON.parse(rawDel);
     } catch {}
+    if (!Array.isArray(localDeletedEventIds)) localDeletedEventIds = [];
+    if (!localDeletedEventIds.includes(id)) {
+      localDeletedEventIds.push(id);
+    }
     if (Array.isArray(localCustomEvents)) {
       localCustomEvents = localCustomEvents.filter(e => e.id !== id);
-      try {
-        localStorage.setItem('mackie_custom_events_v1', JSON.stringify(localCustomEvents));
-        localStorage.setItem('mackie_schedule_updated_at', String(nowTs));
-      } catch {}
     }
+    try {
+      localStorage.setItem('mackie_custom_events_v1', JSON.stringify(localCustomEvents));
+      localStorage.setItem('mackie_deleted_event_ids_v1', JSON.stringify(localDeletedEventIds));
+      localStorage.setItem('mackie_schedule_updated_at', String(nowTs));
+    } catch {}
 
     setBoardData(prev => {
       const prevSched = prev?.calendar?.weekSchedule || {};
@@ -1480,6 +1507,7 @@ export default function App() {
       text,
       priority: newTaskPriority,
       category: 'General',
+      dueDate: 'Today',
       completed: false,
       createdAt: new Date().toISOString()
     };
@@ -1626,10 +1654,41 @@ export default function App() {
   const getUnifiedDayItems = (dateKey, weekdayName, isToday = false) => {
     const items = [];
 
+    // Deleted event IDs filter
+    let localDeletedEventIds = [];
+    try {
+      const rawDel = localStorage.getItem('mackie_deleted_event_ids_v1');
+      if (rawDel) localDeletedEventIds = JSON.parse(rawDel);
+    } catch {}
+    const deletedEventSet = new Set([
+      ...(Array.isArray(calendar?.deletedEventIds) ? calendar.deletedEventIds : []),
+      ...(Array.isArray(localDeletedEventIds) ? localDeletedEventIds : [])
+    ]);
+
     // 1. Google Calendar & Custom Schedule events
     const gEvents = (calendar.weekSchedule && calendar.weekSchedule[dateKey]) ||
       (isToday ? (calendar.todayEvents || []) : []);
+
+    const existingEvtIds = new Set();
+    const activeEvents = [];
+
     for (const evt of gEvents) {
+      if (!evt || !evt.id || deletedEventSet.has(evt.id)) continue;
+      existingEvtIds.add(evt.id);
+      activeEvents.push(evt);
+    }
+
+    // Safety net: ensure any customEvents matching this date (or today) are rendered even if weekSchedule was missing it
+    const extraCustomEvents = (calendar.customEvents || []).filter(e => {
+      if (!e || !e.id || deletedEventSet.has(e.id) || existingEvtIds.has(e.id)) return false;
+      return e.date === dateKey || (!e.date && isToday);
+    });
+    for (const ce of extraCustomEvents) {
+      existingEvtIds.add(ce.id);
+      activeEvents.push(ce);
+    }
+
+    for (const evt of activeEvents) {
       const isAllDay = Boolean(evt.isAllDay || !evt.time || /all[\s-]*day/i.test(String(evt.time)));
       const isCustom = evt.source === 'custom' || String(evt.id || '').startsWith('custom-') || String(evt.id || '').startsWith('evt-');
       items.push({
@@ -1788,7 +1847,7 @@ export default function App() {
     // 6. Action Items / Tasks scheduled for this date or today
     const customTasks = tasksState.customTasks || [];
     for (const t of customTasks) {
-      if (!t.completed && (t.dueDate === dateKey || (isToday && (t.dueDate === 'Today' || t.dueDate === 'Today / This Week')))) {
+      if (!t.completed && (t.dueDate === dateKey || (isToday && (!t.dueDate || t.dueDate === 'Today' || t.dueDate === 'Today / This Week')))) {
         items.push({
           id: `task-cal-${t.id}`,
           rawId: t.id,
