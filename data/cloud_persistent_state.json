@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792414963414,
+  "updatedAt": 1792414969973,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20587,15 +20587,25 @@
   },
   "scheduleUpdatedAt": 1792414959083,
   "tasks": {
-    "customTasks": [],
+    "customTasks": [
+      {
+        "id": "task-1792414969970-tdxy",
+        "text": "Buy infant nail clippers",
+        "priority": "High",
+        "category": "Baby",
+        "dueDate": "Today",
+        "completed": false,
+        "createdAt": "2026-10-19T13:02:49.970Z"
+      }
+    ],
     "completedTaskIds": [],
     "deletedTaskIds": [
       "task-1792376514119-l4gi"
     ],
-    "updatedAt": "2026-10-19T02:22:03.949Z",
-    "updatedAtTs": 1792376523949
+    "updatedAt": "2026-10-19T13:02:49.972Z",
+    "updatedAtTs": 1792414969972
   },
-  "tasksUpdatedAt": 1792376523949,
+  "tasksUpdatedAt": 1792414969972,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
