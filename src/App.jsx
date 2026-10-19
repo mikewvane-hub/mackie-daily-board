@@ -183,6 +183,13 @@ export default function App() {
   // Calendar states
   const [calendarView, setCalendarView] = useState('today'); // 'today' | 'week'
   const [calendarWeekOffset, setCalendarWeekOffset] = useState(0); // 0 = current 7-day forecast, 1 = next week, etc.
+  const [calendarFontSize, setCalendarFontSize] = useState(() => {
+    try {
+      return localStorage.getItem('mackie_calendar_font_size') || 'compact';
+    } catch {
+      return 'compact';
+    }
+  });
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [isSyncingCal, setIsSyncingCal] = useState(false);
   const [showCalSettingsModal, setShowCalSettingsModal] = useState(false);
@@ -1467,12 +1474,15 @@ export default function App() {
         rawId: evt.id,
         source: 'google',
         sourceLabel: 'Google Cal',
+        shortLabel: 'Cal',
         title: evt.title,
         time: evt.time || 'All Day',
         endTime: evt.endTime || null,
         location: evt.location || null,
         notes: evt.notes || null,
         badgeTheme: 'bg-sky-50 text-sky-800 border-sky-200/80',
+        borderAccent: 'border-l-sky-500',
+        bgAccent: 'bg-sky-50/30 hover:bg-sky-50/60',
         dotColor: 'bg-sky-500',
         canDelete: true,
         isCompleted: evt.status === 'completed'
@@ -1490,12 +1500,15 @@ export default function App() {
         rawId: meal.instanceId,
         source: 'meals',
         sourceLabel: 'Meal Plan',
+        shortLabel: 'Meal',
         title: `${icon} ${meal.title}`,
         time: timeStr,
         endTime: null,
         location: null,
         notes: meal.category ? `Cookbook: ${meal.category}` : 'Planned meal',
         badgeTheme: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+        borderAccent: 'border-l-emerald-500',
+        bgAccent: 'bg-emerald-50/30 hover:bg-emerald-50/60',
         dotColor: 'bg-emerald-500',
         canDelete: false,
         recipeId: meal.recipeId || null
@@ -1510,12 +1523,15 @@ export default function App() {
         rawId: w.instanceId,
         source: 'movement',
         sourceLabel: 'Movement',
+        shortLabel: 'Move',
         title: `💪 ${w.title}`,
         time: '09:30',
         endTime: null,
         location: null,
         notes: `${w.durationMinutes || w.duration || '30'} mins • ${w.category || 'Movement'}`,
         badgeTheme: 'bg-amber-50 text-amber-800 border-amber-200/80',
+        borderAccent: 'border-l-amber-500',
+        bgAccent: 'bg-amber-50/30 hover:bg-amber-50/60',
         dotColor: 'bg-amber-500',
         canDelete: false
       });
@@ -1530,12 +1546,15 @@ export default function App() {
         id: `pp-walk-${dateKey}`,
         source: 'postpartum',
         sourceLabel: 'Postpartum Care',
+        shortLabel: 'Care',
         title: `🚶‍♀️ Gentle Walk (${walkDur})`,
         time: '11:00',
         endTime: null,
         location: 'Neighborhood / Stroller',
         notes: activePostpartumPhase.walkingRec?.details || 'Daily activity timeline recommendation',
         badgeTheme: 'bg-rose-50 text-rose-800 border-rose-200/80',
+        borderAccent: 'border-l-rose-400',
+        bgAccent: 'bg-rose-50/30 hover:bg-rose-50/60',
         dotColor: 'bg-rose-500',
         canDelete: false
       });
@@ -1544,12 +1563,15 @@ export default function App() {
         id: `pp-stretch-${dateKey}`,
         source: 'postpartum',
         sourceLabel: 'Postpartum Care',
+        shortLabel: 'Care',
         title: `🧘 ${stretchName}`,
         time: '15:00',
         endTime: null,
         location: null,
         notes: 'Relieves nursing posture tightness and supports core recovery',
         badgeTheme: 'bg-purple-50 text-purple-800 border-purple-200/80',
+        borderAccent: 'border-l-purple-400',
+        bgAccent: 'bg-purple-50/30 hover:bg-purple-50/60',
         dotColor: 'bg-purple-500',
         canDelete: false
       });
@@ -1954,7 +1976,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Right Header Controls: Source Legend, Daily/Weekly Toggle, Add Event */}
+                {/* Right Header Controls: Source Legend, Font Size Toggle, Daily/Weekly Toggle, Add Event */}
                 <div className="flex items-center gap-2 flex-wrap">
                   {/* Distinct Source Badges Legend */}
                   <div className={`hidden sm:flex items-center gap-1.5 text-[10px] font-mono px-2 py-1 rounded-xl ${theme.cardSubtle} border ${theme.border}`}>
@@ -1977,6 +1999,42 @@ export default function App() {
                       <span className="w-2 h-2 rounded-full bg-rose-500" />
                       Postpartum
                     </span>
+                  </div>
+
+                  {/* Font Size Toggle (Compact vs Standard) */}
+                  <div className={`flex items-center p-0.5 rounded-xl ${theme.cardSubtle} border ${theme.border} text-xs`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalendarFontSize('compact');
+                        try { localStorage.setItem('mackie_calendar_font_size', 'compact'); } catch {}
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-medium transition flex items-center gap-1 ${
+                        calendarFontSize === 'compact'
+                          ? `${theme.cardBg} ${theme.textPrimary} font-semibold shadow-2xs`
+                          : theme.textSecondary
+                      }`}
+                      title="Compact text (smaller, cleaner font designed for optimal readability)"
+                    >
+                      <span className="text-[10px] font-bold">A⁻</span>
+                      <span>Compact</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalendarFontSize('standard');
+                        try { localStorage.setItem('mackie_calendar_font_size', 'standard'); } catch {}
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[11px] font-medium transition flex items-center gap-1 ${
+                        calendarFontSize === 'standard'
+                          ? `${theme.cardBg} ${theme.textPrimary} font-semibold shadow-2xs`
+                          : theme.textSecondary
+                      }`}
+                      title="Standard text size"
+                    >
+                      <span className="text-[11px] font-bold">A⁺</span>
+                      <span>Standard</span>
+                    </button>
                   </div>
 
                   {/* Daily / Weekly Cycle Toggle */}
@@ -2082,7 +2140,7 @@ export default function App() {
                             </p>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                             {todayUnifiedItems.map(item => (
                               <div
                                 key={item.id}
@@ -2092,25 +2150,37 @@ export default function App() {
                                     if (rec) setViewingRecipe(rec);
                                   }
                                 }}
-                                className={`p-3.5 rounded-xl border ${theme.cardSubtle} ${theme.border} flex flex-col gap-1.5 transition shadow-2xs group relative ${
+                                className={`border-l-[3.5px] ${item.borderAccent || 'border-l-stone-400'} ${
+                                  item.bgAccent || theme.cardSubtle
+                                } ${
+                                  calendarFontSize === 'compact' ? 'p-2.5 rounded-xl' : 'p-3.5 rounded-2xl'
+                                } border-t border-r border-b ${theme.border} flex flex-col gap-1 transition shadow-2xs group relative ${
                                   item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
                                 }`}
                               >
                                 <div className="flex items-center justify-between gap-1 flex-wrap">
-                                  <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${item.badgeTheme}`}>
-                                    {item.sourceLabel}
+                                  <span className={`${
+                                    calendarFontSize === 'compact' ? 'text-[8.5px] px-1.5 py-0.2' : 'text-[9.5px] px-2 py-0.5'
+                                  } font-bold rounded-full border uppercase tracking-wider ${item.badgeTheme}`}>
+                                    {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
                                   </span>
-                                  <span className={`font-mono text-[11px] font-semibold ${theme.textSecondary}`}>
+                                  <span className={`font-mono ${
+                                    calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[11px]'
+                                  } font-semibold ${theme.textSecondary}`}>
                                     {item.time} {item.endTime ? `– ${item.endTime}` : ''}
                                   </span>
                                 </div>
 
-                                <div className="font-semibold text-sm leading-snug break-words text-stone-800">
+                                <div className={`font-semibold ${
+                                  calendarFontSize === 'compact' ? 'text-xs leading-snug' : 'text-sm leading-snug'
+                                } break-words text-stone-800`}>
                                   {item.title}
                                 </div>
 
                                 {(item.location || item.notes) && (
-                                  <div className={`text-xs ${theme.textSecondary} flex items-center gap-1`}>
+                                  <div className={`${
+                                    calendarFontSize === 'compact' ? 'text-[10px]' : 'text-xs'
+                                  } ${theme.textSecondary} flex items-center gap-1`}>
                                     {item.location && <MapPin className="w-3 h-3 shrink-0" />}
                                     <span className="truncate">{item.location || item.notes}</span>
                                   </div>
@@ -2209,8 +2279,8 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* 7-Day Columns (Vertically Lengthened min-h-[480px] max-h-[540px] Scrollable) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 select-none">
+                        {/* 7-Day Columns (Vertically Lengthened min-h-[500px] max-h-[560px] Scrollable) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 select-none">
                           {sevenDayKeys.map(dateKey => {
                             const dObj = new Date(dateKey + 'T12:00:00');
                             const weekdayShort = dObj.toLocaleDateString('en-US', { weekday: 'short' });
@@ -2222,24 +2292,32 @@ export default function App() {
                             return (
                               <div
                                 key={dateKey}
-                                className={`p-2.5 rounded-xl border ${
+                                className={`${
+                                  calendarFontSize === 'compact' ? 'p-1.5' : 'p-2.5'
+                                } rounded-xl border ${
                                   isToday ? `${theme.accentSoft}` : `${theme.cardSubtle} ${theme.border}`
-                                } flex flex-col gap-2 min-h-[480px] max-h-[540px] transition hover:border-[#CBBBA8]`}
+                                } flex flex-col gap-1.5 min-h-[500px] max-h-[560px] transition hover:border-[#CBBBA8]`}
                               >
                                 {/* Day Header */}
-                                <div className={`flex items-center justify-between text-xs font-semibold border-b ${theme.border} pb-1.5 shrink-0`}>
+                                <div className={`flex items-center justify-between ${
+                                  calendarFontSize === 'compact' ? 'text-[11px]' : 'text-xs'
+                                } font-semibold border-b ${theme.border} pb-1 shrink-0`}>
                                   <span className="flex items-center gap-1">
-                                    {isToday && <span className={`w-2 h-2 rounded-full ${theme.accentBg}`} />}
+                                    {isToday && <span className={`w-1.5 h-1.5 rounded-full ${theme.accentBg}`} />}
                                     <span>{weekdayShort}, {monthDay}</span>
                                   </span>
                                   <div className="flex items-center gap-1">
                                     {dayUnifiedItems.length > 0 && (
-                                      <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded-full border ${theme.badgeNeutral}`}>
+                                      <span className={`${
+                                        calendarFontSize === 'compact' ? 'text-[8.5px] px-1' : 'text-[9.5px] px-1.5'
+                                      } font-mono py-0.2 rounded-full border ${theme.badgeNeutral}`}>
                                         {dayUnifiedItems.length}
                                       </span>
                                     )}
                                     {isToday && (
-                                      <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 font-semibold">
+                                      <span className={`${
+                                        calendarFontSize === 'compact' ? 'text-[8px] px-1' : 'text-[9px] px-1.5'
+                                      } uppercase tracking-wider py-0.2 rounded bg-black/5 font-semibold`}>
                                         Today
                                       </span>
                                     )}
@@ -2249,7 +2327,9 @@ export default function App() {
                                 {/* Stack of Unified Items */}
                                 <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5 scrollbar-minimal">
                                   {dayUnifiedItems.length === 0 ? (
-                                    <div className={`h-full flex items-center justify-center text-center text-[10.5px] ${theme.textMuted} py-10 opacity-60`}>
+                                    <div className={`h-full flex items-center justify-center text-center ${
+                                      calendarFontSize === 'compact' ? 'text-[10px]' : 'text-[10.5px]'
+                                    } ${theme.textMuted} py-10 opacity-60`}>
                                       <span>Open</span>
                                     </div>
                                   ) : (
@@ -2262,26 +2342,38 @@ export default function App() {
                                             if (rec) setViewingRecipe(rec);
                                           }
                                         }}
-                                        className={`p-2 rounded-lg ${theme.cardBg} border ${theme.border} text-xs flex flex-col gap-1 transition shadow-2xs group relative ${
+                                        className={`border-l-[3px] ${item.borderAccent || 'border-l-stone-400'} ${
+                                          item.bgAccent || theme.cardBg
+                                        } ${
+                                          calendarFontSize === 'compact' ? 'p-1.5 rounded-md' : 'p-2 rounded-lg'
+                                        } border-t border-r border-b ${theme.border} flex flex-col gap-0.5 transition shadow-2xs group relative ${
                                           item.recipeId ? 'cursor-pointer hover:border-[#9E5A43]/50' : ''
                                         }`}
                                       >
-                                        <div className="flex items-center justify-between gap-1 flex-wrap">
-                                          <span className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider ${item.badgeTheme}`}>
-                                            {item.sourceLabel}
+                                        <div className="flex items-center justify-between gap-1 leading-none">
+                                          <span className={`${
+                                            calendarFontSize === 'compact' ? 'text-[7.5px] px-1 py-0.2' : 'text-[8.5px] px-1.5 py-0.2'
+                                          } font-bold rounded border uppercase tracking-wider shrink-0 ${item.badgeTheme}`}>
+                                            {calendarFontSize === 'compact' ? (item.shortLabel || item.sourceLabel) : item.sourceLabel}
                                           </span>
-                                          <span className={`font-mono text-[10px] font-semibold ${theme.textSecondary}`}>
+                                          <span className={`font-mono ${
+                                            calendarFontSize === 'compact' ? 'text-[8.5px]' : 'text-[10px]'
+                                          } font-bold text-stone-600 truncate text-right`}>
                                             {item.time}
                                           </span>
                                         </div>
 
-                                        <div className="font-semibold text-[11px] leading-snug break-words text-stone-800">
+                                        <div className={`font-semibold ${
+                                          calendarFontSize === 'compact' ? 'text-[9.5px] leading-tight' : 'text-[11px] leading-snug'
+                                        } break-words text-stone-800`}>
                                           {item.title}
                                         </div>
 
                                         {(item.location || item.notes) && (
-                                          <div className={`text-[9.5px] ${theme.textSecondary} truncate flex items-center gap-1`}>
-                                            {item.location && <MapPin className="w-2.5 h-2.5 shrink-0" />}
+                                          <div className={`${
+                                            calendarFontSize === 'compact' ? 'text-[8px]' : 'text-[9.5px]'
+                                          } ${theme.textSecondary} truncate flex items-center gap-0.5`}>
+                                            {item.location && <MapPin className={`${calendarFontSize === 'compact' ? 'w-2 h-2' : 'w-2.5 h-2.5'} shrink-0`} />}
                                             <span className="truncate">{item.location || item.notes}</span>
                                           </div>
                                         )}
@@ -2293,7 +2385,7 @@ export default function App() {
                                               e.stopPropagation();
                                               handleDeleteCalendarEvent(item.rawId);
                                             }}
-                                            className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
+                                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-600 transition p-0.5"
                                             title="Remove event"
                                           >
                                             <Trash2 className="w-3 h-3" />

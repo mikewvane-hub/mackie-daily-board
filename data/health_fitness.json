@@ -1,10 +1,40 @@
 {
   "customRoutines": [],
   "weeklyWorkouts": {
-    "Monday": [],
-    "Tuesday": [],
+    "Monday": [
+      {
+        "instanceId": "wplan-1792361906457-zool",
+        "routineId": null,
+        "title": "Upper body set and stretching",
+        "category": "Custom Activity",
+        "duration": "Custom",
+        "completed": false,
+        "addedAt": "2026-10-18T22:18:26.457Z"
+      }
+    ],
+    "Tuesday": [
+      {
+        "instanceId": "wplan-1792361921677-h144",
+        "routineId": null,
+        "title": "Core and Stretch",
+        "category": "Custom Activity",
+        "duration": "Custom",
+        "completed": false,
+        "addedAt": "2026-10-18T22:18:41.677Z"
+      }
+    ],
     "Wednesday": [],
-    "Thursday": [],
+    "Thursday": [
+      {
+        "instanceId": "wplan-1792361937752-vvcv",
+        "routineId": null,
+        "title": "Lower body and stretch",
+        "category": "Custom Activity",
+        "duration": "Custom",
+        "completed": false,
+        "addedAt": "2026-10-18T22:18:57.752Z"
+      }
+    ],
     "Friday": [],
     "Saturday": [],
     "Sunday": []
@@ -258,6 +288,6 @@
       "source": "Oura Ring (Demo)"
     }
   ],
-  "updatedAt": "2026-10-18T15:24:35.207Z",
-  "updatedAtTs": 1792337075207
+  "updatedAt": "2026-10-18T22:18:58.607Z",
+  "updatedAtTs": 1792361938607
 }
