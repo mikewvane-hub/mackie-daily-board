@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792418731624,
+  "updatedAt": 1792418743540,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20676,7 +20676,17 @@
   },
   "scheduleUpdatedAt": 1792418730811,
   "tasks": {
-    "customTasks": [],
+    "customTasks": [
+      {
+        "id": "task-1792418743539-vkpq",
+        "text": "JBAB dog park and returns",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "Today",
+        "completed": false,
+        "createdAt": "2026-10-19T14:05:43.539Z"
+      }
+    ],
     "completedTaskIds": [
       "auto-jbab-commissary-grocery-run"
     ],
@@ -20685,10 +20695,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-19T14:05:24.244Z",
-    "updatedAtTs": 1792418724244
+    "updatedAt": "2026-10-19T14:05:43.539Z",
+    "updatedAtTs": 1792418743539
   },
-  "tasksUpdatedAt": 1792418724244,
+  "tasksUpdatedAt": 1792418743539,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
