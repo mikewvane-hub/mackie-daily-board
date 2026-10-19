@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792415217448,
+  "updatedAt": 1792415220249,
   "mealPlanUpdatedAt": 1792336427257,
   "groceryUpdatedAt": 1792336497400,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20649,7 +20649,7 @@
       "Sunday": []
     },
     "deliveryDate": "2026-11-03",
-    "selectedPhaseId": null,
+    "selectedPhaseId": "weeks-1-2",
     "cycleLogs": [],
     "averageCycleLength": 28,
     "periodDurationDays": 5,
@@ -20897,8 +20897,8 @@
         "source": "Oura Ring (Demo)"
       }
     ],
-    "updatedAt": "2026-10-19T12:37:55.290Z",
-    "updatedAtTs": 1792413475290
+    "updatedAt": "2026-10-19T13:07:00.249Z",
+    "updatedAtTs": 1792415220249
   },
-  "healthFitnessUpdatedAt": 1792413475290
+  "healthFitnessUpdatedAt": 1792415220249
 }
