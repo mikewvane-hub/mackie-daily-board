@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792460238656,
+  "updatedAt": 1792460245855,
   "mealPlanUpdatedAt": 1792460238654,
-  "groceryUpdatedAt": 1792423269567,
+  "groceryUpdatedAt": 1792460245854,
   "suggestionsUpdatedAt": 1792378024318,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,16 +66,7 @@
       }
     ]
   },
-  "groceryList": [
-    {
-      "id": "groc-manual-1792155502476-f70",
-      "name": "New England hazelnut decaf coffee",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-16T12:58:22.476Z"
-    }
-  ],
+  "groceryList": [],
   "suggestions": {
     "items": [],
     "deletedIds": [
