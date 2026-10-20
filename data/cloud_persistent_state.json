@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792528805429,
+  "updatedAt": 1792528955730,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792460257414,
   "suggestionsUpdatedAt": 1792378024318,
@@ -6567,10 +6567,10 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-11-01": [
+      "2020-10-11": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-11-01",
+          "date": "2020-10-11",
           "time": "18:30",
           "endTime": "21:30",
           "title": "Family Zoom",
@@ -20679,14 +20679,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-10-20T20:40:05.336Z",
-    "updatedAt": "2026-10-20T20:40:05.336Z",
-    "updatedAtTs": 1792528805336,
+    "lastSynced": "2026-10-20T20:42:35.639Z",
+    "updatedAt": "2026-10-20T20:42:35.639Z",
+    "updatedAtTs": 1792528955639,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1792528805336,
+  "scheduleUpdatedAt": 1792528955639,
   "tasks": {
     "customTasks": [
       {
