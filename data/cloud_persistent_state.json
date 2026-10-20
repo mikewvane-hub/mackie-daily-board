@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792529135239,
+  "updatedAt": 1792529152041,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792460257414,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20690,6 +20690,15 @@
   "tasks": {
     "customTasks": [
       {
+        "id": "task-1792529152040-1sox",
+        "text": "Put away summer clothes, get out cool weather",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-21",
+        "completed": false,
+        "createdAt": "2026-10-20T20:45:52.040Z"
+      },
+      {
         "id": "task-1792519642029-9pfh",
         "text": "Porch poo",
         "priority": "Normal",
@@ -20827,10 +20836,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-20T20:45:27.830Z",
-    "updatedAtTs": 1792529127830
+    "updatedAt": "2026-10-20T20:45:52.040Z",
+    "updatedAtTs": 1792529152040
   },
-  "tasksUpdatedAt": 1792529127830,
+  "tasksUpdatedAt": 1792529152040,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
