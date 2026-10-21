@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792540813138,
+  "updatedAt": 1792540855437,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792460257414,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20690,58 +20690,13 @@
   "tasks": {
     "customTasks": [
       {
-        "id": "task-1792529152040-1sox",
-        "text": "Put away summer clothes, get out cool weather",
+        "id": "task-1792540855352-c6ju",
+        "text": "Mike print Birthplan",
         "priority": "Normal",
         "category": "General",
         "dueDate": "2026-10-21",
         "completed": false,
-        "createdAt": "2026-10-20T20:45:52.040Z"
-      },
-      {
-        "id": "task-1792519642029-9pfh",
-        "text": "Porch poo",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-20",
-        "completed": false,
-        "createdAt": "2026-10-20T18:07:22.029Z"
-      },
-      {
-        "id": "task-1792519610629-991i",
-        "text": "Ice trays",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-20",
-        "completed": true,
-        "createdAt": "2026-10-20T18:06:50.629Z"
-      },
-      {
-        "id": "task-1792519607833-u8pk",
-        "text": "Ice trays",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-20",
-        "completed": true,
-        "createdAt": "2026-10-20T18:06:47.833Z"
-      },
-      {
-        "id": "task-1792519607134-ghqd",
-        "text": "Ice trays",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-20",
-        "completed": true,
-        "createdAt": "2026-10-20T18:06:47.134Z"
-      },
-      {
-        "id": "task-1792519601932-esqg",
-        "text": "Ice trays",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-20",
-        "completed": true,
-        "createdAt": "2026-10-20T18:06:41.932Z"
+        "createdAt": "2026-10-21T00:00:55.352Z"
       },
       {
         "id": "task-1792418743539-vkpq",
@@ -20798,6 +20753,60 @@
         "createdAt": "2026-10-19T15:33:41.175Z"
       },
       {
+        "id": "task-1792529152040-1sox",
+        "text": "Put away summer clothes, get out cool weather",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-21",
+        "completed": false,
+        "createdAt": "2026-10-20T20:45:52.040Z"
+      },
+      {
+        "id": "task-1792519642029-9pfh",
+        "text": "Porch poo",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-20",
+        "completed": false,
+        "createdAt": "2026-10-20T18:07:22.029Z"
+      },
+      {
+        "id": "task-1792519610629-991i",
+        "text": "Ice trays",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-20",
+        "completed": true,
+        "createdAt": "2026-10-20T18:06:50.629Z"
+      },
+      {
+        "id": "task-1792519607833-u8pk",
+        "text": "Ice trays",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-20",
+        "completed": true,
+        "createdAt": "2026-10-20T18:06:47.833Z"
+      },
+      {
+        "id": "task-1792519607134-ghqd",
+        "text": "Ice trays",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-20",
+        "completed": true,
+        "createdAt": "2026-10-20T18:06:47.134Z"
+      },
+      {
+        "id": "task-1792519601932-esqg",
+        "text": "Ice trays",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-20",
+        "completed": true,
+        "createdAt": "2026-10-20T18:06:41.932Z"
+      },
+      {
         "id": "task-1792460190654-klrm",
         "text": "Review Birthplan, Mike print",
         "priority": "Normal",
@@ -20836,10 +20845,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-20T20:45:52.040Z",
-    "updatedAtTs": 1792529152040
+    "updatedAt": "2026-10-21T00:00:55.352Z",
+    "updatedAtTs": 1792540855352
   },
-  "tasksUpdatedAt": 1792529152040,
+  "tasksUpdatedAt": 1792540855352,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
