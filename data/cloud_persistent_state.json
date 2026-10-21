@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792585442281,
+  "updatedAt": 1792585471940,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792585435538,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20848,7 +20848,7 @@
           "title": "Upper body set and stretching",
           "category": "Custom Activity",
           "duration": "Custom",
-          "completed": false,
+          "completed": true,
           "addedAt": "2026-10-18T22:18:26.457Z"
         }
       ],
@@ -21138,8 +21138,8 @@
         "source": "Oura Ring (Demo)"
       }
     ],
-    "updatedAt": "2026-10-19T13:07:02.766Z",
-    "updatedAtTs": 1792415222766
+    "updatedAt": "2026-10-21T12:24:31.937Z",
+    "updatedAtTs": 1792585471937
   },
-  "healthFitnessUpdatedAt": 1792415222766
+  "healthFitnessUpdatedAt": 1792585471937
 }
