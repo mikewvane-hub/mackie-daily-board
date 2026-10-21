@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792613647804,
+  "updatedAt": 1792613665402,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792585435538,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20670,24 +20670,6 @@
   "tasks": {
     "customTasks": [
       {
-        "id": "task-1792540868738-02d8",
-        "text": "38 week bump pic",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-21",
-        "completed": false,
-        "createdAt": "2026-10-21T00:01:08.738Z"
-      },
-      {
-        "id": "task-1792540855352-c6ju",
-        "text": "Mike print Birthplan",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-21",
-        "completed": false,
-        "createdAt": "2026-10-21T00:00:55.352Z"
-      },
-      {
         "id": "task-1792418743539-vkpq",
         "text": "JBAB dog park and returns",
         "priority": "Normal",
@@ -20702,7 +20684,7 @@
         "priority": "Normal",
         "category": "General",
         "dueDate": "2026-10-21",
-        "completed": false,
+        "completed": true,
         "createdAt": "2026-10-19T15:20:09.266Z"
       },
       {
@@ -20740,6 +20722,24 @@
         "dueDate": "2026-10-19",
         "completed": true,
         "createdAt": "2026-10-19T15:33:41.175Z"
+      },
+      {
+        "id": "task-1792540868738-02d8",
+        "text": "38 week bump pic",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-21",
+        "completed": false,
+        "createdAt": "2026-10-21T00:01:08.738Z"
+      },
+      {
+        "id": "task-1792540855352-c6ju",
+        "text": "Mike print Birthplan",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-21",
+        "completed": false,
+        "createdAt": "2026-10-21T00:00:55.352Z"
       },
       {
         "id": "task-1792529152040-1sox",
@@ -20827,17 +20827,18 @@
       "task-1792519601932-esqg",
       "task-1792519607134-ghqd",
       "task-1792519607833-u8pk",
-      "task-1792460146253-z837"
+      "task-1792460146253-z837",
+      "task-1792423209266-6yj4"
     ],
     "deletedTaskIds": [
       "task-1792376514119-l4gi",
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-21T00:01:08.738Z",
-    "updatedAtTs": 1792540868738
+    "updatedAt": "2026-10-21T20:14:25.315Z",
+    "updatedAtTs": 1792613665315
   },
-  "tasksUpdatedAt": 1792540868738,
+  "tasksUpdatedAt": 1792613665315,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
