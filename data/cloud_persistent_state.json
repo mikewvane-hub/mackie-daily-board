@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792585391846,
+  "updatedAt": 1792585435545,
   "mealPlanUpdatedAt": 1792460238654,
-  "groceryUpdatedAt": 1792460257414,
+  "groceryUpdatedAt": 1792585435538,
   "suggestionsUpdatedAt": 1792378024318,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,16 +66,7 @@
       }
     ]
   },
-  "groceryList": [
-    {
-      "id": "groc-manual-1792460257414-5dn",
-      "name": "Silk unsweetened almond milk",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-10-20T01:37:37.414Z"
-    }
-  ],
+  "groceryList": [],
   "suggestions": {
     "items": [],
     "deletedIds": [
