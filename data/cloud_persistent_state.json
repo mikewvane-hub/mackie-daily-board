@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1792871962964,
+  "updatedAt": 1792871969975,
   "mealPlanUpdatedAt": 1792460238654,
-  "groceryUpdatedAt": 1792585435538,
+  "groceryUpdatedAt": 1792871967563,
   "suggestionsUpdatedAt": 1792378024318,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -66,7 +66,16 @@
       }
     ]
   },
-  "groceryList": [],
+  "groceryList": [
+    {
+      "id": "groc-manual-1792871967468-j3i",
+      "name": "Trader Joe’s tea",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-10-24T19:59:27.468Z"
+    }
+  ],
   "suggestions": {
     "items": [],
     "deletedIds": [
