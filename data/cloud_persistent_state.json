@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792940197660,
-  "mealPlanUpdatedAt": 1792460238654,
+  "updatedAt": 1792940263070,
+  "mealPlanUpdatedAt": 1792940263069,
   "groceryUpdatedAt": 1792871967563,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -17,17 +17,7 @@
         "addedAt": "2026-10-18T15:13:47.257Z"
       }
     ],
-    "Tuesday": [
-      {
-        "instanceId": "meal-1792336289742-a6so",
-        "recipeId": null,
-        "title": "Lemon Chicken Spaghetti",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-18T15:11:29.742Z"
-      }
-    ],
+    "Tuesday": [],
     "Wednesday": [
       {
         "instanceId": "meal-1792336410398-kkql",
