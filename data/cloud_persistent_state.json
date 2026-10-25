@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "updatedAt": 1792940105469,
+  "updatedAt": 1792940148370,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792871967563,
-  "suggestionsUpdatedAt": 1792378024318,
+  "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
     "Monday": [
@@ -77,7 +77,16 @@
     }
   ],
   "suggestions": {
-    "items": [],
+    "items": [
+      {
+        "id": "sug-1792940147611-db6d",
+        "text": "When input meals in on certain days, I want them to automatically fall off for the next week",
+        "category": "General",
+        "author": "Mackie",
+        "createdAt": "2026-10-25T14:55:47.610Z",
+        "formattedDate": "Oct 25, 2026 at 10:55 AM EST"
+      }
+    ],
     "deletedIds": [
       "sug-test-sync",
       "sug-1791158808969-dboh",
