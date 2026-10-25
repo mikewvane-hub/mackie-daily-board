@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792940296867,
-  "mealPlanUpdatedAt": 1792940296866,
+  "updatedAt": 1792940321362,
+  "mealPlanUpdatedAt": 1792940321361,
   "groceryUpdatedAt": 1792940268295,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -52,17 +52,7 @@
     ],
     "Friday": [],
     "Saturday": [],
-    "Sunday": [
-      {
-        "instanceId": "meal-1792460238653-i6nk",
-        "recipeId": null,
-        "title": "Pizza",
-        "category": "Custom Meal",
-        "isManual": true,
-        "slot": "Custom",
-        "addedAt": "2026-10-20T01:37:18.653Z"
-      }
-    ]
+    "Sunday": []
   },
   "groceryList": [
     {
