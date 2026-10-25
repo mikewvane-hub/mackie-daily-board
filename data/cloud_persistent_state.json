@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792940280162,
-  "mealPlanUpdatedAt": 1792940280161,
+  "updatedAt": 1792940288966,
+  "mealPlanUpdatedAt": 1792940288965,
   "groceryUpdatedAt": 1792940268295,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -28,7 +28,17 @@
         "addedAt": "2026-10-25T14:58:00.161Z"
       }
     ],
-    "Wednesday": [],
+    "Wednesday": [
+      {
+        "instanceId": "meal-1792940288965-39cs",
+        "recipeId": null,
+        "title": "Hellofresh",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-25T14:58:08.965Z"
+      }
+    ],
     "Thursday": [],
     "Friday": [],
     "Saturday": [],
