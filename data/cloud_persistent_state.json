@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1792940323171,
-  "mealPlanUpdatedAt": 1792940321361,
+  "updatedAt": 1792940335460,
+  "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -52,7 +52,17 @@
     ],
     "Friday": [],
     "Saturday": [],
-    "Sunday": []
+    "Sunday": [
+      {
+        "instanceId": "meal-1792940335459-ju4g",
+        "recipeId": null,
+        "title": "Lambchops",
+        "category": "Custom Meal",
+        "isManual": true,
+        "slot": "Custom",
+        "addedAt": "2026-10-25T14:58:55.459Z"
+      }
+    ]
   },
   "groceryList": [
     {
