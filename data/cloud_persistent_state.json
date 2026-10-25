@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792939876971,
+  "updatedAt": 1792939887865,
   "mealPlanUpdatedAt": 1792460238654,
   "groceryUpdatedAt": 1792871967563,
   "suggestionsUpdatedAt": 1792378024318,
@@ -20738,6 +20738,15 @@
   "tasks": {
     "customTasks": [
       {
+        "id": "task-1792939887864-t5mv",
+        "text": "Shower/hair",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-25",
+        "completed": false,
+        "createdAt": "2026-10-25T14:51:27.864Z"
+      },
+      {
         "id": "task-1792939876970-y2jt",
         "text": "Vacuum",
         "priority": "Normal",
@@ -20912,10 +20921,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-25T14:51:16.970Z",
-    "updatedAtTs": 1792939876970
+    "updatedAt": "2026-10-25T14:51:27.864Z",
+    "updatedAtTs": 1792939887864
   },
-  "tasksUpdatedAt": 1792939876970,
+  "tasksUpdatedAt": 1792939887864,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
