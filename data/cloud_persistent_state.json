@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792981894120,
+  "updatedAt": 1792981926930,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -20745,58 +20745,13 @@
   "tasks": {
     "customTasks": [
       {
-        "id": "task-1792940406659-vlam",
-        "text": "Dog park",
+        "id": "task-1792981926928-fqrd",
+        "text": "Groom Millie",
         "priority": "Normal",
         "category": "General",
-        "dueDate": "2026-10-29",
+        "dueDate": "2026-10-27",
         "completed": false,
-        "createdAt": "2026-10-25T15:00:06.659Z"
-      },
-      {
-        "id": "task-1792940098770-54wr",
-        "text": "Target returns on the way home",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-28",
-        "completed": false,
-        "createdAt": "2026-10-25T14:54:58.770Z"
-      },
-      {
-        "id": "task-1792940064872-ozeu",
-        "text": "Dog park",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-26",
-        "completed": false,
-        "createdAt": "2026-10-25T14:54:24.872Z"
-      },
-      {
-        "id": "task-1792940057065-8vsg",
-        "text": "Clean/organize",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-26",
-        "completed": false,
-        "createdAt": "2026-10-25T14:54:17.065Z"
-      },
-      {
-        "id": "task-1792939887864-t5mv",
-        "text": "Shower/hair",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-25",
-        "completed": false,
-        "createdAt": "2026-10-25T14:51:27.864Z"
-      },
-      {
-        "id": "task-1792939876970-y2jt",
-        "text": "Vacuum",
-        "priority": "Normal",
-        "category": "General",
-        "dueDate": "2026-10-25",
-        "completed": false,
-        "createdAt": "2026-10-25T14:51:16.970Z"
+        "createdAt": "2026-10-26T02:32:06.928Z"
       },
       {
         "id": "task-1792418743539-vkpq",
@@ -20851,6 +20806,60 @@
         "dueDate": "2026-10-19",
         "completed": true,
         "createdAt": "2026-10-19T15:33:41.175Z"
+      },
+      {
+        "id": "task-1792940406659-vlam",
+        "text": "Dog park",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-29",
+        "completed": false,
+        "createdAt": "2026-10-25T15:00:06.659Z"
+      },
+      {
+        "id": "task-1792940098770-54wr",
+        "text": "Target returns on the way home",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-28",
+        "completed": false,
+        "createdAt": "2026-10-25T14:54:58.770Z"
+      },
+      {
+        "id": "task-1792940064872-ozeu",
+        "text": "Dog park",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-26",
+        "completed": false,
+        "createdAt": "2026-10-25T14:54:24.872Z"
+      },
+      {
+        "id": "task-1792940057065-8vsg",
+        "text": "Clean/organize",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-26",
+        "completed": false,
+        "createdAt": "2026-10-25T14:54:17.065Z"
+      },
+      {
+        "id": "task-1792939887864-t5mv",
+        "text": "Shower/hair",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-25",
+        "completed": false,
+        "createdAt": "2026-10-25T14:51:27.864Z"
+      },
+      {
+        "id": "task-1792939876970-y2jt",
+        "text": "Vacuum",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-25",
+        "completed": false,
+        "createdAt": "2026-10-25T14:51:16.970Z"
       },
       {
         "id": "task-1792540868738-02d8",
@@ -20964,10 +20973,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-25T15:00:06.660Z",
-    "updatedAtTs": 1792940406660
+    "updatedAt": "2026-10-26T02:32:06.928Z",
+    "updatedAtTs": 1792981926928
   },
-  "tasksUpdatedAt": 1792940406660,
+  "tasksUpdatedAt": 1792981926928,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
