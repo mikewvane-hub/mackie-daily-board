@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1792982036516,
+  "updatedAt": 1792982038389,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -20745,6 +20745,15 @@
   "tasks": {
     "customTasks": [
       {
+        "id": "task-1792982036918-kcbw",
+        "text": "Wash bedding, rugs",
+        "priority": "Normal",
+        "category": "General",
+        "dueDate": "2026-10-28",
+        "completed": false,
+        "createdAt": "2026-10-26T02:33:56.918Z"
+      },
+      {
         "id": "task-1792982036434-15hy",
         "text": "Wash bedding, rugs,",
         "priority": "Normal",
@@ -21000,10 +21009,10 @@
       "task-1792414969970-tdxy",
       "auto-jbab-commissary-grocery-run"
     ],
-    "updatedAt": "2026-10-26T02:33:56.435Z",
-    "updatedAtTs": 1792982036435
+    "updatedAt": "2026-10-26T02:33:56.918Z",
+    "updatedAtTs": 1792982036918
   },
-  "tasksUpdatedAt": 1792982036435,
+  "tasksUpdatedAt": 1792982036918,
   "healthFitness": {
     "customRoutines": [],
     "weeklyWorkouts": {
