@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793135242886,
+  "updatedAt": 1793135273183,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -899,35 +899,50 @@
       "2026-12-23": [],
       "2026-12-24": [],
       "2026-12-25": [],
-      "2026-10-25": [
+      "2026-10-20": [
         {
-          "id": "q9p2vhbn5gb8trqueqvtl49qag@google.com",
-          "date": "2026-10-25",
-          "time": "09:50",
-          "endTime": "10:50",
-          "title": "Andrew’s Tee time",
-          "location": "",
-          "category": "Appointment",
-          "notes": "",
-          "source": "Google Calendar"
-        },
-        {
-          "id": "imb7ng6gcfnahgs2jovsr8ief0@google.com",
-          "date": "2026-10-25",
-          "time": "14:00",
-          "endTime": "15:00",
-          "title": "Del Ray Halloween Parade",
-          "location": "Mount Vernon Avenue and E. Bellefonte Avenue, Alexandria, VA",
-          "category": "personal",
-          "notes": "Starts at Mount Vernon Avenue and E. Bellefonte Avenue, Alexandria, VA and ends at Mount Vernon Recreation Center field (Mount Vernon and Commonwealth Avenues)",
-          "source": "Google Calendar"
-        },
-        {
-          "id": "jmc5a7nn8mh4cn0itt93at3224@google.com",
-          "date": "2026-10-25",
+          "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
+          "date": "2026-10-20",
           "time": "ALL DAY",
           "endTime": "",
-          "title": "Activate Instacart Plus",
+          "title": "38 weeks",
+          "location": "",
+          "category": "personal",
+          "notes": "",
+          "source": "Google Calendar"
+        }
+      ],
+      "2026-10-22": [
+        {
+          "id": "t3c890mf6nprq7mm600j890e50@google.com",
+          "date": "2026-10-22",
+          "time": "15:00",
+          "endTime": "19:00",
+          "title": "FRESHFARM Penn Quarter Market & Autumn Harvest Stroll",
+          "location": "8th St NW between D & E Streets NW (Penn Quarter, Downtown D.C.)",
+          "category": "personal",
+          "notes": "Open-air farmers market featuring Shenandoah Valley orchard apples, warm apple cider, artisan sourdough, seasonal flowers, and local D.C. roasters right in the heart of Penn Quarte",
+          "source": "Google Calendar"
+        }
+      ],
+      "2026-10-23": [
+        {
+          "id": "h0mcprs41opv5j057218mjttfc@google.com",
+          "date": "2026-10-23",
+          "time": "09:00",
+          "endTime": "10:00",
+          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
+          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
+          "category": "personal",
+          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
+          "source": "Google Calendar"
+        },
+        {
+          "id": "j45gtluqacbiushpni9lqn89k4@google.com",
+          "date": "2026-10-23",
+          "time": "19:00",
+          "endTime": "21:00",
+          "title": "Riverpoint Halloween Kareoke",
           "location": "",
           "category": "personal",
           "notes": "",
@@ -958,50 +973,35 @@
           "source": "Google Calendar"
         }
       ],
-      "2026-10-23": [
+      "2026-10-25": [
         {
-          "id": "h0mcprs41opv5j057218mjttfc@google.com",
-          "date": "2026-10-23",
-          "time": "09:00",
-          "endTime": "10:00",
-          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
-          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
-          "category": "personal",
-          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
+          "id": "q9p2vhbn5gb8trqueqvtl49qag@google.com",
+          "date": "2026-10-25",
+          "time": "09:50",
+          "endTime": "10:50",
+          "title": "Andrew’s Tee time",
+          "location": "",
+          "category": "Appointment",
+          "notes": "",
           "source": "Google Calendar"
         },
         {
-          "id": "j45gtluqacbiushpni9lqn89k4@google.com",
-          "date": "2026-10-23",
-          "time": "19:00",
-          "endTime": "21:00",
-          "title": "Riverpoint Halloween Kareoke",
-          "location": "",
+          "id": "imb7ng6gcfnahgs2jovsr8ief0@google.com",
+          "date": "2026-10-25",
+          "time": "14:00",
+          "endTime": "15:00",
+          "title": "Del Ray Halloween Parade",
+          "location": "Mount Vernon Avenue and E. Bellefonte Avenue, Alexandria, VA",
           "category": "personal",
-          "notes": "",
+          "notes": "Starts at Mount Vernon Avenue and E. Bellefonte Avenue, Alexandria, VA and ends at Mount Vernon Recreation Center field (Mount Vernon and Commonwealth Avenues)",
           "source": "Google Calendar"
-        }
-      ],
-      "2026-10-22": [
+        },
         {
-          "id": "t3c890mf6nprq7mm600j890e50@google.com",
-          "date": "2026-10-22",
-          "time": "15:00",
-          "endTime": "19:00",
-          "title": "FRESHFARM Penn Quarter Market & Autumn Harvest Stroll",
-          "location": "8th St NW between D & E Streets NW (Penn Quarter, Downtown D.C.)",
-          "category": "personal",
-          "notes": "Open-air farmers market featuring Shenandoah Valley orchard apples, warm apple cider, artisan sourdough, seasonal flowers, and local D.C. roasters right in the heart of Penn Quarte",
-          "source": "Google Calendar"
-        }
-      ],
-      "2026-10-20": [
-        {
-          "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
-          "date": "2026-10-20",
+          "id": "jmc5a7nn8mh4cn0itt93at3224@google.com",
+          "date": "2026-10-25",
           "time": "ALL DAY",
           "endTime": "",
-          "title": "38 weeks",
+          "title": "Activate Instacart Plus",
           "location": "",
           "category": "personal",
           "notes": "",
@@ -6612,13 +6612,13 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-10-04": [
+      "2020-11-01": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-10-04",
+          "date": "2020-11-01",
           "time": "18:30",
           "endTime": "21:30",
-          "title": "Weekly Family Zoom Call",
+          "title": "Family Zoom",
           "location": "https://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTUNyM05tNDlNM1ZMQT09",
           "category": "Family",
           "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nTopic: Taylor Blair's Personal Meeting Room\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTU",
@@ -20718,30 +20718,20 @@
           "notes": "",
           "source": "Google Calendar"
         }
-      ],
-      "2021-08-18": [
-        {
-          "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-08-18",
-          "time": "19:00",
-          "endTime": "21:00",
-          "title": "Blair Family Zoom",
-          "location": "https://projekt202.zoom.us/j/9029622241",
-          "category": "Family",
-          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241\n\nMeeting ID: 902 962 2241\nOne tap mobile\n+13462487799,,90296222",
-          "source": "Google Calendar"
-        }
       ]
     },
     "customEvents": [],
-    "lastSynced": "2026-10-27T20:20:06.342Z",
-    "updatedAt": "2026-10-27T21:07:21.262Z",
-    "updatedAtTs": 1793135241262,
+    "deletedEventIds": [
+      "evt-1792414955699"
+    ],
+    "lastSynced": "2026-10-27T21:07:53.091Z",
+    "updatedAt": "2026-10-27T21:07:53.091Z",
+    "updatedAtTs": 1793135273091,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793135241262,
+  "scheduleUpdatedAt": 1793135273091,
   "tasks": {
     "customTasks": [
       {
