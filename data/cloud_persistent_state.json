@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793191130655,
+  "updatedAt": 1793191206215,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -1130,16 +1130,16 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-03-04": [
+      "2021-06-24": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-03-04",
+          "date": "2021-06-24",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
           "location": "https://projekt202.zoom.us/j/9029622241",
           "category": "Family",
-          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241\n\nMeeting ID: 902 962 2241\nOne tap mobile\n+13462487799,,90296222",
+          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.<br><br>Join Zoom Meeting<br><a href=\"https://projekt202.zoom.us/j/9029622241\">https://projekt202.zoom.us/j/9029622241</a><",
           "source": "Google Calendar"
         }
       ],
@@ -6625,10 +6625,10 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-10-11": [
+      "2020-11-01": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-10-11",
+          "date": "2020-11-01",
           "time": "18:30",
           "endTime": "21:30",
           "title": "Family Zoom",
@@ -20737,14 +20737,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-10-28T12:38:50.563Z",
-    "updatedAt": "2026-10-28T12:38:50.563Z",
-    "updatedAtTs": 1793191130563,
+    "lastSynced": "2026-10-28T12:40:06.168Z",
+    "updatedAt": "2026-10-28T12:40:06.168Z",
+    "updatedAtTs": 1793191206168,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793191130563,
+  "scheduleUpdatedAt": 1793191206168,
   "tasks": {
     "customTasks": [
       {
