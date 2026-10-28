@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793190590166,
+  "updatedAt": 1793190606157,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -1130,16 +1130,16 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-06-24": [
+      "2021-03-04": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-06-24",
+          "date": "2021-03-04",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
           "location": "https://projekt202.zoom.us/j/9029622241",
           "category": "Family",
-          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.<br><br>Join Zoom Meeting<br><a href=\"https://projekt202.zoom.us/j/9029622241\">https://projekt202.zoom.us/j/9029622241</a><",
+          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241\n\nMeeting ID: 902 962 2241\nOne tap mobile\n+13462487799,,90296222",
           "source": "Google Calendar"
         }
       ],
@@ -20737,14 +20737,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-10-28T12:29:50.160Z",
-    "updatedAt": "2026-10-28T12:29:50.160Z",
-    "updatedAtTs": 1793190590160,
+    "lastSynced": "2026-10-28T12:30:06.066Z",
+    "updatedAt": "2026-10-28T12:30:06.066Z",
+    "updatedAtTs": 1793190606066,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793190590160,
+  "scheduleUpdatedAt": 1793190606066,
   "tasks": {
     "customTasks": [
       {
