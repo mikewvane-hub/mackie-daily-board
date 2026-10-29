@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793292301787,
+  "updatedAt": 1793292345184,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -1119,10 +1119,10 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-08-18": [
+      "2021-03-04": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-08-18",
+          "date": "2021-03-04",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
@@ -6614,13 +6614,13 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-10-11": [
+      "2020-10-04": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-10-11",
+          "date": "2020-10-04",
           "time": "18:30",
           "endTime": "21:30",
-          "title": "Family Zoom",
+          "title": "Weekly Family Zoom Call",
           "location": "https://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTUNyM05tNDlNM1ZMQT09",
           "category": "Family",
           "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nTopic: Taylor Blair's Personal Meeting Room\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTU",
@@ -20711,14 +20711,14 @@
     },
     "customEvents": [],
     "deletedEventIds": [],
-    "lastSynced": "2026-10-29T16:45:01.777Z",
-    "updatedAt": "2026-10-29T16:45:01.777Z",
-    "updatedAtTs": 1793292301777,
+    "lastSynced": "2026-10-29T16:45:45.173Z",
+    "updatedAt": "2026-10-29T16:45:45.173Z",
+    "updatedAtTs": 1793292345173,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793292301777,
+  "scheduleUpdatedAt": 1793292345173,
   "tasks": {
     "customTasks": [
       {
