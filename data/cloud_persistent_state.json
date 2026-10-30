@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793371490629,
+  "updatedAt": 1793371502209,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -900,41 +900,77 @@
           "source": "Google Calendar"
         }
       ],
-      "2026-10-28": [
+      "2026-10-20": [
         {
-          "id": "sm7taculi3e8ps2kns1hso6ei8@google.com",
-          "date": "2026-10-28",
-          "time": "08:30",
-          "endTime": "09:30",
-          "title": "Infusion at 8:30",
+          "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
+          "date": "2026-10-20",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "38 weeks",
           "location": "",
           "category": "personal",
           "notes": "",
-          "source": "Google Calendar"
-        },
-        {
-          "id": "2anqva85cdht5d433b2l711of6@google.com_2026-10-28",
-          "date": "2026-10-28",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "Dog flea/tick/worker",
-          "location": "",
-          "category": "Work",
-          "notes": "",
-          "recurring": true,
           "source": "Google Calendar"
         }
       ],
-      "2026-10-27": [
+      "2026-10-22": [
         {
-          "id": "s9n9usufqoicgguigps26rml98@google.com",
-          "date": "2026-10-27",
-          "time": "08:30",
-          "endTime": "09:30",
-          "title": "Baby apt, Husslebirth",
+          "id": "t3c890mf6nprq7mm600j890e50@google.com",
+          "date": "2026-10-22",
+          "time": "15:00",
+          "endTime": "19:00",
+          "title": "FRESHFARM Penn Quarter Market & Autumn Harvest Stroll",
+          "location": "8th St NW between D & E Streets NW (Penn Quarter, Downtown D.C.)",
+          "category": "personal",
+          "notes": "Open-air farmers market featuring Shenandoah Valley orchard apples, warm apple cider, artisan sourdough, seasonal flowers, and local D.C. roasters right in the heart of Penn Quarte",
+          "source": "Google Calendar"
+        }
+      ],
+      "2026-10-23": [
+        {
+          "id": "h0mcprs41opv5j057218mjttfc@google.com",
+          "date": "2026-10-23",
+          "time": "09:00",
+          "endTime": "10:00",
+          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
+          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
+          "category": "personal",
+          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
+          "source": "Google Calendar"
+        },
+        {
+          "id": "j45gtluqacbiushpni9lqn89k4@google.com",
+          "date": "2026-10-23",
+          "time": "19:00",
+          "endTime": "21:00",
+          "title": "Riverpoint Halloween Kareoke",
           "location": "",
           "category": "personal",
           "notes": "",
+          "source": "Google Calendar"
+        }
+      ],
+      "2026-10-24": [
+        {
+          "id": "lr833llcsi9mdmb4n5681g7b70@google.com",
+          "date": "2026-10-24",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "Fall Fredrick Babymoon day",
+          "location": "",
+          "category": "Appointment",
+          "notes": "🎃🍂 Frederick, MD — Fall/Halloween Babymoon Day\n\nSaturday, October 24, 2026\n\n9:00 AM — Leave DC\n~1 hour drive\n\n10:15 AM — ☕ Coffee + breakfast\nFrederick Coffee Co & Cafe\nCute, cas",
+          "source": "Google Calendar"
+        },
+        {
+          "id": "dp9f987jtk1j2bdm8dv7ilva74@google.com",
+          "date": "2026-10-24",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "Assateague Babymoon Day",
+          "location": "",
+          "category": "personal",
+          "notes": "The whole day at a glance\n\n7:00 — Leave DC\n↓\n9:45 — ☕ On What Grounds in Berlin\n↓\n10:20 — Drive to Assateague\n↓\n10:45 — 🐴 Enter Maryland district + horse spotting\n↓\n11:15 — 🌾 Lif",
           "source": "Google Calendar"
         }
       ],
@@ -973,77 +1009,41 @@
           "source": "Google Calendar"
         }
       ],
-      "2026-10-24": [
+      "2026-10-27": [
         {
-          "id": "lr833llcsi9mdmb4n5681g7b70@google.com",
-          "date": "2026-10-24",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "Fall Fredrick Babymoon day",
-          "location": "",
-          "category": "Appointment",
-          "notes": "🎃🍂 Frederick, MD — Fall/Halloween Babymoon Day\n\nSaturday, October 24, 2026\n\n9:00 AM — Leave DC\n~1 hour drive\n\n10:15 AM — ☕ Coffee + breakfast\nFrederick Coffee Co & Cafe\nCute, cas",
-          "source": "Google Calendar"
-        },
-        {
-          "id": "dp9f987jtk1j2bdm8dv7ilva74@google.com",
-          "date": "2026-10-24",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "Assateague Babymoon Day",
-          "location": "",
-          "category": "personal",
-          "notes": "The whole day at a glance\n\n7:00 — Leave DC\n↓\n9:45 — ☕ On What Grounds in Berlin\n↓\n10:20 — Drive to Assateague\n↓\n10:45 — 🐴 Enter Maryland district + horse spotting\n↓\n11:15 — 🌾 Lif",
-          "source": "Google Calendar"
-        }
-      ],
-      "2026-10-23": [
-        {
-          "id": "h0mcprs41opv5j057218mjttfc@google.com",
-          "date": "2026-10-23",
-          "time": "09:00",
-          "endTime": "10:00",
-          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
-          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
-          "category": "personal",
-          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
-          "source": "Google Calendar"
-        },
-        {
-          "id": "j45gtluqacbiushpni9lqn89k4@google.com",
-          "date": "2026-10-23",
-          "time": "19:00",
-          "endTime": "21:00",
-          "title": "Riverpoint Halloween Kareoke",
+          "id": "s9n9usufqoicgguigps26rml98@google.com",
+          "date": "2026-10-27",
+          "time": "08:30",
+          "endTime": "09:30",
+          "title": "Baby apt, Husslebirth",
           "location": "",
           "category": "personal",
           "notes": "",
           "source": "Google Calendar"
         }
       ],
-      "2026-10-22": [
+      "2026-10-28": [
         {
-          "id": "t3c890mf6nprq7mm600j890e50@google.com",
-          "date": "2026-10-22",
-          "time": "15:00",
-          "endTime": "19:00",
-          "title": "FRESHFARM Penn Quarter Market & Autumn Harvest Stroll",
-          "location": "8th St NW between D & E Streets NW (Penn Quarter, Downtown D.C.)",
-          "category": "personal",
-          "notes": "Open-air farmers market featuring Shenandoah Valley orchard apples, warm apple cider, artisan sourdough, seasonal flowers, and local D.C. roasters right in the heart of Penn Quarte",
-          "source": "Google Calendar"
-        }
-      ],
-      "2026-10-20": [
-        {
-          "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
-          "date": "2026-10-20",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "38 weeks",
+          "id": "sm7taculi3e8ps2kns1hso6ei8@google.com",
+          "date": "2026-10-28",
+          "time": "08:30",
+          "endTime": "09:30",
+          "title": "Infusion at 8:30",
           "location": "",
           "category": "personal",
           "notes": "",
+          "source": "Google Calendar"
+        },
+        {
+          "id": "2anqva85cdht5d433b2l711of6@google.com_2026-10-28",
+          "date": "2026-10-28",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "Dog flea/tick/worker",
+          "location": "",
+          "category": "Work",
+          "notes": "",
+          "recurring": true,
           "source": "Google Calendar"
         }
       ],
@@ -1156,16 +1156,16 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-08-18": [
+      "2021-06-24": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-08-18",
+          "date": "2021-06-24",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
           "location": "https://projekt202.zoom.us/j/9029622241",
           "category": "Family",
-          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241\n\nMeeting ID: 902 962 2241\nOne tap mobile\n+13462487799,,90296222",
+          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.<br><br>Join Zoom Meeting<br><a href=\"https://projekt202.zoom.us/j/9029622241\">https://projekt202.zoom.us/j/9029622241</a><",
           "source": "Google Calendar"
         }
       ],
@@ -20750,14 +20750,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-10-30T14:44:48.810Z",
-    "updatedAt": "2026-10-30T14:44:48.810Z",
-    "updatedAtTs": 1793371488810,
+    "lastSynced": "2026-10-30T14:45:01.192Z",
+    "updatedAt": "2026-10-30T14:45:01.192Z",
+    "updatedAtTs": 1793371501192,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793371488810,
+  "scheduleUpdatedAt": 1793371501192,
   "tasks": {
     "customTasks": [
       {
