@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793378818419,
+  "updatedAt": 1793436532879,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -743,14 +743,14 @@
   "schedule": {
     "events": [
       {
-        "id": "tehb91p0cn8u04nmv1qcf2ij54@google.com",
-        "date": "2026-10-30",
-        "time": "09:00",
-        "endTime": "10:00",
-        "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
-        "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
+        "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
+        "date": "2026-10-31",
+        "time": "ALL DAY",
+        "endTime": "",
+        "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
+        "location": "69 Q Street Southwest, Washington, DC 20024, USA",
         "category": "personal",
-        "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
+        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
         "source": "Google Calendar"
       }
     ],
@@ -20747,17 +20747,14 @@
       ]
     },
     "customEvents": [],
-    "deletedEventIds": [
-      "evt-1792414955699"
-    ],
     "lastSynced": "2026-10-30T16:46:57.800Z",
-    "updatedAt": "2026-10-30T16:46:57.800Z",
-    "updatedAtTs": 1793378817800,
+    "updatedAt": "2026-10-31T04:09:20.329Z",
+    "updatedAtTs": 1793419760329,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793378817800,
+  "scheduleUpdatedAt": 1793419760329,
   "tasks": {
     "customTasks": [
       {
