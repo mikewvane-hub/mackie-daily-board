@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793496372469,
+  "updatedAt": 1793510769182,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1792940321361,
   "suggestionsUpdatedAt": 1792940148369,
@@ -741,33 +741,8 @@
     "updatedAtTs": 1791172501842
   },
   "schedule": {
-    "events": [
-      {
-        "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
-        "date": "2026-10-31",
-        "time": "ALL DAY",
-        "endTime": "",
-        "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
-        "location": "69 Q Street Southwest, Washington, DC 20024, USA",
-        "category": "personal",
-        "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-        "source": "Google Calendar"
-      }
-    ],
+    "events": [],
     "weekSchedule": {
-      "2026-10-31": [
-        {
-          "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
-          "date": "2026-10-31",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
-          "location": "69 Q Street Southwest, Washington, DC 20024, USA",
-          "category": "personal",
-          "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-          "source": "Google Calendar"
-        }
-      ],
       "2026-11-01": [],
       "2026-11-02": [],
       "2026-11-03": [
@@ -888,6 +863,20 @@
         }
       ],
       "2026-12-29": [],
+      "2026-12-30": [],
+      "2026-10-31": [
+        {
+          "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
+          "date": "2026-10-31",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
+          "location": "69 Q Street Southwest, Washington, DC 20024, USA",
+          "category": "personal",
+          "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
+          "source": "Google Calendar"
+        }
+      ],
       "2026-10-30": [
         {
           "id": "tehb91p0cn8u04nmv1qcf2ij54@google.com",
@@ -6652,13 +6641,13 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-10-11": [
+      "2020-10-04": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-10-11",
+          "date": "2020-10-04",
           "time": "18:30",
           "endTime": "21:30",
-          "title": "Family Zoom",
+          "title": "Weekly Family Zoom Call",
           "location": "https://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTUNyM05tNDlNM1ZMQT09",
           "category": "Family",
           "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nTopic: Taylor Blair's Personal Meeting Room\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTU",
@@ -20751,14 +20740,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-11-01T01:26:11.104Z",
-    "updatedAt": "2026-11-01T01:26:11.104Z",
-    "updatedAtTs": 1793496371104,
+    "lastSynced": "2026-11-01T05:26:09.173Z",
+    "updatedAt": "2026-11-01T05:26:09.173Z",
+    "updatedAtTs": 1793510769173,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793496371104,
+  "scheduleUpdatedAt": 1793510769173,
   "tasks": {
     "customTasks": [
       {
