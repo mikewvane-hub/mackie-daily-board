@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1793673633327,
+  "updatedAt": 1793673643003,
   "mealPlanUpdatedAt": 1792940335459,
-  "groceryUpdatedAt": 1793673631245,
+  "groceryUpdatedAt": 1793673642988,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -64,7 +64,16 @@
       }
     ]
   },
-  "groceryList": [],
+  "groceryList": [
+    {
+      "id": "groc-manual-1793673642988-qtv",
+      "name": "Almond milk",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-11-03T02:40:42.988Z"
+    }
+  ],
   "suggestions": {
     "items": [
       {
