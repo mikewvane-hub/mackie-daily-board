@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793756180848,
+  "updatedAt": 1793756189781,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1793673647915,
   "suggestionsUpdatedAt": 1792940148369,
@@ -895,6 +895,32 @@
       "2026-12-30": [],
       "2026-12-31": [],
       "2027-01-01": [],
+      "2026-10-31": [
+        {
+          "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
+          "date": "2026-10-31",
+          "time": "ALL DAY",
+          "endTime": "",
+          "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
+          "location": "69 Q Street Southwest, Washington, DC 20024, USA",
+          "category": "personal",
+          "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
+          "source": "Google Calendar"
+        }
+      ],
+      "2026-10-30": [
+        {
+          "id": "tehb91p0cn8u04nmv1qcf2ij54@google.com",
+          "date": "2026-10-30",
+          "time": "09:00",
+          "endTime": "10:00",
+          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
+          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
+          "category": "personal",
+          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
+          "source": "Google Calendar"
+        }
+      ],
       "2026-10-20": [
         {
           "id": "hh0d1kugef4qb0duqu5vv6cjks@google.com",
@@ -1042,32 +1068,6 @@
           "source": "Google Calendar"
         }
       ],
-      "2026-10-30": [
-        {
-          "id": "tehb91p0cn8u04nmv1qcf2ij54@google.com",
-          "date": "2026-10-30",
-          "time": "09:00",
-          "endTime": "10:00",
-          "title": "Pre-Natal and Post-Natal Yoga @ Eastern Market - Barracks Row with Chris Sherman",
-          "location": "405 8th St SE, 2nd Floor, Washington, DC 20003, United States",
-          "category": "personal",
-          "notes": "For all our soon-to-be and newly minted moms out there! Come practice yoga in ways catered to your pre- and post-natal needs.\n\nhttps://www.districtflowyoga.com/classes?_mt=%2Fclass",
-          "source": "Google Calendar"
-        }
-      ],
-      "2026-10-31": [
-        {
-          "id": "achkm5i3ejgl4aodllaveoifl8@google.com",
-          "date": "2026-10-31",
-          "time": "ALL DAY",
-          "endTime": "",
-          "title": "Stay at Cambria Hotel Washington D.C. Navy Yard Riverfront",
-          "location": "69 Q Street Southwest, Washington, DC 20024, USA",
-          "category": "personal",
-          "notes": "To see detailed information for automatically created events like this one, use the official Google Calendar app. https://g.co/calendar\n\nThis event was created from an email you re",
-          "source": "Google Calendar"
-        }
-      ],
       "2022-12-29": [
         {
           "id": "8vudr1hsvus48uqur764346ijs@google.com",
@@ -1177,16 +1177,16 @@
           "source": "Google Calendar"
         }
       ],
-      "2021-06-24": [
+      "2021-08-18": [
         {
           "id": "3guq382m3b5rkcepd229vjm668@google.com",
-          "date": "2021-06-24",
+          "date": "2021-08-18",
           "time": "19:00",
           "endTime": "21:00",
           "title": "Blair Family Zoom",
           "location": "https://projekt202.zoom.us/j/9029622241",
           "category": "Family",
-          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.<br><br>Join Zoom Meeting<br><a href=\"https://projekt202.zoom.us/j/9029622241\">https://projekt202.zoom.us/j/9029622241</a><",
+          "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241\n\nMeeting ID: 902 962 2241\nOne tap mobile\n+13462487799,,90296222",
           "source": "Google Calendar"
         }
       ],
@@ -6672,13 +6672,13 @@
           "source": "Google Calendar"
         }
       ],
-      "2020-11-01": [
+      "2020-10-04": [
         {
           "id": "78pofss0f1638fe07h0h64po0a@google.com",
-          "date": "2020-11-01",
+          "date": "2020-10-04",
           "time": "18:30",
           "endTime": "21:30",
-          "title": "Family Zoom",
+          "title": "Weekly Family Zoom Call",
           "location": "https://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTUNyM05tNDlNM1ZMQT09",
           "category": "Family",
           "notes": "Taylor Blair is inviting you to a scheduled Zoom meeting.\n\nTopic: Taylor Blair's Personal Meeting Room\n\nJoin Zoom Meeting\nhttps://projekt202.zoom.us/j/9029622241?pwd=eFVWZUdCa0xZTU",
@@ -20771,14 +20771,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-11-04T01:36:20.755Z",
-    "updatedAt": "2026-11-04T01:36:20.755Z",
-    "updatedAtTs": 1793756180755,
+    "lastSynced": "2026-11-04T01:36:26.589Z",
+    "updatedAt": "2026-11-04T01:36:26.589Z",
+    "updatedAtTs": 1793756186589,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793756180755,
+  "scheduleUpdatedAt": 1793756186589,
   "tasks": {
     "customTasks": [
       {
