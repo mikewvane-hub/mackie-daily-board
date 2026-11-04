@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updatedAt": 1793814308718,
+  "updatedAt": 1793814314230,
   "mealPlanUpdatedAt": 1792940335459,
   "groceryUpdatedAt": 1793673647915,
   "suggestionsUpdatedAt": 1792940148369,
@@ -20749,14 +20749,14 @@
     "deletedEventIds": [
       "evt-1792414955699"
     ],
-    "lastSynced": "2026-11-04T17:45:05.927Z",
-    "updatedAt": "2026-11-04T17:45:05.927Z",
-    "updatedAtTs": 1793814305927,
+    "lastSynced": "2026-11-04T17:45:14.220Z",
+    "updatedAt": "2026-11-04T17:45:14.220Z",
+    "updatedAtTs": 1793814314220,
     "source": "Google Calendar (Live iCal Sync)",
     "account": "amblair92@gmail.com",
     "authorized": true
   },
-  "scheduleUpdatedAt": 1793814305927,
+  "scheduleUpdatedAt": 1793814314220,
   "tasks": {
     "customTasks": [
       {
