@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1794921653095,
+  "updatedAt": 1794921697700,
   "mealPlanUpdatedAt": 1794897087214,
-  "groceryUpdatedAt": 1794897087214,
+  "groceryUpdatedAt": 1794921697699,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -64,7 +64,16 @@
       }
     ]
   },
-  "groceryList": [],
+  "groceryList": [
+    {
+      "id": "groc-manual-1794921697699-fe4",
+      "name": "Eggs",
+      "checked": false,
+      "sourceRecipeTitle": "Manual Addition",
+      "isManual": true,
+      "createdAt": "2026-11-17T13:21:37.699Z"
+    }
+  ],
   "suggestions": {
     "items": [
       {
