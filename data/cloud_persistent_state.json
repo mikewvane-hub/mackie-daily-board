@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1794897083005,
+  "updatedAt": 1794897084964,
   "mealPlanUpdatedAt": 1794897065506,
-  "groceryUpdatedAt": 1794897083004,
+  "groceryUpdatedAt": 1794897084006,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -75,14 +75,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-manual-1793673642988-qtv",
-      "name": "Almond milk",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-11-03T02:40:42.988Z"
-    },
     {
       "id": "groc-1794897065508-0-opo",
       "name": "Sweet potatoes",
