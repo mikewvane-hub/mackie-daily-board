@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1794897087215,
+  "updatedAt": 1794897089035,
   "mealPlanUpdatedAt": 1794897087214,
-  "groceryUpdatedAt": 1794897084006,
+  "groceryUpdatedAt": 1794897087214,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -64,116 +64,7 @@
       }
     ]
   },
-  "groceryList": [
-    {
-      "id": "groc-1794897065508-0-opo",
-      "name": "Sweet potatoes",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.508Z"
-    },
-    {
-      "id": "groc-1794897065508-1-d9v",
-      "name": "Eggs",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.508Z"
-    },
-    {
-      "id": "groc-1794897065509-2-n2n",
-      "name": "Avocado",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.509Z"
-    },
-    {
-      "id": "groc-1794897065510-3-49a",
-      "name": "Bell peppers / sweet peppers",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.510Z"
-    },
-    {
-      "id": "groc-1794897065598-4-mwa",
-      "name": "Mushrooms",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.598Z"
-    },
-    {
-      "id": "groc-1794897065598-5-39a",
-      "name": "Mozzarella cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.598Z"
-    },
-    {
-      "id": "groc-1794897065598-6-8ub",
-      "name": "Onion",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.598Z"
-    },
-    {
-      "id": "groc-1794897065598-7-7ks",
-      "name": "Feta cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.598Z"
-    },
-    {
-      "id": "groc-1794897065598-8-jfw",
-      "name": "Parmesan cheese",
-      "checked": false,
-      "sourceRecipeTitle": "Bfast Hash",
-      "sourceDay": "Tuesday",
-      "sourceInstanceIds": [
-        "meal-1794897065506-pfcy"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-17T06:31:05.598Z"
-    }
-  ],
+  "groceryList": [],
   "suggestions": {
     "items": [
       {
