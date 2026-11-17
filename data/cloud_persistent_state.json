@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1794897067269,
+  "updatedAt": 1794897083005,
   "mealPlanUpdatedAt": 1794897065506,
-  "groceryUpdatedAt": 1794897065598,
+  "groceryUpdatedAt": 1794897083004,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -75,14 +75,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-manual-1793673647915-2eb",
-      "name": "Sourdough",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
-      "isManual": true,
-      "createdAt": "2026-11-03T02:40:47.915Z"
-    },
     {
       "id": "groc-manual-1793673642988-qtv",
       "name": "Almond milk",
