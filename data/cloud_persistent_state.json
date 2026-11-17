@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1794897018792,
-  "mealPlanUpdatedAt": 1792940335459,
+  "updatedAt": 1794897065599,
+  "mealPlanUpdatedAt": 1794897065506,
   "groceryUpdatedAt": 1793673647915,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -26,6 +26,16 @@
         "isManual": true,
         "slot": "Custom",
         "addedAt": "2026-10-25T14:58:00.161Z"
+      },
+      {
+        "instanceId": "meal-1794897065506-pfcy",
+        "recipeId": "bfast-hash",
+        "title": "Bfast Hash",
+        "category": "Breakfast",
+        "page": 6,
+        "isManual": false,
+        "slot": "Breakfast",
+        "addedAt": "2026-11-17T06:31:05.506Z"
       }
     ],
     "Wednesday": [
