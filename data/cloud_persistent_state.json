@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1795541868980,
+  "updatedAt": 1795541870337,
   "mealPlanUpdatedAt": 1795541868955,
-  "groceryUpdatedAt": 1794921697699,
+  "groceryUpdatedAt": 1795541868978,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -79,9 +79,72 @@
       "id": "groc-manual-1794921697699-fe4",
       "name": "Eggs",
       "checked": false,
-      "sourceRecipeTitle": "Manual Addition",
+      "sourceRecipeTitle": "Manual Addition, Mackie's Avocado Toast",
       "isManual": true,
-      "createdAt": "2026-11-17T13:21:37.699Z"
+      "createdAt": "2026-11-17T13:21:37.699Z",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ]
+    },
+    {
+      "id": "groc-1795541868975-0-1eo",
+      "name": "Bread",
+      "checked": false,
+      "sourceRecipeTitle": "Mackie's Avocado Toast",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ],
+      "isManual": false,
+      "createdAt": "2026-11-24T17:37:48.975Z"
+    },
+    {
+      "id": "groc-1795541868976-1-2ce",
+      "name": "Avocado",
+      "checked": false,
+      "sourceRecipeTitle": "Mackie's Avocado Toast",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ],
+      "isManual": false,
+      "createdAt": "2026-11-24T17:37:48.976Z"
+    },
+    {
+      "id": "groc-1795541868976-3-cpf",
+      "name": "Shredded cheese",
+      "checked": false,
+      "sourceRecipeTitle": "Mackie's Avocado Toast",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ],
+      "isManual": false,
+      "createdAt": "2026-11-24T17:37:48.976Z"
+    },
+    {
+      "id": "groc-1795541868977-4-xfr",
+      "name": "Chipotle mayo",
+      "checked": false,
+      "sourceRecipeTitle": "Mackie's Avocado Toast",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ],
+      "isManual": false,
+      "createdAt": "2026-11-24T17:37:48.977Z"
+    },
+    {
+      "id": "groc-1795541868978-5-8o3",
+      "name": "Onion powder, garlic salt, pepper, chipotle seasoning",
+      "checked": false,
+      "sourceRecipeTitle": "Mackie's Avocado Toast",
+      "sourceDay": "Wednesday",
+      "sourceInstanceIds": [
+        "meal-1795541868954-ef4b"
+      ],
+      "isManual": false,
+      "createdAt": "2026-11-24T17:37:48.978Z"
     }
   ],
   "suggestions": {
