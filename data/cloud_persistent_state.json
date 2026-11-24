@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "updatedAt": 1795541909604,
-  "mealPlanUpdatedAt": 1795541868955,
+  "updatedAt": 1795541917061,
+  "mealPlanUpdatedAt": 1795541917058,
   "groceryUpdatedAt": 1795541909604,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
@@ -37,16 +37,6 @@
         "isManual": true,
         "slot": "Custom",
         "addedAt": "2026-10-25T14:58:08.965Z"
-      },
-      {
-        "instanceId": "meal-1795541868954-ef4b",
-        "recipeId": "mackies-avocado-toast",
-        "title": "Mackie's Avocado Toast",
-        "category": "Breakfast",
-        "page": 5,
-        "isManual": false,
-        "slot": "Breakfast",
-        "addedAt": "2026-11-24T17:37:48.954Z"
       }
     ],
     "Thursday": [
