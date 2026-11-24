@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1795541905476,
+  "updatedAt": 1795541909604,
   "mealPlanUpdatedAt": 1795541868955,
-  "groceryUpdatedAt": 1795541905475,
+  "groceryUpdatedAt": 1795541909604,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -110,18 +110,6 @@
       ],
       "isManual": false,
       "createdAt": "2026-11-24T17:37:48.976Z"
-    },
-    {
-      "id": "groc-1795541868977-4-xfr",
-      "name": "Chipotle mayo",
-      "checked": false,
-      "sourceRecipeTitle": "Mackie's Avocado Toast",
-      "sourceDay": "Wednesday",
-      "sourceInstanceIds": [
-        "meal-1795541868954-ef4b"
-      ],
-      "isManual": false,
-      "createdAt": "2026-11-24T17:37:48.977Z"
     },
     {
       "id": "groc-1795541868978-5-8o3",
