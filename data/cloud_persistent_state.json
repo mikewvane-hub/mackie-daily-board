@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "updatedAt": 1795541870337,
+  "updatedAt": 1795541905476,
   "mealPlanUpdatedAt": 1795541868955,
-  "groceryUpdatedAt": 1795541868978,
+  "groceryUpdatedAt": 1795541905475,
   "suggestionsUpdatedAt": 1792940148369,
   "babyTrackerUpdatedAt": 1791172501842,
   "mealPlan": {
@@ -75,17 +75,6 @@
     ]
   },
   "groceryList": [
-    {
-      "id": "groc-manual-1794921697699-fe4",
-      "name": "Eggs",
-      "checked": false,
-      "sourceRecipeTitle": "Manual Addition, Mackie's Avocado Toast",
-      "isManual": true,
-      "createdAt": "2026-11-17T13:21:37.699Z",
-      "sourceInstanceIds": [
-        "meal-1795541868954-ef4b"
-      ]
-    },
     {
       "id": "groc-1795541868975-0-1eo",
       "name": "Bread",
